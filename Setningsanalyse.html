@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setningsanalyse</title>
+    <style>
+        body {
+            font-family: 'Futura', 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            overflow: hidden;
+        }
+        #sentence {
+            font-size: 30px;
+            color: #000;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            min-height: 60px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80%;
+            box-sizing: border-box;
+        }
+        .word {
+            display: inline-block;
+            margin: 0 5px;
+            padding: 2px 6px;
+        }
+        .word.correct {
+            color: white;
+            border-radius: 5px;
+        }
+        .box {
+            width: 120px;
+            height: 50px;
+            color: white;
+            text-align: center;
+            line-height: 50px;
+            border-radius: 8px;
+            cursor: grab;
+            user-select: none;
+            margin: 10px;
+        }
+        #boxes {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+        }
+        .subject { background-color: #e74c3c; }
+        .verb { background-color: #2ecc71; }
+        .adverbial { background-color: #f39c12; }
+        .direct-object { background-color: #3498db; }
+        .indirect-object { background-color: #9b59b6; }
+        #score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
+        }
+        #popup {
+            position: absolute;
+            background-color: #fff;
+            border: 2px solid #000;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 250px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+            display: none;
+            font-size: 16px;
+        }
+        #modeToggle {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            background-color: #ddd;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            z-index: 20;
+        }
+        body.dark-mode {
+            background-color: #121212;
+            color: #f0f0f0;
+        }
+        body.dark-mode #sentence {
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        body.dark-mode .box {
+            opacity: 0.8;
+        }
+        body.dark-mode #modeToggle {
+            background-color: #444;
+            color: #fff;
+        }
+        body.dark-mode #popup {
+            background-color: #333;
+            color: #f0f0f0;
+            border-color: #fff;
+        }
+        @keyframes explode {
+            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
+            100% { transform: translate(var(--dx), var(--dy)) rotate(720deg); opacity: 0; }
+        }
+        .confetti {
+            position: absolute;
+            font-size: 20px;
+            pointer-events: none;
+            animation: explode 1s forwards ease-out;
+        }
+    </style>
+</head>
+<body>
+    <button id="modeToggle">Dark Mode</button>
+    <div id="score">
+        ⭐ Poeng: <span id="points">0</span> | 🔥 Streak: <span id="streak">0</span>
+    </div>
+    <div id="sentence"></div>
+    <div id="boxes"></div>
+    <div id="popup"></div>
+
+    <script>
+        const sentenceEl = document.getElementById('sentence');
+        const boxesEl = document.getElementById('boxes');
+        const popupEl = document.getElementById('popup');
+        const pointsEl = document.getElementById('points');
+        const streakEl = document.getElementById('streak');
+
+        let points = 0;
+        let streak = 0;
+        let lastSentence = null;
+
+        const functions = [
+            { name: 'Subjekt', color: 'subject', desc: 'Den som utfører handlingen i setningen.' },
+            { name: 'Verbal', color: 'verb', desc: 'Handlingen eller tilstanden i setningen.' },
+            { name: 'Adverbial', color: 'adverbial', desc: 'Gir informasjon om tid, sted, måte eller omstendigheter.' },
+            { name: 'Direkte objekt', color: 'direct-object', desc: 'Det som blir direkte påvirket av handlingen.' },
+            { name: 'Indirekte objekt', color: 'indirect-object', desc: 'Mottakeren av det direkte objektet.' }
+        ];
+
+        // Ord og kompatibilitetsregler
+        const subjects = ['Barna', 'Hunden', 'Jeg', 'Læreren', 'Katten', 'Elevene'];
+        const verbs = [
+            { text: 'løper', transitive: false, compatibleAdverbials: ['raskt', 'ute', 'i dag', 'i parken'] },
+            { text: 'leser', transitive: true, compatibleObjects: ['bøker', 'brev'], compatibleAdverbials: ['stille', 'i klasserommet'] },
+            { text: 'gir', transitive: true, requiresIndirect: true, compatibleObjects: ['ballen', 'blomster', 'brev'], compatibleIndirect: ['meg', 'henne', 'ham'] },
+            { text: 'spiser', transitive: true, compatibleObjects: ['mat', 'frokost'], compatibleAdverbials: ['raskt', 'hjemme'] },
+            { text: 'leker', transitive: false, compatibleAdverbials: ['ute', 'i parken', 'i snøen'] },
+            { text: 'skriver', transitive: true, compatibleObjects: ['brev'], compatibleAdverbials: ['stille', 'i klasserommet'] }
+        ];
+        const adverbials = ['raskt', 'ute', 'i dag', 'hjemme', 'stille', 'i klasserommet', 'i parken', 'i snøen'];
+        const directObjects = ['ballen', 'bøker', 'mat', 'brev', 'frokost', 'blomster'];
+        const indirectObjects = ['meg', 'henne', 'ham', 'oss'];
+
+        function generateSentence() {
+            const structures = [
+                // Subjekt + Verbal (intransitivt) + Adverbial
+                () => {
+                    const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
+                    return {
+                        text: `${s} ${verb.text} ${a}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' }
+                    };
+                },
+                // Subjekt + Verbal (transitivt) + Direkte objekt + Adverbial
+                () => {
+                    const verb = verbs.filter(v => v.transitive && !v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.transitive && !v.requiresIndirect).length)];
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
+                    return {
+                        text: `${s} ${verb.text} ${d} ${a}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
+                    };
+                },
+                // Subjekt + Verbal (transitivt med indirekte) + Indirekte objekt + Direkte objekt
+                () => {
+                    const verb = verbs.filter(v => v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    return {
+                        text: `${s} ${verb.text} ${i} ${d}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object' }
+                    };
+                }
+            ];
+            let sentence;
+            do {
+                sentence = structures[Math.floor(Math.random() * structures.length)]();
+            } while (sentence.text === lastSentence?.text || !isSentenceValid(sentence));
+            return sentence;
+        }
+
+        function isSentenceValid(sentence) {
+            // Sjekk om setningen gir mening og er passende
+            const words = sentence.text.split(' ');
+            if (words.length < 3) return false; // For kort
+            if (words[1] === 'gir' && !sentence.correct.hasOwnProperty('direct-object')) return false; // "Gir" krever direkte objekt
+            if (words.includes('raskt') && words[1] === 'gir' && !sentence.correct.hasOwnProperty('direct-object')) return false; // "Gir raskt" gir ikke mening uten objekt
+            return true; // Legg til flere regler her om nødvendig
+        }
+
+        let currentSentence = null;
+
+        function createBoxes() {
+            boxesEl.innerHTML = '';
+            functions.forEach(funcData => {
+                const box = document.createElement('div');
+                box.classList.add('box', funcData.color);
+                box.textContent = funcData.name;
+                box.dataset.function = funcData.name;
+                box.draggable = true;
+                box.addEventListener('dragstart', dragStart);
+                box.addEventListener('click', () => showPopup(funcData));
+                boxesEl.appendChild(box);
+            });
+        }
+
+        function showPopup(funcData) {
+            const exampleWord = Object.entries(currentSentence.correct).find(([word, func]) => func === funcData.color)?.[0];
+            let explanation = '';
+            switch (funcData.color) {
+                case 'subject':
+                    explanation = `I "${currentSentence.text}" er "${exampleWord}" subjektet fordi det er den som utfører handlingen.`;
+                    break;
+                case 'verb':
+                    explanation = `I "${currentSentence.text}" er "${exampleWord}" verbalet fordi det beskriver handlingen.`;
+                    break;
+                case 'adverbial':
+                    explanation = `I "${currentSentence.text}" er "${exampleWord}" et adverbial fordi det sier noe om ${['raskt', 'stille'].includes(exampleWord) ? 'måte' : ['ute', 'hjemme', 'i klasserommet', 'i parken', 'i snøen'].includes(exampleWord) ? 'sted' : 'tid'}.`;
+                    break;
+                case 'direct-object':
+                    explanation = `I "${currentSentence.text}" er "${exampleWord}" direkte objekt fordi det er det som blir påvirket av handlingen.`;
+                    break;
+                case 'indirect-object':
+                    explanation = `I "${currentSentence.text}" er "${exampleWord}" indirekte objekt fordi det er mottakeren av det direkte objektet.`;
+                    break;
+            }
+            popupEl.innerHTML = `${funcData.desc}<br><br>${explanation}`;
+            popupEl.style.display = 'block';
+            const box = boxesEl.querySelector(`.${funcData.color}`);
+            const rect = box.getBoundingClientRect();
+            popupEl.style.left = `${rect.left}px`;
+            popupEl.style.top = `${rect.top - popupEl.offsetHeight - 10}px`;
+            setTimeout(() => popupEl.style.display = 'none', 10000);
+        }
+
+        function loadSentence() {
+            currentSentence = generateSentence();
+            lastSentence = currentSentence;
+            sentenceEl.innerHTML = '';
+            Object.keys(currentSentence.correct).forEach(word => {
+                const span = document.createElement('span');
+                span.classList.add('word');
+                span.textContent = word;
+                span.dataset.word = word;
+                span.addEventListener('dragover', dragOver);
+                span.addEventListener('drop', drop);
+                sentenceEl.appendChild(span);
+            });
+            createBoxes();
+        }
+
+        function dragStart(e) {
+            e.dataTransfer.setData('text', e.target.dataset.function);
+        }
+
+        function dragOver(e) {
+            e.preventDefault();
+        }
+
+        function drop(e) {
+            e.preventDefault();
+            const wordEl = e.target;
+            const func = e.dataTransfer.getData('text');
+            const correctFunc = Object.entries(currentSentence.correct).find(([w, f]) => w === wordEl.dataset.word)?.[1];
+            const funcData = functions.find(f => f.name === func);
+            if (correctFunc === funcData.color) {
+                wordEl.classList.add('correct');
+                wordEl.style.backgroundColor = getColor(funcData.color);
+                // Ikke fjern boksen, da alle boksene skal være synlige hele tiden
+                checkCompletion();
+            }
+        }
+
+        function getColor(colorName) {
+            switch (colorName) {
+                case 'subject': return '#e74c3c';
+                case 'verb': return '#2ecc71';
+                case 'adverbial': return '#f39c12';
+                case 'direct-object': return '#3498db';
+                case 'indirect-object': return '#9b59b6';
+                default: return '#000';
+            }
+        }
+
+        function checkCompletion() {
+            const correctWords = sentenceEl.querySelectorAll('.correct').length;
+            const total = Object.keys(currentSentence.correct).length;
+            if (correctWords === total) {
+                points++;
+                streak++;
+                pointsEl.textContent = points;
+                streakEl.textContent = streak;
+                playConfettiAnimation();
+            }
+        }
+
+        function playConfettiAnimation() {
+            const rect = sentenceEl.getBoundingClientRect();
+            const text = sentenceEl.textContent;
+            sentenceEl.innerHTML = '';
+            for (const char of text) {
+                if (char === ' ') continue;
+                // Generer 10 konfettibiter per bokstav for mye mer konfetti
+                for (let i = 0; i < 25; i++) {
+                    const confetti = document.createElement('span');
+                    confetti.classList.add('confetti');
+                    confetti.textContent = char;
+                    const x = Math.random() * rect.width;
+                    const y = Math.random() * rect.height;
+                    confetti.style.left = `${rect.left + x}px`;
+                    confetti.style.top = `${rect.top + y}px`;
+                    const dx = (Math.random() - 0.5) * 600; // økt spredningsområde
+                    const dy = (Math.random() - 0.5) * 600;
+                    confetti.style.setProperty('--dx', `${dx}px`);
+                    confetti.style.setProperty('--dy', `${dy}px`);
+                    const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
+                    confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+                    document.body.appendChild(confetti);
+                    setTimeout(() => confetti.remove(), 1000);
+                }
+            }
+            // Last neste setning etter animasjonen
+            setTimeout(loadSentence, 1100);
+        }
+
+        // Dark/light mode toggle
+        const modeToggleBtn = document.getElementById('modeToggle');
+        modeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            modeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+        });
+
+        // Start med å laste en setning
+        loadSentence();
+    </script>
+</body>
+</html>

@@ -396,9 +396,42 @@
                 box.classList.add('box', funcData.color);
                 box.textContent = funcData.name;
                 box.dataset.function = funcData.name;
-                box.draggable = true;
-                box.addEventListener('dragstart', dragStart);
-                box.addEventListener('click', () => showPopup(funcData));
+                box.setAttribute('draggable', 'true'); // Aktiver dra fra starten
+
+                let isDragging = false; // Sporer om brukeren drar boksen
+                let dragStartX, dragStartY; // Startposisjon for dra-bevegelse
+
+                // Start dra-operasjon
+                box.addEventListener('mousedown', (e) => {
+                    isDragging = false;
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
+                });
+
+                // Sjekk om det er en dra-bevegelse
+                box.addEventListener('mousemove', (e) => {
+                    const deltaX = Math.abs(e.clientX - dragStartX);
+                    const deltaY = Math.abs(e.clientY - dragStartY);
+
+                    // Hvis brukeren beveger musen mer enn 5px, tolkes det som dra
+                    if (deltaX > 5 || deltaY > 5) {
+                        isDragging = true;
+                    }
+                });
+
+                // Håndter klikk eller dra
+                box.addEventListener('mouseup', () => {
+                    if (!isDragging) {
+                        // Hvis det ikke var en dra-bevegelse, vis popup
+                        showPopup(funcData);
+                    }
+                });
+
+                // Dra-hendelse
+                box.addEventListener('dragstart', (e) => {
+                    e.dataTransfer.setData('text', funcData.name);
+                });
+
                 boxesEl.appendChild(box);
             });
         }

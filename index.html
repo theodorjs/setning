@@ -294,80 +294,79 @@
                 ];
                 sentence = structures[Math.floor(Math.random() * structures.length)]();
             } else if (difficulty === "Vanskelig") {
-                // Først: hvis denne vanskelige setningen er hvert 5. (basert på en global teller),
-                // generer et spørsmål med rekkefølgen: verbal, subjekt, direkte objekt, adverbial.
-                if (vanskeligCounter % 5 === 0) {
-                    const questionPattern = () => {
-                        const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
-                        const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
-                        const s = subjects[Math.floor(Math.random() * subjects.length)];
-                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                        const a = (verb.compatibleAdverbials && verb.compatibleAdverbials.length > 0) ?
-                                  verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)]
-                                  : adverbials[Math.floor(Math.random() * adverbials.length)];
-                        return {
-                            text: `${capitalize(verb.text)} ${decapitalize(s)} ${d} ${a}?`,
-                            correct: { [capitalize(verb.text)]: 'verb', [decapitalize(s)]: 'subject', [d]: 'direct-object', [a]: 'adverbial' }
-                        };
+                // Definer mønstrene for vanskelige setninger:
+                const pattern5 = () => {
+                    // 5-ledds: subjekt, verb, indirekte objekt, direkte objekt, adverbial
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const verb = verbs.filter(v => v.requiresIndirect)
+                        [Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
+                    const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    const a = (verb.compatibleAdverbials && verb.compatibleAdverbials.length > 0) ?
+                              verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)]
+                              : adverbials[Math.floor(Math.random() * adverbials.length)];
+                    return {
+                        text: `${s} ${verb.text} ${i} ${d} ${a}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [a]: 'adverbial' }
                     };
-                    sentence = questionPattern();
-                    vanskeligCounter++;
-                } else {
-                    // Velg mellom 5-ledds og 6-ledds mønstre – 70 % for 6-ledds, 30 % for 5-ledds.
-                    const pattern5 = () => {
-                        // 5-ledds: subjekt, verb, indirekte objekt, direkte objekt, adverbial
-                        const s = subjects[Math.floor(Math.random() * subjects.length)];
-                        const verb = verbs.filter(v => v.requiresIndirect)
-                            [Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
-                        const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
-                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                        const a = (verb.compatibleAdverbials && verb.compatibleAdverbials.length > 0) ?
-                                   verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)]
-                                   : adverbials[Math.floor(Math.random() * adverbials.length)];
-                        return {
-                            text: `${s} ${verb.text} ${i} ${d} ${a}.`,
-                            correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [a]: 'adverbial' }
-                        };
-                    };
-                    const pattern6 = () => {
-                        // 6-ledds: subjekt, verb, indirekte objekt, direkte objekt, adverbial, adverbial
-                        const s = subjects[Math.floor(Math.random() * subjects.length)];
-                        const verb = verbs.filter(v => v.requiresIndirect)
-                            [Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
-                        const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
-                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                        let a1, a2;
-                        if (verb.compatibleAdverbials && Array.isArray(verb.compatibleAdverbials) && verb.compatibleAdverbials.length >= 2) {
-                            let indices = [];
-                            while (indices.length < 2) {
-                                let idx = Math.floor(Math.random() * verb.compatibleAdverbials.length);
-                                if (!indices.includes(idx)) indices.push(idx);
-                            }
-                            a1 = verb.compatibleAdverbials[indices[0]];
-                            a2 = verb.compatibleAdverbials[indices[1]];
-                        } else {
-                            let chosen = [];
-                            while (chosen.length < 2) {
-                                let candidate = adverbials[Math.floor(Math.random() * adverbials.length)];
-                                if (!chosen.includes(candidate)) chosen.push(candidate);
-                            }
-                            a1 = chosen[0];
-                            a2 = chosen[1];
+                };
+                const pattern6 = () => {
+                    // 6-ledds: subjekt, verb, indirekte objekt, direkte objekt, adverbial, adverbial
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const verb = verbs.filter(v => v.requiresIndirect)
+                        [Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
+                    const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    let a1, a2;
+                    if (verb.compatibleAdverbials && Array.isArray(verb.compatibleAdverbials) && verb.compatibleAdverbials.length >= 2) {
+                        let indices = [];
+                        while (indices.length < 2) {
+                            let idx = Math.floor(Math.random() * verb.compatibleAdverbials.length);
+                            if (!indices.includes(idx)) indices.push(idx);
                         }
-                        return {
-                            text: `${s} ${verb.text} ${i} ${d} ${a1} ${a2}.`,
-                            correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [a1]: 'adverbial', [a2]: 'adverbial' }
-                        };
-                    };
-                    // Velg med 30 % sjanse pattern5 og 70 % sjanse pattern6:
-                    const rand = Math.random();
-                    if (rand < 0.3) {
-                        sentence = pattern5();
+                        a1 = verb.compatibleAdverbials[indices[0]];
+                        a2 = verb.compatibleAdverbials[indices[1]];
                     } else {
-                        sentence = pattern6();
+                        let chosen = [];
+                        while (chosen.length < 2) {
+                            let candidate = adverbials[Math.floor(Math.random() * adverbials.length)];
+                            if (!chosen.includes(candidate)) chosen.push(candidate);
+                        }
+                        a1 = chosen[0];
+                        a2 = chosen[1]];
                     }
-                    vanskeligCounter++;
+                    return {
+                        text: `${s} ${verb.text} ${i} ${d} ${a1} ${a2}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [a1]: 'adverbial', [a2]: 'adverbial' }
+                    };
+                };
+                const questionPattern = () => {
+                    // Spørsmålsmønster: verbal, subjekt, direkte objekt, adverbial
+                    const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
+                    const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    const a = (verb.compatibleAdverbials && verb.compatibleAdverbials.length > 0) ?
+                              verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)]
+                              : adverbials[Math.floor(Math.random() * adverbials.length)];
+                    // Inverter rekkefølgen med korrekt kapitalisering:
+                    return {
+                        text: `${capitalize(verb.text)} ${decapitalize(s)} ${d} ${a}?`,
+                        correct: { [capitalize(verb.text)]: 'verb', [decapitalize(s)]: 'subject', [d]: 'direct-object', [a]: 'adverbial' }
+                    };
+                };
+                // Bestem om setningen skal være spørsmål (kun hver 5. setning)
+                const isQuestion = (vanskeligCounter % 5 === 0);
+                let baseSentence;
+                if (isQuestion) {
+                    baseSentence = questionPattern();
+                } else {
+                    // Velg med 30% sjanse pattern5 og 70% sjanse pattern6
+                    baseSentence = (Math.random() < 0.3) ? pattern5() : pattern6();
                 }
+                // Gjør én inkrementering etter valget
+                vanskeligCounter++;
+                sentence = baseSentence;
             }
             // Variasjonslogikk (samme kriterier som før)
             let variationOK = true;

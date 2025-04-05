@@ -123,9 +123,36 @@
             pointer-events: none;
             animation: explode 1s forwards ease-out;
         }
+        /* Ny CSS for vanskelighetsknapper */
+        #difficulty-buttons {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 30;
+        }
+        #difficulty-buttons button {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #ddd;
+        }
+        #difficulty-buttons button.active {
+            background-color: #3498db;
+            color: #fff;
+        }
     </style>
 </head>
 <body>
+    <!-- Vanskelighetsknapper -->
+    <div id="difficulty-buttons">
+        <button data-difficulty="Enkel">Enkel</button>
+        <button data-difficulty="Middels" class="active">Middels</button>
+        <button data-difficulty="Vanskelig">Vanskelig</button>
+    </div>
     <button id="modeToggle">Dark Mode</button>
     <div id="score">
         ⭐ Poeng: <span id="points">0</span> | 🔥 Streak: <span id="streak">0</span>
@@ -140,12 +167,15 @@
         const popupEl = document.getElementById('popup');
         const pointsEl = document.getElementById('points');
         const streakEl = document.getElementById('streak');
+        const modeToggleBtn = document.getElementById('modeToggle');
+        const difficultyButtons = document.getElementById('difficulty-buttons').querySelectorAll('button');
 
         let points = 0;
         let streak = 0;
         let lastSentence = null;
         let currentPopupFunc = null; // ny global variabel for å spore aktuell forklaring
         let popupTimer = null;     // ny global variabel for tidsur
+        let difficulty = "Middels"; // ny global variabel
 
         const functions = [
             { name: 'Subjekt', color: 'subject', desc: 'Den som utfører handlingen i setningen.' },
@@ -169,44 +199,116 @@
         const directObjects = ['ballen', 'bøker', 'mat', 'brev', 'frokost', 'blomster'];
         const indirectObjects = ['meg', 'henne', 'ham', 'oss'];
 
+        // Oppdater vanskelighetsknapper
+        difficultyButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficulty = btn.getAttribute('data-difficulty');
+                // Marker aktiv knapp
+                difficultyButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                loadSentence();
+            });
+        });
+
         function generateSentence() {
-            const structures = [
-                // Subjekt + Verbal (intransitivt) + Adverbial
-                () => {
-                    const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
-                    const s = subjects[Math.floor(Math.random() * subjects.length)];
-                    const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
-                    return {
-                        text: `${s} ${verb.text} ${a}.`,
-                        correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' }
-                    };
-                },
-                // Subjekt + Verbal (transitivt) + Direkte objekt + Adverbial
-                () => {
-                    const verb = verbs.filter(v => v.transitive && !v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.transitive && !v.requiresIndirect).length)];
-                    const s = subjects[Math.floor(Math.random() * subjects.length)];
-                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                    const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
-                    return {
-                        text: `${s} ${verb.text} ${d} ${a}.`,
-                        correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
-                    };
-                },
-                // Subjekt + Verbal (transitivt med indirekte) + Indirekte objekt + Direkte objekt
-                () => {
-                    const verb = verbs.filter(v => v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
-                    const s = subjects[Math.floor(Math.random() * subjects.length)];
-                    const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
-                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                    return {
-                        text: `${s} ${verb.text} ${i} ${d}.`,
-                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object' }
-                    };
-                }
-            ];
+            let structures = [];
+            if(difficulty === "Enkel"){
+                // To mønstre med 3 setningsledd
+                structures = [
+                    // Subjekt + Verbal (intransitiv) + Adverbial
+                    () => {
+                        const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)];
+                        const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
+                        return {
+                            text: `${s} ${verb.text} ${a}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' }
+                        };
+                    },
+                    // Subjekt + Verbal (transitiv) + Direkte objekt
+                    () => {
+                        const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
+                        const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)];
+                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                        return {
+                            text: `${s} ${verb.text} ${d}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object' }
+                        };
+                    }
+                ];
+            } else if(difficulty === "Middels"){
+                // Dagens mønstre (3 mønstre)
+                structures = [
+                    // Subjekt + Verbal (intransitiv) + Adverbial
+                    () => {
+                        const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)];
+                        const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
+                        return {
+                            text: `${s} ${verb.text} ${a}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' }
+                        };
+                    },
+                    // Subjekt + Verbal (transitiv) + Direkte objekt + Adverbial
+                    () => {
+                        const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
+                        const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)];
+                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                        const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
+                        return {
+                            text: `${s} ${verb.text} ${d} ${a}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
+                        };
+                    },
+                    // Subjekt + Verbal (transitiv med indirekte) + Indirekte objekt + Direkte objekt
+                    () => {
+                        const verb = verbs.filter(v => v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)];
+                        const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                        return {
+                            text: `${s} ${verb.text} ${i} ${d}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object' }
+                        };
+                    }
+                ];
+            } else if(difficulty === "Vanskelig"){
+                // Kun mønstre med minst 4 setningsledd
+                structures = [
+                    // Subjekt + Verbal (transitiv) + Direkte objekt + Adverbial
+                    () => {
+                        const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
+                        const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)];
+                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                        const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
+                        return {
+                            text: `${s} ${verb.text} ${d} ${a}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
+                        };
+                    },
+                    // Subjekt + Verbal (transitiv med indirekte) + Indirekte objekt + Direkte objekt
+                    () => {
+                        const verb = verbs.filter(v => v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)];
+                        const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                        return {
+                            text: `${s} ${verb.text} ${i} ${d}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object' }
+                        };
+                    }
+                ];
+            }
             let sentence;
             do {
                 sentence = structures[Math.floor(Math.random() * structures.length)]();
+                // For Vanskelig, med en sjanse gjør vi setningen om til et spørsmål
+                if(difficulty === "Vanskelig" && Math.random() < 0.3) {
+                    sentence.text = sentence.text.slice(0, -1) + '?';
+                }
             } while (sentence.text === lastSentence?.text || !isSentenceValid(sentence));
             return sentence;
         }
@@ -372,7 +474,6 @@
         }
 
         // Dark/light mode toggle
-        const modeToggleBtn = document.getElementById('modeToggle');
         modeToggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');
             modeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';

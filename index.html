@@ -219,6 +219,14 @@
             });
         });
 
+        // Hjelpefunksjoner for kapitalisering:
+        function capitalize(word) {
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }
+        function decapitalize(word) {
+            return word.charAt(0).toLowerCase() + word.slice(1);
+        }
+
         function generateSentence() {
             let sentence;
             if (difficulty === "Enkel") {
@@ -298,8 +306,8 @@
                                   verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)]
                                   : adverbials[Math.floor(Math.random() * adverbials.length)];
                         return {
-                            text: `${verb.text} ${s} ${d} ${a}?`,
-                            correct: { [verb.text]: 'verb', [s]: 'subject', [d]: 'direct-object', [a]: 'adverbial' }
+                            text: `${capitalize(verb.text)} ${decapitalize(s)} ${d} ${a}?`,
+                            correct: { [capitalize(verb.text)]: 'verb', [decapitalize(s)]: 'subject', [d]: 'direct-object', [a]: 'adverbial' }
                         };
                     };
                     sentence = questionPattern();
@@ -344,7 +352,7 @@
                                 if (!chosen.includes(candidate)) chosen.push(candidate);
                             }
                             a1 = chosen[0];
-                            a2 = chosen[1];
+                            a2 = chosen[1]];
                         }
                         return {
                             text: `${s} ${verb.text} ${i} ${d} ${a1} ${a2}.`,

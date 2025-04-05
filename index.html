@@ -184,6 +184,7 @@
         let currentPopupFunc = null; // ny global variabel for å spore aktuell forklaring
         let popupTimer = null;     // ny global variabel for tidsur
         let difficulty = "Middels"; // ny global variabel
+        let vanskeligCounter = 0; // ny global variabel for å telle Vanskelig-setninger
 
         const functions = [
             { name: 'Subjekt', color: 'subject', desc: 'Den som utfører handlingen i setningen.' },
@@ -313,11 +314,30 @@
             let sentence;
             do {
                 sentence = structures[Math.floor(Math.random() * structures.length)]();
-                // For Vanskelig, med en sjanse gjør vi setningen om til et spørsmål
-                if(difficulty === "Vanskelig" && Math.random() < 0.3) {
-                    sentence.text = sentence.text.slice(0, -1) + '?';
+                // I Vanskelig-modus: tving fram spørsmålsformulering mellom 4. og 6. genererte setninger
+                if (difficulty === "Vanskelig") {
+                    vanskeligCounter++;
+                    if(vanskeligCounter >= 4 && vanskeligCounter <= 6) {
+                        sentence.text = sentence.text.slice(0, -1) + '?';
+                    } else if (vanskeligCounter > 6) {
+                        vanskeligCounter = 0;
+                    } else {
+                        if(Math.random() < 0.3) { // standard sjanse for spørsmål
+                            sentence.text = sentence.text.slice(0, -1) + '?';
+                        }
+                    }
                 }
-            } while (sentence.text === lastSentence?.text || !isSentenceValid(sentence));
+                // Vurder variasjonsregler
+                let variationOK = true;
+                if (lastSentence) {
+                    let newWords = Object.keys(sentence.correct);
+                    let oldWords = Object.keys(lastSentence.correct);
+                    let common = newWords.filter(word => oldWords.includes(word)).length;
+                    let diff = newWords.length - common;
+                    if (newWords.length === 3 && diff < 2) variationOK = false;
+                    if (newWords.length >= 4 && diff < 3) variationOK = false;
+                }
+            } while ((sentence.text === lastSentence?.text || !isSentenceValid(sentence)) || !variationOK);
             return sentence;
         }
 

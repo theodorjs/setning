@@ -312,6 +312,7 @@
                 ];
             }
             let sentence;
+            let variationOK; // deklarer utenfor løkken
             do {
                 sentence = structures[Math.floor(Math.random() * structures.length)]();
                 // I Vanskelig-modus: tving fram spørsmålsformulering mellom 4. og 6. genererte setninger
@@ -328,7 +329,7 @@
                     }
                 }
                 // Vurder variasjonsregler
-                let variationOK = true;
+                variationOK = true;
                 if (lastSentence) {
                     let newWords = Object.keys(sentence.correct);
                     let oldWords = Object.keys(lastSentence.correct);

@@ -144,6 +144,8 @@
         let points = 0;
         let streak = 0;
         let lastSentence = null;
+        let currentPopupFunc = null; // ny global variabel for å spore aktuell forklaring
+        let popupTimer = null;     // ny global variabel for tidsur
 
         const functions = [
             { name: 'Subjekt', color: 'subject', desc: 'Den som utfører handlingen i setningen.' },
@@ -235,7 +237,18 @@
         }
 
         function showPopup(funcData) {
-            const exampleWord = Object.entries(currentSentence.correct).find(([word, func]) => func === funcData.color)?.[0];
+            // Toggle: Hvis forklaringen allerede vises for den samme boksen, lukk den
+            if (popupEl.style.display === 'block' && currentPopupFunc === funcData.color) {
+                popupEl.style.display = 'none';
+                currentPopupFunc = null;
+                clearTimeout(popupTimer);
+                return;
+            }
+            // Hvis en annen forklaring er åpen, stopp dens nedtelling
+            clearTimeout(popupTimer);
+            
+            const exampleEntry = Object.entries(currentSentence.correct).find(([word, func]) => func === funcData.color);
+            const exampleWord = exampleEntry ? exampleEntry[0] : '';
             let explanation = '';
             switch (funcData.color) {
                 case 'subject':
@@ -256,11 +269,16 @@
             }
             popupEl.innerHTML = `${funcData.desc}<br><br>${explanation}`;
             popupEl.style.display = 'block';
+            currentPopupFunc = funcData.color;
             const box = boxesEl.querySelector(`.${funcData.color}`);
             const rect = box.getBoundingClientRect();
             popupEl.style.left = `${rect.left}px`;
             popupEl.style.top = `${rect.top - popupEl.offsetHeight - 10}px`;
-            setTimeout(() => popupEl.style.display = 'none', 10000);
+            // Sett et nytt tidsur på 10 sekunder for den nye boksen
+            popupTimer = setTimeout(() => {
+                popupEl.style.display = 'none';
+                currentPopupFunc = null;
+            }, 10000);
         }
 
         function loadSentence() {

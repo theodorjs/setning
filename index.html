@@ -220,10 +220,10 @@
         });
 
         function generateSentence() {
-            let structures = [];
+            let sentence;
             if(difficulty === "Enkel"){
                 // To mønstre med 3 setningsledd
-                structures = [
+                const structures = [
                     // Subjekt + Verbal (intransitiv) + Adverbial
                     () => {
                         const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
@@ -246,9 +246,10 @@
                         };
                     }
                 ];
+                sentence = structures[Math.floor(Math.random() * structures.length)]();
             } else if(difficulty === "Middels"){
                 // Dagens mønstre (3 mønstre)
-                structures = [
+                const structures = [
                     // Subjekt + Verbal (intransitiv) + Adverbial
                     () => {
                         const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
@@ -283,10 +284,10 @@
                         };
                     }
                 ];
+                sentence = structures[Math.floor(Math.random() * structures.length)]();
             } else if(difficulty === "Vanskelig"){
-                // Kun mønstre med minst 4 setningsledd
-                structures = [
-                    // Subjekt + Verbal (transitiv) + Direkte objekt + Adverbial
+                // Definer to standard vanskelige strukturer:
+                const standardStructures = [
                     () => {
                         const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
                         const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
@@ -298,7 +299,6 @@
                             correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
                         };
                     },
-                    // Subjekt + Verbal (transitiv med indirekte) + Indirekte objekt + Direkte objekt
                     () => {
                         const verb = verbs.filter(v => v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
                         const s = subjects[Math.floor(Math.random() * subjects.length)];
@@ -310,35 +310,54 @@
                         };
                     }
                 ];
-            }
-            let sentence;
-            let variationOK; // deklarer utenfor løkken
-            do {
-                sentence = structures[Math.floor(Math.random() * structures.length)]();
-                // I Vanskelig-modus: tving fram spørsmålsformulering mellom 4. og 6. genererte setninger
-                if (difficulty === "Vanskelig") {
-                    vanskeligCounter++;
-                    if(vanskeligCounter >= 4 && vanskeligCounter <= 6) {
-                        sentence.text = sentence.text.slice(0, -1) + '?';
-                    } else if (vanskeligCounter > 6) {
-                        vanskeligCounter = 0;
-                    } else {
-                        if(Math.random() < 0.3) { // standard sjanse for spørsmål
-                            sentence.text = sentence.text.slice(0, -1) + '?';
+                // Definer utvidet struktur med ALLE ledd (to adverbial)
+                const extendedStructure = () => {
+                    const verbCandidates = verbs.filter(v => v.requiresIndirect);
+                    const verb = verbCandidates[Math.floor(Math.random() * verbCandidates.length)];
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    let adverbial1, adverbial2;
+                    if (verb.compatibleAdverbials && verb.compatibleAdverbials.length >= 2) {
+                        let indices = [];
+                        while(indices.length < 2) {
+                            let idx = Math.floor(Math.random() * verb.compatibleAdverbials.length);
+                            if (!indices.includes(idx)) indices.push(idx);
                         }
+                        adverbial1 = verb.compatibleAdverbials[indices[0]];
+                        adverbial2 = verb.compatibleAdverbials[indices[1]];
+                    } else {
+                        adverbial1 = adverbial2 = verb.compatibleAdverbials[0];
                     }
+                    return {
+                        text: `${s} ${verb.text} ${i} ${d} ${adverbial1} ${adverbial2}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [adverbial1]: 'adverbial', [adverbial2]: 'adverbial' }
+                    };
+                };
+                // For vanskelige setninger: minst en gang hver sjette setning skal være utvidet
+                if (vanskeligCounter % 6 === 0) {
+                    sentence = extendedStructure();
+                } else {
+                    sentence = standardStructures[Math.floor(Math.random() * standardStructures.length)]();
                 }
-                // Vurder variasjonsregler
-                variationOK = true;
-                if (lastSentence) {
-                    let newWords = Object.keys(sentence.correct);
-                    let oldWords = Object.keys(lastSentence.correct);
-                    let common = newWords.filter(word => oldWords.includes(word)).length;
-                    let diff = newWords.length - common;
-                    if (newWords.length === 3 && diff < 2) variationOK = false;
-                    if (newWords.length >= 4 && diff < 3) variationOK = false;
+                // Spørsmålsformatering i vanskelig modus: sørg for at en utvidet setning (eller med 30% sjanse) blir spørsmål
+                if (Math.random() < 0.3 || (vanskeligCounter % 6 === 0)) {
+                    sentence.text = sentence.text.slice(0, -1) + '?';
                 }
-            } while ((sentence.text === lastSentence?.text || !isSentenceValid(sentence)) || !variationOK);
+                vanskeligCounter++;
+            }
+            let variationOK = true;
+            if (lastSentence) {
+                let newWords = Object.keys(sentence.correct);
+                let oldWords = Object.keys(lastSentence.correct);
+                let common = newWords.filter(word => oldWords.includes(word)).length;
+                let diff = newWords.length - common;
+                if (newWords.length === 3 && diff < 2) variationOK = false;
+                if (newWords.length >= 4 && diff < 3) variationOK = false;
+            }
+            if (sentence.text === lastSentence?.text || !isSentenceValid(sentence) || !variationOK) {
+                return generateSentence();
+            }
             return sentence;
         }
 
@@ -474,32 +493,34 @@
         }
 
         function playConfettiAnimation() {
-            const rect = sentenceEl.getBoundingClientRect();
-            const text = sentenceEl.textContent;
-            sentenceEl.innerHTML = '';
-            for (const char of text) {
-                if (char === ' ') continue;
-                // Generer 10 konfettibiter per bokstav for mye mer konfetti
-                for (let i = 0; i < 25; i++) {
-                    const confetti = document.createElement('span');
-                    confetti.classList.add('confetti');
-                    confetti.textContent = char;
-                    const x = Math.random() * rect.width;
-                    const y = Math.random() * rect.height;
-                    confetti.style.left = `${rect.left + x}px`;
-                    confetti.style.top = `${rect.top + y}px`;
-                    const dx = (Math.random() - 0.5) * 600; // økt spredningsområde
-                    const dy = (Math.random() - 0.5) * 600;
-                    confetti.style.setProperty('--dx', `${dx}px`);
-                    confetti.style.setProperty('--dy', `${dy}px`);
-                    const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
-                    confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-                    document.body.appendChild(confetti);
-                    setTimeout(() => confetti.remove(), 1000);
+            // Legg til forsinkelse på 0,8 sekunder før konfettien spretter frem
+            setTimeout(() => {
+                const rect = sentenceEl.getBoundingClientRect();
+                const text = sentenceEl.textContent;
+                sentenceEl.innerHTML = '';
+                for (const char of text) {
+                    if (char === ' ') continue;
+                    // Generer 25 konfettibiter per bokstav
+                    for (let i = 0; i < 25; i++) {
+                        const confetti = document.createElement('span');
+                        confetti.classList.add('confetti');
+                        confetti.textContent = char;
+                        const x = Math.random() * rect.width;
+                        const y = Math.random() * rect.height;
+                        confetti.style.left = `${rect.left + x}px`;
+                        confetti.style.top = `${rect.top + y}px`;
+                        const dx = (Math.random() - 0.5) * 600;
+                        const dy = (Math.random() - 0.5) * 600;
+                        confetti.style.setProperty('--dx', `${dx}px`);
+                        confetti.style.setProperty('--dy', `${dy}px`);
+                        const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
+                        confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+                        document.body.appendChild(confetti);
+                        setTimeout(() => confetti.remove(), 1000);
+                    }
                 }
-            }
-            // Last neste setning etter animasjonen
-            setTimeout(loadSentence, 1100);
+                setTimeout(loadSentence, 1100);
+            }, 800);
         }
 
         // Dark/light mode toggle

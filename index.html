@@ -310,7 +310,7 @@
                         };
                     }
                 ];
-                // Definer utvidet struktur med ALLE ledd (to adverbial)
+                // Endret extendedStructure-funksjon i vanskelig modus:
                 const extendedStructure = () => {
                     const verbCandidates = verbs.filter(v => v.requiresIndirect);
                     const verb = verbCandidates[Math.floor(Math.random() * verbCandidates.length)];
@@ -318,7 +318,7 @@
                     const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
                     const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
                     let adverbial1, adverbial2;
-                    if (verb.compatibleAdverbials && verb.compatibleAdverbials.length >= 2) {
+                    if (verb.compatibleAdverbials && Array.isArray(verb.compatibleAdverbials) && verb.compatibleAdverbials.length >= 2) {
                         let indices = [];
                         while(indices.length < 2) {
                             let idx = Math.floor(Math.random() * verb.compatibleAdverbials.length);
@@ -327,7 +327,14 @@
                         adverbial1 = verb.compatibleAdverbials[indices[0]];
                         adverbial2 = verb.compatibleAdverbials[indices[1]];
                     } else {
-                        adverbial1 = adverbial2 = verb.compatibleAdverbials[0];
+                        // Fallback: plukk to forskjellige adverbialer fra den globale adverbials-listen
+                        let chosen = [];
+                        while(chosen.length < 2) {
+                            let candidate = adverbials[Math.floor(Math.random() * adverbials.length)];
+                            if (!chosen.includes(candidate)) chosen.push(candidate);
+                        }
+                        adverbial1 = chosen[0];
+                        adverbial2 = chosen[1];
                     }
                     return {
                         text: `${s} ${verb.text} ${i} ${d} ${adverbial1} ${adverbial2}.`,

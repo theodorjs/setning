@@ -221,7 +221,7 @@
 
         function generateSentence() {
             let sentence;
-            if(difficulty === "Enkel"){
+            if (difficulty === "Enkel") {
                 // To mønstre med 3 setningsledd
                 const structures = [
                     // Subjekt + Verbal (intransitiv) + Adverbial
@@ -247,7 +247,7 @@
                     }
                 ];
                 sentence = structures[Math.floor(Math.random() * structures.length)]();
-            } else if(difficulty === "Middels"){
+            } else if (difficulty === "Middels") {
                 // Dagens mønstre (3 mønstre)
                 const structures = [
                     // Subjekt + Verbal (intransitiv) + Adverbial
@@ -285,82 +285,94 @@
                     }
                 ];
                 sentence = structures[Math.floor(Math.random() * structures.length)]();
-            } else if(difficulty === "Vanskelig"){
-                // Definer to standard vanskelige strukturer:
-                const standardStructures = [
-                    () => {
-                        const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
-                        const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
-                        const s = subjects[Math.floor(Math.random() * subjects.length)];
-                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                        const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
-                        return {
-                            text: `${s} ${verb.text} ${d} ${a}.`,
-                            correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
-                        };
-                    },
-                    () => {
-                        const verb = verbs.filter(v => v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
-                        const s = subjects[Math.floor(Math.random() * subjects.length)];
-                        const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
-                        const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                        return {
-                            text: `${s} ${verb.text} ${i} ${d}.`,
-                            correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object' }
-                        };
-                    }
-                ];
-                // Endret extendedStructure-funksjon i vanskelig modus:
-                const extendedStructure = () => {
-                    const verbCandidates = verbs.filter(v => v.requiresIndirect);
-                    const verb = verbCandidates[Math.floor(Math.random() * verbCandidates.length)];
+            } else if (difficulty === "Vanskelig") {
+                // Nye mønstre med 4, 5 eller 6 setningsledd:
+                const pattern4 = () => {
+                    // 4-ledd: subjekt, verb, direkte objekt, adverbial
                     const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const verb = verbs.filter(v => v.transitive && !v.requiresIndirect)
+                        [Math.floor(Math.random() * verbs.filter(v => v.transitive && !v.requiresIndirect).length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
+                    return {
+                        text: `${s} ${verb.text} ${d} ${a}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
+                    };
+                };
+
+                const pattern5 = () => {
+                    // 5-ledd: subjekt, verb, indirekte objekt, direkte objekt, adverbial
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const verb = verbs.filter(v => v.requiresIndirect)
+                        [Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
                     const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
                     const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                    let adverbial1, adverbial2;
+                    // Bruk verbets adverbials om tilgjengelig, ellers global liste
+                    const a = (verb.compatibleAdverbials && verb.compatibleAdverbials.length > 0) ?
+                        verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)]
+                        : adverbials[Math.floor(Math.random() * adverbials.length)];
+                    return {
+                        text: `${s} ${verb.text} ${i} ${d} ${a}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [a]: 'adverbial' }
+                    };
+                };
+
+                const pattern6 = () => {
+                    // 6-ledd: subjekt, verb, indirekte objekt, direkte objekt, adverbial, adverbial
+                    const s = subjects[Math.floor(Math.random() * subjects.length)];
+                    const verb = verbs.filter(v => v.requiresIndirect)
+                        [Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
+                    const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                    const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                    let a1, a2;
                     if (verb.compatibleAdverbials && Array.isArray(verb.compatibleAdverbials) && verb.compatibleAdverbials.length >= 2) {
                         let indices = [];
-                        while(indices.length < 2) {
+                        while (indices.length < 2) {
                             let idx = Math.floor(Math.random() * verb.compatibleAdverbials.length);
                             if (!indices.includes(idx)) indices.push(idx);
                         }
-                        adverbial1 = verb.compatibleAdverbials[indices[0]];
-                        adverbial2 = verb.compatibleAdverbials[indices[1]];
+                        a1 = verb.compatibleAdverbials[indices[0]];
+                        a2 = verb.compatibleAdverbials[indices[1]];
                     } else {
-                        // Fallback: plukk to forskjellige adverbialer fra den globale adverbials-listen
                         let chosen = [];
-                        while(chosen.length < 2) {
+                        while (chosen.length < 2) {
                             let candidate = adverbials[Math.floor(Math.random() * adverbials.length)];
                             if (!chosen.includes(candidate)) chosen.push(candidate);
                         }
-                        adverbial1 = chosen[0];
-                        adverbial2 = chosen[1];
+                        a1 = chosen[0];
+                        a2 = chosen[1];
                     }
                     return {
-                        text: `${s} ${verb.text} ${i} ${d} ${adverbial1} ${adverbial2}.`,
-                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [adverbial1]: 'adverbial', [adverbial2]: 'adverbial' }
+                        text: `${s} ${verb.text} ${i} ${d} ${a1} ${a2}.`,
+                        correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [a1]: 'adverbial', [a2]: 'adverbial' }
                     };
                 };
-                // For vanskelige setninger: minst en gang hver sjette setning skal være utvidet
-                if (vanskeligCounter % 6 === 0) {
-                    sentence = extendedStructure();
-                } else {
-                    sentence = standardStructures[Math.floor(Math.random() * standardStructures.length)]();
+
+                // Velg et mønster tilfeldig blant de tre
+                const patterns = [pattern4, pattern5, pattern6];
+                let baseSentence = patterns[Math.floor(Math.random() * patterns.length)]();
+
+                // Spørsmålsformatering (med ca. 30 % sjanse)
+                if (Math.random() < 0.3) {
+                    // For 4-ledd kan vi i tillegg bruke spørsmålsinversjon (verb, subjekt, direkte objekt, adverbial)
+                    const parts = baseSentence.text.slice(0, -1).split(' ');
+                    if (parts.length === 4 && Math.random() < 0.5) {
+                        baseSentence.text = `${parts[1]} ${parts[0]} ${parts[2]} ${parts[3]}?`;
+                    } else {
+                        baseSentence.text = baseSentence.text.slice(0, -1) + '?';
+                    }
                 }
-                // Spørsmålsformatering i vanskelig modus: sørg for at en utvidet setning (eller med 30% sjanse) blir spørsmål
-                if (Math.random() < 0.3 || (vanskeligCounter % 6 === 0)) {
-                    sentence.text = sentence.text.slice(0, -1) + '?';
-                }
-                vanskeligCounter++;
+                sentence = baseSentence;
             }
+            // ...existing variasjonslogikk...
             let variationOK = true;
             if (lastSentence) {
                 let newWords = Object.keys(sentence.correct);
                 let oldWords = Object.keys(lastSentence.correct);
                 let common = newWords.filter(word => oldWords.includes(word)).length;
                 let diff = newWords.length - common;
-                if (newWords.length === 3 && diff < 2) variationOK = false;
-                if (newWords.length >= 4 && diff < 3) variationOK = false;
+                if (newWords.length === 4 && diff < 2) variationOK = false;
+                if (newWords.length >= 5 && diff < 3) variationOK = false;
             }
             if (sentence.text === lastSentence?.text || !isSentenceValid(sentence) || !variationOK) {
                 return generateSentence();

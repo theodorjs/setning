@@ -262,6 +262,11 @@
             const mannerAdverbials = ['raskt', 'stille', 'fort', 'sakte', 'nøyaktig', 'rolig', 'høyt', 'lavt', 'pent', 'stygt', 'klønete', 'forsiktig']; // Adverbialer som beskriver måte
             const placeAdverbials = ['i parken', 'i klasserommet', 'hjemme', 'på skolen', 'på kjøpesenteret', 'i hagen', 'i bilen', 'under bordet', 'i byen', 'ved vannet', 'ute', 'inne', 'på ferie']; // Adverbialer som beskriver sted
             const timeAdverbials = ['i dag', 'i morgen', 'i går']; // Adverbialer som beskriver tid
+            const conflictingAdverbials = [
+                ['pent', 'stygt'],
+                ['høyt', 'lavt'],
+                ['rolig', 'klønete']
+            ]; // Liste over motstridende måtesadverb
 
             // Flytt måtesadverb foran stedsadverb og tidsadverb
             for (let i = 0; i < words.length - 1; i++) {
@@ -275,6 +280,24 @@
                 if (mannerAdverbials.includes(words[i]) && mannerAdverbials.includes(words[i + 1])) {
                     words[i] = `${words[i]} og`; // Legg til "og" etter det første adverbialet
                 }
+            }
+
+            // Fjern påfølgende stedsadverb
+            for (let i = 0; i < words.length - 1; i++) {
+                if (placeAdverbials.includes(words[i]) && placeAdverbials.includes(words[i + 1])) {
+                    words.splice(i + 1, 1); // Fjern det andre stedsadverbialet
+                    i--; // Juster indeksen for å fortsette sjekken
+                }
+            }
+
+            // Fjern motstridende måtesadverb
+            for (let i = 0; i < words.length - 1; i++) {
+                conflictingAdverbials.forEach(pair => {
+                    if (pair.includes(words[i]) && pair.includes(words[i + 1])) {
+                        words.splice(i + 1, 1); // Fjern det andre adverbialet i paret
+                        i--; // Juster indeksen for å fortsette sjekken
+                    }
+                });
             }
 
             sentence.text = words.join(' ');

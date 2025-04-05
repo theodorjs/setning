@@ -419,31 +419,49 @@
                 let isDragging = false; // Sporer om brukeren drar boksen
                 let dragStartX, dragStartY; // Startposisjon for dra-bevegelse
 
-                // Start dra-operasjon
+                // Start dra-operasjon for mus (PC)
                 box.addEventListener('mousedown', (e) => {
                     isDragging = false;
                     dragStartX = e.clientX;
                     dragStartY = e.clientY;
                 });
 
-                // Sjekk om det er en dra-bevegelse
-                box.addEventListener('mousemove', (e) => {
-                    const deltaX = Math.abs(e.clientX - dragStartX);
-                    const deltaY = Math.abs(e.clientY - dragStartY);
-
-                    // Hvis brukeren beveger musen mer enn 5px, tolkes det som dra
-                    if (deltaX > 5 || deltaY > 5) {
-                        isDragging = true;
-                    }
+                // Start dra-operasjon for berøring (iPad)
+                box.addEventListener('touchstart', (e) => {
+                    isDragging = false;
+                    const touch = e.touches[0];
+                    dragStartX = touch.clientX;
+                    dragStartY = touch.clientY;
                 });
 
-                // Håndter klikk eller dra
-                box.addEventListener('mouseup', () => {
+                // Sjekk om det er en dra-bevegelse (mus eller berøring)
+                const handleMove = (e) => {
+                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+
+                    const deltaX = Math.abs(clientX - dragStartX);
+                    const deltaY = Math.abs(clientY - dragStartY);
+
+                    // Hvis brukeren beveger mer enn 5px, tolkes det som dra
+                    if (deltaX > 5 || deltaY > 5) {
+                        isDragging = true;
+                        box.dispatchEvent(new DragEvent('dragstart', { dataTransfer: new DataTransfer() }));
+                    }
+                };
+
+                // Håndter klikk eller dra (mus eller berøring)
+                const handleEnd = () => {
                     if (!isDragging) {
                         // Hvis det ikke var en dra-bevegelse, vis popup
                         showPopup(funcData);
                     }
-                });
+                };
+
+                // Legg til hendelser for mus og berøring
+                box.addEventListener('mousemove', handleMove);
+                box.addEventListener('touchmove', handleMove);
+                box.addEventListener('mouseup', handleEnd);
+                box.addEventListener('touchend', handleEnd);
 
                 // Dra-hendelse
                 box.addEventListener('dragstart', (e) => {

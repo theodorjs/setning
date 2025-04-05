@@ -203,7 +203,12 @@
         ];
 
         // Ord og kompatibilitetsregler
-        const subjects = ['Barna', 'Hunden', 'Jeg', 'Læreren', 'Katten', 'Elevene'];
+        const subjects = [
+            'Barna', 'Hunden', 'Jeg', 'Læreren', 'Katten', 'Elevene', 
+            'Bestemor', 'Postmannen', 'Vi', 'Gutten', 'Guttene', 
+            'Jenta', 'Jentene', 'De', 'Moren', 'Faren'
+        ];
+
         const verbs = [
             { text: 'løper', transitive: false, compatibleAdverbials: ['raskt', 'ute', 'i dag', 'i parken'] },
             { text: 'leser', transitive: true, compatibleObjects: ['bøker', 'brev'], compatibleAdverbials: ['stille', 'i klasserommet'] },
@@ -212,9 +217,25 @@
             { text: 'leker', transitive: false, compatibleAdverbials: ['ute', 'i parken', 'i snøen'] },
             { text: 'skriver', transitive: true, compatibleObjects: ['brev'], compatibleAdverbials: ['stille', 'i klasserommet'] }
         ];
-        const adverbials = ['raskt', 'ute', 'i dag', 'hjemme', 'stille', 'i klasserommet', 'i parken', 'i snøen'];
-        const directObjects = ['ballen', 'bøker', 'mat', 'brev', 'frokost', 'blomster'];
-        const indirectObjects = ['meg', 'henne', 'ham', 'oss'];
+
+        const adverbials = [
+            'raskt', 'stille', 'ute', 'i dag', 'hjemme', 'i klasserommet', 
+            'i parken', 'i snøen', 'fort', 'sakte', 'nøyaktig', 'rolig', 
+            'høyt', 'lavt', 'pent', 'stygt', 'klønete', 'forsiktig', 
+            'på skolen', 'på kjøpesenteret', 'i hagen', 'i bilen', 
+            'under bordet', 'i byen', 'ved vannet', 'ute', 'inne', 'på ferie'
+        ];
+
+        const directObjects = [
+            'ballen', 'bøker', 'mat', 'brev', 'frokost', 'blomster', 
+            'gaven', 'jakka', 'filmen', 'blyanten', 'skoene', 
+            'telefonen', 'sekken', 'vannflaska', 'sangen', 'nøklene'
+        ];
+
+        const indirectObjects = [
+            'meg', 'henne', 'ham', 'oss', 'dem', 'deg', 'dere', 
+            'læreren', 'vennen', 'moren', 'faren'
+        ];
 
         // Oppdater vanskelighetsknapper
         difficultyButtons.forEach(btn => {
@@ -238,8 +259,8 @@
         // Grammatikksjekker for å justere setninger
         function adjustSentence(sentence) {
             const words = sentence.text.split(' ');
-            const mannerAdverbials = ['raskt', 'stille']; // Adverbialer som beskriver måte
-            const placeAdverbials = ['i parken', 'i klasserommet', 'hjemme']; // Adverbialer som beskriver sted
+            const mannerAdverbials = ['raskt', 'stille', 'fort', 'sakte', 'nøyaktig', 'rolig', 'høyt', 'lavt', 'pent', 'stygt', 'klønete', 'forsiktig']; // Adverbialer som beskriver måte
+            const placeAdverbials = ['i parken', 'i klasserommet', 'hjemme', 'på skolen', 'på kjøpesenteret', 'i hagen', 'i bilen', 'under bordet', 'i byen', 'ved vannet', 'ute', 'inne', 'på ferie']; // Adverbialer som beskriver sted
             const timeAdverbials = ['i dag', 'i morgen', 'i går']; // Adverbialer som beskriver tid
 
             // Flytt måtesadverb foran stedsadverb og tidsadverb
@@ -249,14 +270,11 @@
                 }
             }
 
-            // Legg til "og" mellom to måtesadverb
-            let i = 0;
-            while (i < words.length - 1) {
+            // Legg til "og" mellom alle påfølgende måtesadverb
+            for (let i = 0; i < words.length - 1; i++) {
                 if (mannerAdverbials.includes(words[i]) && mannerAdverbials.includes(words[i + 1])) {
                     words[i] = `${words[i]} og`; // Legg til "og" etter det første adverbialet
-                    i++; // Hopp over det neste ordet siden det allerede er behandlet
                 }
-                i++;
             }
 
             sentence.text = words.join(' ');

@@ -445,76 +445,104 @@
         let currentSentence = null;
 
         function createBoxes() {
-            boxesEl.innerHTML = '';
-            functions.forEach(funcData => {
-                const box = document.createElement('div');
-                box.classList.add('box', funcData.color);
-                box.textContent = funcData.name;
-                box.dataset.function = funcData.name;
-                box.setAttribute('draggable', 'true');
+    boxesEl.innerHTML = '';
+    functions.forEach(funcData => {
+        const box = document.createElement('div');
+        box.classList.add('box', funcData.color);
+        box.textContent = funcData.name;
+        box.dataset.function = funcData.name;
+        box.setAttribute('draggable', 'true');
 
-                let isDragging = false;
-                let dragStartX, dragStartY;
+        let isDragging = false;
+        let dragStartX, dragStartY;
 
-                // Desktop: Klikk for popup, dra for drag
-                box.addEventListener('mousedown', (e) => {
-                    isDragging = false;
-                    dragStartX = e.clientX;
-                    dragStartY = e.clientY;
-                });
+        // Desktop: Klikk for popup, dra for drag
+        box.addEventListener('mousedown', (e) => {
+            isDragging = false;
+            dragStartX = e.clientX;
+            dragStartY = e.clientY;
+        });
 
-                box.addEventListener('mousemove', (e) => {
-                    const deltaX = Math.abs(e.clientX - dragStartX);
-                    const deltaY = Math.abs(e.clientY - dragStartY);
-                    if (deltaX > 5 || deltaY > 5) {
-                        isDragging = true;
-                    }
-                });
+        box.addEventListener('mousemove', (e) => {
+            const deltaX = Math.abs(e.clientX - dragStartX);
+            const deltaY = Math.abs(e.clientY - dragStartY);
+            if (deltaX > 5 || deltaY > 5) {
+                isDragging = true;
+            }
+        });
 
-                box.addEventListener('mouseup', () => {
-                    if (!isDragging) {
-                        showPopup(funcData);
-                    }
-                });
+        box.addEventListener('mouseup', () => {
+            if (!isDragging) {
+                showPopup(funcData);
+            }
+        });
 
-                box.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text', funcData.name);
-                });
+        box.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text', funcData.name);
+        });
 
-                // iPad: Touch for både popup og dra
-                box.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    isDragging = false;
-                    const touch = e.touches[0];
-                    dragStartX = touch.clientX;
-                    dragStartY = touch.clientY;
-                });
+        // iPad: Touch-håndtering for både popup og dra-og-slipp
+        box.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            isDragging = false;
+            const touch = e.touches[0];
+            dragStartX = touch.clientX;
+            dragStartY = touch.clientY;
+        });
 
-                box.addEventListener('touchmove', (e) => {
-                    const touch = e.touches[0];
-                    const deltaX = Math.abs(touch.clientX - dragStartX);
-                    const deltaY = Math.abs(touch.clientY - dragStartY);
-                    if (deltaX > 5 || deltaY > 5) {
-                        isDragging = true;
-                        const dragEvent = new DragEvent('dragstart', {
-                            dataTransfer: new DataTransfer(),
-                            clientX: touch.clientX,
-                            clientY: touch.clientY
-                        });
-                        dragEvent.dataTransfer.setData('text', funcData.name);
-                        box.dispatchEvent(dragEvent);
-                    }
-                });
+        box.addEventListener('touchmove', (e) => {
+            const touch = e.touches[0];
+            const deltaX = Math.abs(touch.clientX - dragStartX);
+            const deltaY = Math.abs(touch.clientY - dragStartY);
+            if (deltaX > 5 || deltaY > 5) {
+                if (!isDragging) {
+                    isDragging = true;
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text', funcData.name);
+                    const dragEvent = new DragEvent('dragstart', {
+                        dataTransfer: dataTransfer,
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    box.dispatchEvent(dragEvent);
 
-                box.addEventListener('touchend', (e) => {
-                    if (!isDragging) {
-                        showPopup(funcData);
-                    }
-                });
+                    // Manuell posisjonsoppdatering for å vise boksen under dragging
+                    box.style.position = 'absolute';
+                    box.style.zIndex = '1000';
+                }
+                box.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
+                box.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
+            }
+        });
 
-                boxesEl.appendChild(box);
-            });
-        }
+        box.addEventListener('touchend', (e) => {
+            if (!isDragging) {
+                showPopup(funcData);
+            } else {
+                // Simuler drop ved å finne målelementet under fingeren
+                const touch = e.changedTouches[0];
+                const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+                if (dropTarget && dropTarget.classList.contains('word')) {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text', funcData.name);
+                    const dropEvent = new DragEvent('drop', {
+                        dataTransfer: dataTransfer,
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    dropTarget.dispatchEvent(dropEvent);
+                }
+                // Tilbakestill posisjon
+                box.style.position = '';
+                box.style.left = '';
+                box.style.top = '';
+                box.style.zIndex = '';
+            }
+        });
+
+        boxesEl.appendChild(box);
+    });
+}
 
         function showPopup(funcData) {
             if (popupEl.style.display === 'block' && currentPopupFunc === funcData.color) {

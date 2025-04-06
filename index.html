@@ -59,6 +59,7 @@
             cursor: grab;
             user-select: none;
             margin: 10px;
+            touch-action: none; /* Forbedrer touch-respons på iPad */
         }
         #boxes {
             display: flex;
@@ -452,26 +453,41 @@
                 box.dataset.function = funcData.name;
                 box.setAttribute('draggable', 'true');
 
-                box.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    showPopup(funcData);
+                let isDragging = false;
+
+                // Desktop: Klikk for popup, dra for drag
+                box.addEventListener('mousedown', () => {
+                    isDragging = false;
+                });
+
+                box.addEventListener('mousemove', () => {
+                    isDragging = true;
+                });
+
+                box.addEventListener('mouseup', () => {
+                    if (!isDragging) {
+                        showPopup(funcData);
+                    }
                 });
 
                 box.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text', funcData.name);
                 });
 
+                // iPad: Touch for både popup og dra
                 box.addEventListener('touchstart', (e) => {
                     e.preventDefault();
-                    const touch = e.touches[0];
-                    const dragEvent = new DragEvent('dragstart', {
-                        dataTransfer: new DataTransfer(),
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
-                    });
-                    e.dataTransfer = dragEvent.dataTransfer;
-                    e.dataTransfer.setData('text', funcData.name);
-                    box.dispatchEvent(dragEvent);
+                    isDragging = false;
+                });
+
+                box.addEventListener('touchmove', () => {
+                    isDragging = true;
+                });
+
+                box.addEventListener('touchend', (e) => {
+                    if (!isDragging) {
+                        showPopup(funcData);
+                    }
                 });
 
                 boxesEl.appendChild(box);
@@ -547,7 +563,6 @@
                     span.addEventListener('drop', dropOmorganiser);
                     sentenceEl.appendChild(span);
                 });
-                // Sjekk om setningen allerede er korrekt ved lasting
                 const spans = Array.from(sentenceEl.querySelectorAll('span'));
                 const currentOrder = spans.map(span => span.dataset.word);
                 if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
@@ -565,7 +580,7 @@
         function dragStartOmorganiser(e) {
             draggedSpan = e.target;
             e.dataTransfer.setData('text', draggedSpan.dataset.word);
-            e.dataTransfer.setDragImage(draggedSpan, 0, 0); // Bruk selve elementet som drag-bilde
+            e.dataTransfer.setDragImage(draggedSpan, 0, 0);
             setTimeout(() => {
                 draggedSpan.style.display = 'none';
             }, 0);

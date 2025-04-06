@@ -456,7 +456,6 @@
         let isDragging = false;
         let dragStartX, dragStartY;
 
-        // Desktop: Klikk for popup, dra for drag
         box.addEventListener('mousedown', (e) => {
             isDragging = false;
             dragStartX = e.clientX;
@@ -481,7 +480,6 @@
             e.dataTransfer.setData('text', funcData.name);
         });
 
-        // iPad: Touch-håndtering for både popup og dra-og-slipp
         box.addEventListener('touchstart', (e) => {
             e.preventDefault();
             isDragging = false;
@@ -495,48 +493,16 @@
             const deltaX = Math.abs(touch.clientX - dragStartX);
             const deltaY = Math.abs(touch.clientY - dragStartY);
             if (deltaX > 5 || deltaY > 5) {
-                if (!isDragging) {
-                    isDragging = true;
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.setData('text', funcData.name);
-                    const dragEvent = new DragEvent('dragstart', {
-                        dataTransfer: dataTransfer,
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
-                    });
-                    box.dispatchEvent(dragEvent);
-
-                    // Manuell posisjonsoppdatering for å vise boksen under dragging
-                    box.style.position = 'absolute';
-                    box.style.zIndex = '1000';
-                }
-                box.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
-                box.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
+                isDragging = true;
+                box.dispatchEvent(new DragEvent('dragstart', { 
+                    dataTransfer: new DataTransfer() 
+                }));
             }
         });
 
         box.addEventListener('touchend', (e) => {
             if (!isDragging) {
                 showPopup(funcData);
-            } else {
-                // Simuler drop ved å finne målelementet under fingeren
-                const touch = e.changedTouches[0];
-                const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
-                if (dropTarget && dropTarget.classList.contains('word')) {
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.setData('text', funcData.name);
-                    const dropEvent = new DragEvent('drop', {
-                        dataTransfer: dataTransfer,
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
-                    });
-                    dropTarget.dispatchEvent(dropEvent);
-                }
-                // Tilbakestill posisjon
-                box.style.position = '';
-                box.style.left = '';
-                box.style.top = '';
-                box.style.zIndex = '';
             }
         });
 

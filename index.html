@@ -454,14 +454,21 @@
                 box.setAttribute('draggable', 'true');
 
                 let isDragging = false;
+                let dragStartX, dragStartY;
 
                 // Desktop: Klikk for popup, dra for drag
-                box.addEventListener('mousedown', () => {
+                box.addEventListener('mousedown', (e) => {
                     isDragging = false;
+                    dragStartX = e.clientX;
+                    dragStartY = e.clientY;
                 });
 
-                box.addEventListener('mousemove', () => {
-                    isDragging = true;
+                box.addEventListener('mousemove', (e) => {
+                    const deltaX = Math.abs(e.clientX - dragStartX);
+                    const deltaY = Math.abs(e.clientY - dragStartY);
+                    if (deltaX > 5 || deltaY > 5) {
+                        isDragging = true;
+                    }
                 });
 
                 box.addEventListener('mouseup', () => {
@@ -478,10 +485,25 @@
                 box.addEventListener('touchstart', (e) => {
                     e.preventDefault();
                     isDragging = false;
+                    const touch = e.touches[0];
+                    dragStartX = touch.clientX;
+                    dragStartY = touch.clientY;
                 });
 
-                box.addEventListener('touchmove', () => {
-                    isDragging = true;
+                box.addEventListener('touchmove', (e) => {
+                    const touch = e.touches[0];
+                    const deltaX = Math.abs(touch.clientX - dragStartX);
+                    const deltaY = Math.abs(touch.clientY - dragStartY);
+                    if (deltaX > 5 || deltaY > 5) {
+                        isDragging = true;
+                        const dragEvent = new DragEvent('dragstart', {
+                            dataTransfer: new DataTransfer(),
+                            clientX: touch.clientX,
+                            clientY: touch.clientY
+                        });
+                        dragEvent.dataTransfer.setData('text', funcData.name);
+                        box.dispatchEvent(dragEvent);
+                    }
                 });
 
                 box.addEventListener('touchend', (e) => {

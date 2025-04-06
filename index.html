@@ -29,16 +29,24 @@
             transform: translateY(-50%);
             width: 80%;
             box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
         }
         .word {
             display: inline-block;
             margin: 0 5px;
             padding: 2px 6px;
+            cursor: grab;
+            transition: all 0.3s ease;
         }
-        .word.correct {
-            color: white;
-            border-radius: 5px;
-        }
+        .word.correct, .word.subject { background-color: #e74c3c; color: white; border-radius: 5px; }
+        .word.verb { background-color: #2ecc71; color: white; border-radius: 5px; }
+        .word.adverbial, .word.manner, .word.place { background-color: #f39c12; color: white; border-radius: 5px; }
+        .word.direct-object { background-color: #3498db; color: white; border-radius: 5px; }
+        .word.indirect-object { background-color: #9b59b6; color: white; border-radius: 5px; }
+        .word.conjunction { background-color: #ccc; color: black; border-radius: 5px; }
         .box {
             width: 120px;
             height: 50px;
@@ -93,34 +101,13 @@
             cursor: pointer;
             z-index: 20;
         }
-        body.dark-mode {
-            background-color: #121212;
-            color: #f0f0f0;
-        }
-        body.dark-mode #sentence {
-            background-color: #333;
-            color: #f0f0f0;
-        }
-        body.dark-mode .box {
-            opacity: 0.8;
-        }
-        body.dark-mode #modeToggle {
-            background-color: #444;
-            color: #fff;
-        }
-        body.dark-mode #popup {
-            background-color: #333;
-            color: #f0f0f0;
-            border-color: #fff;
-        }
-        body.dark-mode #difficulty-buttons button {
-            background-color: #444;
-            color: #fff;
-        }
-        body.dark-mode #difficulty-buttons button.active {
-            background-color: #3498db;
-            color: #fff;
-        }
+        body.dark-mode { background-color: #121212; color: #f0f0f0; }
+        body.dark-mode #sentence { background-color: #333; color: #f0f0f0; }
+        body.dark-mode .box { opacity: 0.8; }
+        body.dark-mode #modeToggle { background-color: #444; color: #fff; }
+        body.dark-mode #popup { background-color: #333; color: #f0f0f0; border-color: #fff; }
+        body.dark-mode #difficulty-buttons button { background-color: #444; color: #fff; }
+        body.dark-mode #difficulty-buttons button.active { background-color: #3498db; color: #fff; }
         @keyframes explode {
             0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
             100% { transform: translate(var(--dx), var(--dy)) rotate(720deg); opacity: 0; }
@@ -131,7 +118,6 @@
             pointer-events: none;
             animation: explode 1s forwards ease-out;
         }
-        /* Ny CSS for vanskelighetsknapper */
         #difficulty-buttons {
             position: fixed;
             left: 20px;
@@ -153,21 +139,16 @@
             color: #fff;
         }
         @media only screen and (max-width: 600px) {
-            #score {
-                top: 70px; /* posisjonert under dark mode-knappen */
-                right: auto;
-                left: 50%;
-                transform: translateX(-50%);
-            }
+            #score { top: 70px; right: auto; left: 50%; transform: translateX(-50%); }
         }
     </style>
 </head>
 <body>
-    <!-- Vanskelighetsknapper -->
     <div id="difficulty-buttons">
         <button data-difficulty="Enkel">Enkel</button>
         <button data-difficulty="Middels" class="active">Middels</button>
         <button data-difficulty="Vanskelig">Vanskelig</button>
+        <button data-difficulty="Omorganiser">Omorganiser</button>
     </div>
     <button id="modeToggle">Dark Mode</button>
     <div id="score">
@@ -188,10 +169,9 @@
         let points = 0;
         let streak = 0;
         let lastSentence = null;
-        let currentPopupFunc = null; // ny global variabel for å spore aktuell forklaring
-        let popupTimer = null;     // ny global variabel for tidsur
-        let difficulty = "Middels"; // ny global variabel
-        let vanskeligCounter = 1; // endret initialisering slik at vi starter på 1
+        let currentPopupFunc = null;
+        let popupTimer = null;
+        let difficulty = "Middels";
 
         const functions = [
             { name: 'Subjekt', color: 'subject', desc: 'Den som utfører handlingen i setningen.' },
@@ -201,327 +181,262 @@
             { name: 'Indirekte objekt', color: 'indirect-object', desc: 'Mottakeren av det direkte objektet.' }
         ];
 
-        // Ord og kompatibilitetsregler
         const subjects = [
-            'Barna', 'Hunden', 'Jeg', 'Læreren', 'Katten', 'Elevene', 
-            'Bestemor', 'Postmannen', 'Gutten', 'Guttene', 
-            'Jenta', 'Jentene', 'De', 'Moren', 'Faren' // Fjernet "Vi"
+            { text: 'Barna', preferredMannerAdverbials: ['raskt', 'stille'] },
+            { text: 'Postmannen', preferredMannerAdverbials: ['raskt', 'forsiktig'] },
+            { text: 'Jeg', preferredMannerAdverbials: ['rolig', 'nøyaktig'] },
+            { text: 'Læreren', preferredMannerAdverbials: ['nøyaktig', 'rolig'] },
+            { text: 'Katten', preferredMannerAdverbials: ['stille', 'raskt'] },
+            { text: 'Hunden', preferredMannerAdverbials: ['høyt', 'raskt'] }
         ];
 
-        const mannerAdverbials = [
-            'raskt', 'stille', 'fort', 'sakte', 'nøyaktig', 'rolig', 
-            'høyt', 'lavt', 'pent', 'stygt', 'klønete', 'forsiktig'
-        ];
-
-        const placeAdverbials = [
-            'hjemme', 'i snøen', 'på kjøpesenteret', 'i byen', 'ved vannet', 
-            'ute', 'inne', 'på ferie', 'i bilen', 'i parken', 'i klasserommet'
-        ];
-
-        const timeAdverbials = [
-            'i dag', 'i morgen', 'i går'
-        ];
-
-        // Oppdaterte verbaler med kategoriserte adverbialer
         const verbs = [
-            { 
-                text: 'løper', 
-                transitive: false, 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials, ...timeAdverbials] 
+            {
+                text: 'gir',
+                transitive: true,
+                requiresIndirect: true,
+                compatibleObjects: ['ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken'],
+                compatibleIndirect: ['meg', 'henne', 'ham', 'barna', 'læreren', 'deg'],
+                compatibleMannerAdverbials: ['raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig'],
+                compatiblePlaceAdverbials: ['hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen'],
+                compatibleTimeAdverbials: ['i dag', 'i morgen', 'i går', 'nå', 'snart']
             },
-            { 
-                text: 'leser', 
-                transitive: true, 
-                compatibleObjects: ['bøker', 'brev'], 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials, 'i bilen'] 
+            {
+                text: 'løper',
+                transitive: false,
+                compatibleMannerAdverbials: ['raskt', 'sakte', 'rolig', 'stille', 'klønete'],
+                compatiblePlaceAdverbials: ['i parken', 'hjemme', 'ute', 'på skolen', 'i skogen'],
+                compatibleTimeAdverbials: ['i dag', 'i går', 'nå']
             },
-            { 
-                text: 'gir', 
-                transitive: true, 
-                requiresIndirect: true, 
-                compatibleObjects: [
-                    'ballen', 'blomster', 'brev', 'bøker', 'mat', 'frokost', 
-                    'gaven', 'jakka', 'blyanten', 'skoene', 'telefonen', 
-                    'sekken', 'vannflaska', 'nøklene'
-                ], 
-                compatibleIndirect: ['meg', 'henne', 'ham', 'oss', 'dem', 'deg', 'dere'], 
-                compatibleAdverbials: [
-                    'raskt', 'hjemme', 'i dag', 'på skolen', 
-                    ...mannerAdverbials.filter(adverb => adverb !== 'nøyaktig') // Ekskluderer "nøyaktig"
-                ] 
-            },
-            { 
-                text: 'spiser', 
-                transitive: true, 
-                compatibleObjects: ['mat', 'frokost'], 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials, 'i bilen'] 
-            },
-            { 
-                text: 'leker', 
-                transitive: false, 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials, 'i bilen'] 
-            },
-            { 
-                text: 'skriver', 
-                transitive: true, 
-                compatibleObjects: ['brev'], 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials, 'i bilen'] 
-            },
-            { 
-                text: 'hopper', 
-                transitive: false, 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials] 
-            },
-            { 
-                text: 'roper', 
-                transitive: false, 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials, 'i bilen'] 
-            },
-            { 
-                text: 'danser', 
-                transitive: false, 
-                compatibleAdverbials: [...mannerAdverbials, ...placeAdverbials] 
+            {
+                text: 'roper',
+                transitive: false,
+                compatibleMannerAdverbials: ['høyt', 'lavt', 'klart', 'stille'],
+                compatiblePlaceAdverbials: ['i parken', 'på skolen', 'ute', 'hjemme'],
+                compatibleTimeAdverbials: ['i dag', 'i morgen', 'nå']
             }
         ];
 
-        const directObjects = [
-            'ballen', 'bøker', 'mat', 'brev', 'frokost', 'blomster', 
-            'gaven', 'jakka', 'filmen', 'blyanten', 'skoene', 
-            'telefonen', 'sekken', 'vannflaska', 'sangen', 'nøklene'
+        const conflictingAdverbials = [
+            ['raskt', 'sakte'],
+            ['høyt', 'lavt'],
+            ['rolig', 'klønete']
         ];
 
-        const indirectObjects = [
-            'meg', 'henne', 'ham', 'oss', 'dem', 'deg', 'dere', 
-            'læreren', 'vennen', 'moren', 'faren'
-        ];
-
-        // Oppdater vanskelighetsknapper
         difficultyButtons.forEach(btn => {
             btn.addEventListener('click', () => {
                 difficulty = btn.getAttribute('data-difficulty');
-                // Marker aktiv knapp
                 difficultyButtons.forEach(b => b.classList.remove('active'));
                 btn.classList.add('active');
                 loadSentence();
             });
         });
 
-        // Hjelpefunksjoner for kapitalisering:
+        function replaceUnderscores(str) {
+            return str.replace(/_/g, ' ');
+        }
+
         function capitalize(word) {
             return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
         }
-        function decapitalize(word) {
-            return word.charAt(0).toLowerCase() + word.slice(1);
+
+        function checkConflict(a1, a2) {
+            return conflictingAdverbials.some(pair => pair.includes(a1) && pair.includes(a2));
         }
 
-        // Grammatikksjekker for å justere setninger
-        function adjustSentence(sentence) {
-    let words = sentence.text.split(' ');
-    const mannerAdverbials = ['raskt', 'stille', 'fort', 'sakte', 'nøyaktig', 'rolig', 'høyt', 'lavt', 'pent', 'stygt', 'klønete', 'forsiktig'];
-    const placeAdverbials = ['hjemme', 'i snøen', 'på kjøpesenteret', 'i byen', 'ved vannet', 'ute', 'inne', 'på ferie', 'i bilen', 'i parken', 'i klasserommet'];
-    const timeAdverbials = ['i dag', 'i morgen', 'i går'];
-    const allowedPlaceCombinations = [['ved vannet', 'hjemme'], ['inne', 'i byen']];
-    const conflictingAdverbials = [['pent', 'stygt'], ['høyt', 'lavt'], ['rolig', 'klønete']];
-
-    // Flytt måtesadverb foran steds- og tidsadverb
-    let i = 0;
-    while (i < words.length - 1) {
-        if ((placeAdverbials.includes(words[i]) || timeAdverbials.includes(words[i])) && mannerAdverbials.includes(words[i + 1])) {
-            [words[i], words[i + 1]] = [words[i + 1], words[i]];
+        function dragOver(e) {
+            e.preventDefault();
         }
-        i++;
-    }
 
-    // Fjern påfølgende stedsadverb som ikke er tillatt
-    i = 0;
-    while (i < words.length - 1) {    
-        if (placeAdverbials.includes(words[i]) && placeAdverbials.includes(words[i + 1])) {
-            const combination = [words[i], words[i + 1]];
-            const isAllowed = allowedPlaceCombinations.some(pair => pair[0] === combination[0] && pair[1] === combination[1]);
-            if (!isAllowed) {
-                words.splice(i + 1, 1);
-            } else {
-                i++;
+        function drop(e) {
+            e.preventDefault();
+            const wordEl = e.target;
+            const func = e.dataTransfer.getData('text');
+            const correctFunc = currentSentence.correct[wordEl.dataset.word];
+            const funcData = functions.find(f => f.name === func);
+            if (correctFunc === funcData.color) {
+                wordEl.classList.add('correct', funcData.color);
+                wordEl.style.backgroundColor = getColor(funcData.color);
+                checkCompletion();
             }
-        } else {
-            i++;
         }
-    }
 
-    // Fjern påfølgende tidsadverb
-    i = 0;
-    while (i < words.length - 1) {
-        if (timeAdverbials.includes(words[i]) && timeAdverbials.includes(words[i + 1])) {
-            words.splice(i + 1, 1);
-        } else {
-            i++;
-        }
-    }
+        function generateSentence() {
+            let sentence;
 
-    // Fjern motstridende måtesadverb
-    i = 0;
-    while (i < words.length - 1) {
-        conflictingAdverbials.forEach(pair => {
-            if (pair.includes(words[i]) && pair.includes(words[i + 1])) {
-                words.splice(i + 1, 1);
-            }
-        });
-        i++;
-    }
-
-    // Legg til "og" mellom måtesadverb til slutt
-    words = addAndBetweenMannerAdverbials(words, mannerAdverbials);
-    sentence.text = words.join(' ');
-    return sentence;
-}
-
-        function addAndBetweenMannerAdverbials(words, mannerAdverbials) {
-        const result = [];
-        for (let i = 0; i < words.length; i++) {
-        result.push(words[i]);
-        // Sjekk om gjeldende ord og neste ord begge er måtesadverb
-        if (i < words.length - 1 && 
-            mannerAdverbials.includes(words[i]) && 
-            mannerAdverbials.includes(words[i + 1])) {
-            result.push('og');
-        }
-    }
-    return result;
-}
-
-function generateSentence() {
-    let sentence;
-    if (difficulty === "Enkel") {
-        const structures = [
-            () => {
-                const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
-                const s = subjects[Math.floor(Math.random() * subjects.length)];
-                const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
-                return {
+            if (difficulty === "Enkel") {
+                const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                sentence = {
+                    parts: [s, verb.text, a],
+                    interactiveParts: [s, verb.text, a],
                     text: `${s} ${verb.text} ${a}.`,
-                    correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' }
+                    correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' },
+                    verb: verb
                 };
-            },
-            () => {
-                const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
-                const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
-                const s = subjects[Math.floor(Math.random() * subjects.length)];
-                const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                return {
-                    text: `${s} ${verb.text} ${d}.`,
-                    correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object' }
+            } else if (difficulty === "Middels") {
+                const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
+                const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
+                const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                const parts = [s, verb.text, i, d, a].filter(part => part);
+                sentence = {
+                    parts: parts,
+                    interactiveParts: parts,
+                    text: `${s} ${verb.text} ${i} ${d} ${a}.`.replace(/\s+/g, ' ').trim(),
+                    correct: { 
+                        [s]: 'subject', 
+                        [verb.text]: 'verb', 
+                        ...(i && { [i]: 'indirect-object' }), 
+                        ...(d && { [d]: 'direct-object' }), 
+                        [a]: 'adverbial' 
+                    },
+                    verb: verb
                 };
-            }
-        ];
-        sentence = structures[Math.floor(Math.random() * structures.length)]();
-    } else if (difficulty === "Middels") {
-        const structures = [
-            () => {
-                const verb = verbs.filter(v => !v.transitive)[Math.floor(Math.random() * verbs.filter(v => !v.transitive).length)];
-                const s = subjects[Math.floor(Math.random() * subjects.length)];
-                const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
-                return {
-                    text: `${s} ${verb.text} ${a}.`,
-                    correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' }
-                };
-            },
-            () => {
-                const validVerbs = verbs.filter(v => v.transitive && !v.requiresIndirect);
-                const verb = validVerbs[Math.floor(Math.random() * validVerbs.length)];
-                const s = subjects[Math.floor(Math.random() * subjects.length)];
-                const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                const a = verb.compatibleAdverbials[Math.floor(Math.random() * verb.compatibleAdverbials.length)];
-                return {
-                    text: `${s} ${verb.text} ${d} ${a}.`,
-                    correct: { [s]: 'subject', [verb.text]: 'verb', [d]: 'direct-object', [a]: 'adverbial' }
-                };
-            },
-            () => {
-                const verb = verbs.filter(v => v.requiresIndirect)[Math.floor(Math.random() * verbs.filter(v => v.requiresIndirect).length)];
-                const s = subjects[Math.floor(Math.random() * subjects.length)];
+            } else if (difficulty === "Vanskelig") {
+                const verb = verbs.find(v => v.text === 'gir');
+                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
                 const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
                 const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                return {
-                    text: `${s} ${verb.text} ${i} ${d}.`,
-                    correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object' }
+                let a1, a2;
+                do {
+                    a1 = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                    a2 = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                } while (a1 === a2 || checkConflict(a1, a2));
+                const p = replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]);
+                sentence = {
+                    parts: [s, verb.text, i, d, a1, "og", a2, p],
+                    interactiveParts: [s, verb.text, i, d, a1, a2, p],
+                    text: `${s} ${verb.text} ${i} ${d} ${a1} og ${a2} ${p}.`,
+                    correct: { 
+                        [s]: 'subject', 
+                        [verb.text]: 'verb', 
+                        [i]: 'indirect-object', 
+                        [d]: 'direct-object', 
+                        [a1]: 'adverbial', 
+                        [a2]: 'adverbial', 
+                        [p]: 'adverbial' 
+                    },
+                    verb: verb
+                };
+            } else if (difficulty === "Omorganiser") {
+                const baseSentence = generateBaseSentence();
+                const scrambledParts = [...baseSentence.parts].sort(() => Math.random() - 0.5);
+                sentence = {
+                    parts: scrambledParts,
+                    correctParts: baseSentence.parts,
+                    interactiveParts: scrambledParts,
+                    text: scrambledParts.join(' ') + '.',
+                    correct: baseSentence.correct,
+                    verb: baseSentence.verb
                 };
             }
-        ];
-        sentence = structures[Math.floor(Math.random() * structures.length)]();
-    } else if (difficulty === "Vanskelig") {
-        const verb = verbs.find(v => v.requiresIndirect); // "gir"
-        const allAdverbials = [...mannerAdverbials, ...placeAdverbials, ...timeAdverbials];
 
-        const pattern5 = () => {
-            const s = subjects[Math.floor(Math.random() * subjects.length)];
-            const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
-            const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-            const a = allAdverbials[Math.floor(Math.random() * allAdverbials.length)];
-            return {
-                text: `${s} ${verb.text} ${i} ${d} ${a}.`,
-                correct: { [s]: 'subject', [verb.text]: 'verb', [i]: 'indirect-object', [d]: 'direct-object', [a]: 'adverbial' }
-            };
-        };
+            if (difficulty === "Enkel" || difficulty === "Middels") {
+                let maxAttempts = 10;
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    let tempSentence = { ...sentence };
+                    if (isSentenceValid(tempSentence)) {
+                        let variationOK = true;
+                        if (lastSentence) {
+                            let newWords = Object.keys(tempSentence.correct);
+                            let oldWords = Object.keys(lastSentence.correct);
+                            let common = newWords.filter(word => oldWords.includes(word)).length;
+                            let diff = newWords.length - common;
+                            if (difficulty === "Enkel" && newWords.length === 3 && diff < 1) variationOK = false;
+                            else if (difficulty === "Middels" && (newWords.length === 4 || newWords.length === 5) && diff < 2) variationOK = false;
+                        }
+                        if (variationOK) {
+                            sentence = tempSentence;
+                            break;
+                        }
+                    }
 
-        const pattern6 = () => {
-            const s = subjects[Math.floor(Math.random() * subjects.length)];
-            const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
-            const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-            let chosen = [];
-            while (chosen.length < 2) {
-                let candidate = mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)]; // Kun måtesadverb
-                if (!chosen.includes(candidate)) chosen.push(candidate);
+                    if (difficulty === "Enkel") {
+                        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                        const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                        sentence = {
+                            parts: [s, verb.text, a],
+                            interactiveParts: [s, verb.text, a],
+                            text: `${s} ${verb.text} ${a}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' },
+                            verb: verb
+                        };
+                    } else if (difficulty === "Middels") {
+                        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                        const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
+                        const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
+                        const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                        const parts = [s, verb.text, i, d, a].filter(part => part);
+                        sentence = {
+                            parts: parts,
+                            interactiveParts: parts,
+                            text: `${s} ${verb.text} ${i} ${d} ${a}.`.replace(/\s+/g, ' ').trim(),
+                            correct: { 
+                                [s]: 'subject', 
+                                [verb.text]: 'verb', 
+                                ...(i && { [i]: 'indirect-object' }), 
+                                ...(d && { [d]: 'direct-object' }), 
+                                [a]: 'adverbial' 
+                            },
+                            verb: verb
+                        };
+                    }
+                }
+                if (!isSentenceValid(sentence)) {
+                    console.error("Kunne ikke generere gyldig setning etter maks forsøk.");
+                    sentence.text = "Feil i setningsgenerering.";
+                    sentence.parts = ["Feil"];
+                    sentence.interactiveParts = ["Feil"];
+                }
             }
-            const a1 = chosen[0];
-            const a2 = chosen[1];
+
+            if (difficulty === "Vanskelig" && !isSentenceValid(sentence)) {
+                console.error("Kunne ikke generere gyldig setning for Vanskelig.");
+                sentence.text = "Feil i setningsgenerering.";
+                sentence.parts = ["Feil"];
+                sentence.interactiveParts = ["Feil"];
+            }
+
+            return sentence;
+        }
+
+        function generateBaseSentence() {
+            const verb = verbs[Math.floor(Math.random() * verbs.length)];
+            const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+            const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
+            const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
+            const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+            const p = replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]);
+            const parts = [s, verb.text, i, d, a, p].filter(part => part);
             return {
-                text: `${s} ${verb.text} ${i} ${d} ${a1} ${a2}.`,
+                parts: parts,
                 correct: { 
                     [s]: 'subject', 
                     [verb.text]: 'verb', 
-                    [i]: 'indirect-object', 
-                    [d]: 'direct-object', 
-                    [a1]: 'adverbial', 
-                    ['og']: 'adverbial', // Legg til "og" som en del av setningen
-                    [a2]: 'adverbial' 
-                }
+                    ...(i && { [i]: 'indirect-object' }), 
+                    ...(d && { [d]: 'direct-object' }), 
+                    [a]: 'adverbial', 
+                    [p]: 'adverbial' 
+                },
+                verb: verb
             };
-        };
-
-        const baseSentence = (Math.random() < 0.3) ? pattern5() : pattern6();
-        vanskeligCounter++;
-        sentence = baseSentence;
-    }
-
-    // Kun for Enkel og Middels sjekkes for variasjon
-    if (difficulty === "Enkel" || difficulty === "Middels") {
-        let variationOK = true;
-        if (lastSentence) {
-            let newWords = Object.keys(sentence.correct);
-            let oldWords = Object.keys(lastSentence.correct);
-            let common = newWords.filter(word => oldWords.includes(word)).length;
-            let diff = newWords.length - common;
-            if (newWords.length === 4 && diff < 2) variationOK = false;
-            if (newWords.length === 5 && diff < 2) variationOK = false;
-            if (newWords.length === 6 && diff < 3) variationOK = false;
         }
-        if (!isSentenceValid(sentence) || !variationOK) {
-            return generateSentence();
-        }
-    }
 
-    // Juster setningen med grammatikksjekkeren
-    sentence = adjustSentence(sentence);
-    return sentence;
-}
+        function scrambleSentence(sentence) {
+            const parts = [...sentence.parts].sort(() => Math.random() - 0.5);
+            return { text: parts.join(' ') + '.' };
+        }
 
         function isSentenceValid(sentence) {
-            // Sjekk om setningen gir mening og er passende
             const words = sentence.text.split(' ');
-            if (words.length < 3) return false; // For kort
-            if (words[1] === 'gir' && !sentence.correct.hasOwnProperty('direct-object')) return false; // "Gir" krever direkte objekt
-            if (words.includes('raskt') && words[1] === 'gir' && !sentence.correct.hasOwnProperty('direct-object')) return false; // "Gir raskt" gir ikke mening uten objekt
-            return true; // Legg til flere regler her om nødvendig
+            if (words.length < 3) return false;
+            if (words.includes('gir') && !Object.values(sentence.correct).includes('direct-object')) return false;
+            return true;
         }
 
         let currentSentence = null;
@@ -533,19 +448,17 @@ function generateSentence() {
                 box.classList.add('box', funcData.color);
                 box.textContent = funcData.name;
                 box.dataset.function = funcData.name;
-                box.setAttribute('draggable', 'true'); // Aktiver dra fra starten
+                box.setAttribute('draggable', 'true');
 
-                let isDragging = false; // Sporer om brukeren drar boksen
-                let dragStartX, dragStartY; // Startposisjon for dra-bevegelse
+                let isDragging = false;
+                let dragStartX, dragStartY;
 
-                // Start dra-operasjon for mus (PC)
                 box.addEventListener('mousedown', (e) => {
                     isDragging = false;
                     dragStartX = e.clientX;
                     dragStartY = e.clientY;
                 });
 
-                // Start dra-operasjon for berøring (iPad)
                 box.addEventListener('touchstart', (e) => {
                     isDragging = false;
                     const touch = e.touches[0];
@@ -553,36 +466,28 @@ function generateSentence() {
                     dragStartY = touch.clientY;
                 });
 
-                // Sjekk om det er en dra-bevegelse (mus eller berøring)
                 const handleMove = (e) => {
                     const clientX = e.touches ? e.touches[0].clientX : e.clientX;
                     const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
                     const deltaX = Math.abs(clientX - dragStartX);
                     const deltaY = Math.abs(clientY - dragStartY);
-
-                    // Hvis brukeren beveger mer enn 5px, tolkes det som dra
                     if (deltaX > 5 || deltaY > 5) {
                         isDragging = true;
                         box.dispatchEvent(new DragEvent('dragstart', { dataTransfer: new DataTransfer() }));
                     }
                 };
 
-                // Håndter klikk eller dra (mus eller berøring)
                 const handleEnd = () => {
                     if (!isDragging) {
-                        // Hvis det ikke var en dra-bevegelse, vis popup
                         showPopup(funcData);
                     }
                 };
 
-                // Legg til hendelser for mus og berøring
                 box.addEventListener('mousemove', handleMove);
                 box.addEventListener('touchmove', handleMove);
                 box.addEventListener('mouseup', handleEnd);
                 box.addEventListener('touchend', handleEnd);
 
-                // Dra-hendelse
                 box.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text', funcData.name);
                 });
@@ -592,34 +497,22 @@ function generateSentence() {
         }
 
         function showPopup(funcData) {
-            // Toggle: Hvis forklaringen allerede vises for den samme boksen, lukk den
             if (popupEl.style.display === 'block' && currentPopupFunc === funcData.color) {
                 popupEl.style.display = 'none';
                 currentPopupFunc = null;
                 clearTimeout(popupTimer);
                 return;
             }
-            // Hvis en annen forklaring er åpen, stopp dens nedtelling
             clearTimeout(popupTimer);
             const exampleEntry = Object.entries(currentSentence.correct).find(([word, func]) => func === funcData.color);
             const exampleWord = exampleEntry ? exampleEntry[0] : '';
             let explanation = '';
             switch (funcData.color) {
-                case 'subject':
-                    explanation = `I "${currentSentence.text}" er "${exampleWord}" subjektet fordi det er den som utfører handlingen.`;
-                    break;
-                case 'verb':
-                    explanation = `I "${currentSentence.text}" er "${exampleWord}" verbalet fordi det beskriver handlingen.`;
-                    break;
-                case 'adverbial':
-                    explanation = `I "${currentSentence.text}" er "${exampleWord}" et adverbial fordi det sier noe om ${['raskt', 'stille'].includes(exampleWord) ? 'måte' : ['ute', 'hjemme', 'i klasserommet', 'i parken', 'i snøen'].includes(exampleWord) ? 'sted' : 'tid'}.`;
-                    break;
-                case 'direct-object':
-                    explanation = `I "${currentSentence.text}" er "${exampleWord}" direkte objekt fordi det er det som blir påvirket av handlingen.`;
-                    break;
-                case 'indirect-object':
-                    explanation = `I "${currentSentence.text}" er "${exampleWord}" indirekte objekt fordi det er mottakeren av det direkte objektet.`;
-                    break;
+                case 'subject': explanation = `I "${currentSentence.text}" er "${exampleWord}" subjektet fordi det er den som utfører handlingen.`; break;
+                case 'verb': explanation = `I "${currentSentence.text}" er "${exampleWord}" verbalet fordi det beskriver handlingen.`; break;
+                case 'adverbial': explanation = `I "${currentSentence.text}" er "${exampleWord}" et adverbial fordi det sier noe om ${['raskt', 'sakte'].includes(exampleWord) ? 'måte' : ['hjemme', 'på skolen'].includes(exampleWord) ? 'sted' : 'tid'}.`; break;
+                case 'direct-object': explanation = `I "${currentSentence.text}" er "${exampleWord}" direkte objekt fordi det er det som blir påvirket av handlingen.`; break;
+                case 'indirect-object': explanation = `I "${currentSentence.text}" er "${exampleWord}" indirekte objekt fordi det er mottakeren av det direkte objektet.`; break;
             }
             popupEl.innerHTML = `${funcData.desc}<br><br>${explanation}`;
             popupEl.style.display = 'block';
@@ -628,7 +521,6 @@ function generateSentence() {
             const rect = box.getBoundingClientRect();
             popupEl.style.left = `${rect.left}px`;
             popupEl.style.top = `${rect.top - popupEl.offsetHeight - 10}px`;
-            // Sett et nytt tidsur på 10 sekunder for den nye boksen
             popupTimer = setTimeout(() => {
                 popupEl.style.display = 'none';
                 currentPopupFunc = null;
@@ -639,43 +531,100 @@ function generateSentence() {
             currentSentence = generateSentence();
             lastSentence = currentSentence;
             sentenceEl.innerHTML = '';
-            Object.keys(currentSentence.correct).forEach(word => {
-                const span = document.createElement('span');
-                span.classList.add('word');
-                span.textContent = word;
-                span.dataset.word = word;
-                span.addEventListener('dragover', dragOver);
-                span.addEventListener('drop', drop);
-                sentenceEl.appendChild(span);
-            });
-            createBoxes();
+            if (difficulty !== "Omorganiser") {
+                currentSentence.parts.forEach(part => {
+                    if (currentSentence.interactiveParts.includes(part)) {
+                        const span = document.createElement('span');
+                        span.classList.add('word');
+                        span.textContent = part;
+                        span.dataset.word = part;
+                        span.addEventListener('dragover', dragOver);
+                        span.addEventListener('drop', drop);
+                        sentenceEl.appendChild(span);
+                    } else {
+                        const textNode = document.createTextNode(part + ' ');
+                        sentenceEl.appendChild(textNode);
+                    }
+                });
+                createBoxes();
+            } else if (difficulty === "Omorganiser") {
+                currentSentence.parts.forEach(part => {
+                    const span = document.createElement('span');
+                    span.classList.add('word');
+                    span.textContent = part;
+                    span.dataset.word = part;
+                    if (currentSentence.correct[part]) { // Bare fargelegg interaktive ledd
+                        span.classList.add(currentSentence.correct[part]);
+                        span.style.backgroundColor = getColor(currentSentence.correct[part]);
+                    }
+                    span.setAttribute('draggable', 'true');
+                    span.addEventListener('dragstart', dragStartOmorganiser);
+                    span.addEventListener('dragend', dragEndOmorganiser);
+                    span.addEventListener('dragover', dragOverOmorganiser);
+                    span.addEventListener('dragleave', dragLeaveOmorganiser);
+                    span.addEventListener('drop', dropOmorganiser);
+                    sentenceEl.appendChild(span);
+                });
+            }
         }
 
-        function dragStart(e) {
-            e.dataTransfer.setData('text', e.target.dataset.function);
+        let draggedSpan = null;
+
+        function dragStartOmorganiser(e) {
+            draggedSpan = e.target;
+            e.dataTransfer.setData('text', draggedSpan.dataset.word);
+            setTimeout(() => {
+                draggedSpan.style.display = 'none';
+            }, 0);
         }
 
-        function dragOver(e) {
+        function dragEndOmorganiser(e) {
+            if (draggedSpan) {
+                draggedSpan.style.display = 'inline-block';
+                draggedSpan = null;
+            }
+        }
+
+        function dragOverOmorganiser(e) {
             e.preventDefault();
+            const targetSpan = e.target;
+            if (draggedSpan && targetSpan !== draggedSpan) {
+                const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                const targetIndex = spans.indexOf(targetSpan);
+                const rect = targetSpan.getBoundingClientRect();
+                const midPoint = rect.left + rect.width / 2;
+                if (e.clientX < midPoint) {
+                    sentenceEl.insertBefore(draggedSpan, targetSpan);
+                } else {
+                    sentenceEl.insertBefore(draggedSpan, targetSpan.nextSibling);
+                }
+                draggedSpan.style.display = 'inline-block';
+            }
         }
 
-        function drop(e) {
+        function dragLeaveOmorganiser(e) {
+            // Ingen handling nødvendig her
+        }
+
+        function dropOmorganiser(e) {
             e.preventDefault();
-            const wordEl = e.target;
-            const func = e.dataTransfer.getData('text');
-            const correctFunc = Object.entries(currentSentence.correct).find(([w, f]) => w === wordEl.dataset.word)?.[1];
-            const funcData = functions.find(f => f.name === func);
-            if (correctFunc === funcData.color) {
-                wordEl.classList.add('correct');
-                wordEl.style.backgroundColor = getColor(funcData.color);
-                // Ikke fjern boksen, da alle boksene skal være synlige hele tiden
-                checkCompletion();
+            if (draggedSpan) {
+                const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                const currentOrder = spans.map(span => span.dataset.word);
+                if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
+                    points++;
+                    streak++;
+                    pointsEl.textContent = points;
+                    streakEl.textContent = streak;
+                    playConfettiAnimation();
+                }
+                draggedSpan = null;
             }
         }
 
         function checkCompletion() {
             const correctWords = sentenceEl.querySelectorAll('.correct').length;
-            const total = Object.keys(currentSentence.correct).length;
+            const total = currentSentence.interactiveParts.length;
             if (correctWords === total) {
                 points++;
                 streak++;
@@ -699,7 +648,6 @@ function generateSentence() {
         function playConfettiAnimation() {
             const rect = sentenceEl.getBoundingClientRect();
             const text = sentenceEl.textContent;
-            // Ikke tømmer setningen – la den vises med riktige mellomrom
             for (const char of text) {
                 if (char === ' ') continue;
                 for (let i = 0; i < 25; i++) {
@@ -720,7 +668,6 @@ function generateSentence() {
                     setTimeout(() => confetti.remove(), 1000);
                 }
             }
-            // Når animasjonen er ferdig, last inn en ny setning etter en forsinkelse
             setTimeout(loadSentence, 1500);
         }
 
@@ -729,7 +676,7 @@ function generateSentence() {
             modeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
         });
 
-        loadSentence(); // Start med å laste en setning
+        loadSentence();
     </script>
 </body>
 </html>

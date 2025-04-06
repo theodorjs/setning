@@ -565,6 +565,15 @@
                     span.addEventListener('drop', dropOmorganiser);
                     sentenceEl.appendChild(span);
                 });
+                const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                const currentOrder = spans.map(span => span.dataset.word);
+                if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
+                    points++;
+                    streak++;
+                    pointsEl.textContent = points;
+                    streakEl.textContent = streak;
+                    playConfettiAnimation();
+                }
             }
         }
 

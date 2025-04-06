@@ -15,6 +15,8 @@
             align-items: center;
             height: 100vh;
             overflow: hidden;
+            user-select: none; /* Deaktiverer tekstmarkering */
+            -webkit-user-select: none; /* For Safari/iPad */
         }
         #sentence {
             font-size: 30px;
@@ -450,46 +452,26 @@
                 box.dataset.function = funcData.name;
                 box.setAttribute('draggable', 'true');
 
-                let isDragging = false;
-                let dragStartX, dragStartY;
-
-                box.addEventListener('mousedown', (e) => {
-                    isDragging = false;
-                    dragStartX = e.clientX;
-                    dragStartY = e.clientY;
+                box.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    showPopup(funcData);
                 });
-
-                box.addEventListener('touchstart', (e) => {
-                    isDragging = false;
-                    const touch = e.touches[0];
-                    dragStartX = touch.clientX;
-                    dragStartY = touch.clientY;
-                });
-
-                const handleMove = (e) => {
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    const deltaX = Math.abs(clientX - dragStartX);
-                    const deltaY = Math.abs(clientY - dragStartY);
-                    if (deltaX > 5 || deltaY > 5) {
-                        isDragging = true;
-                        box.dispatchEvent(new DragEvent('dragstart', { dataTransfer: new DataTransfer() }));
-                    }
-                };
-
-                const handleEnd = () => {
-                    if (!isDragging) {
-                        showPopup(funcData);
-                    }
-                };
-
-                box.addEventListener('mousemove', handleMove);
-                box.addEventListener('touchmove', handleMove);
-                box.addEventListener('mouseup', handleEnd);
-                box.addEventListener('touchend', handleEnd);
 
                 box.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text', funcData.name);
+                });
+
+                box.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const dragEvent = new DragEvent('dragstart', {
+                        dataTransfer: new DataTransfer(),
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    e.dataTransfer = dragEvent.dataTransfer;
+                    e.dataTransfer.setData('text', funcData.name);
+                    box.dispatchEvent(dragEvent);
                 });
 
                 boxesEl.appendChild(box);
@@ -553,7 +535,7 @@
                     span.classList.add('word');
                     span.textContent = part;
                     span.dataset.word = part;
-                    if (currentSentence.correct[part]) { // Bare fargelegg interaktive ledd
+                    if (currentSentence.correct[part]) {
                         span.classList.add(currentSentence.correct[part]);
                         span.style.backgroundColor = getColor(currentSentence.correct[part]);
                     }
@@ -565,6 +547,16 @@
                     span.addEventListener('drop', dropOmorganiser);
                     sentenceEl.appendChild(span);
                 });
+                // Sjekk om setningen allerede er korrekt ved lasting
+                const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                const currentOrder = spans.map(span => span.dataset.word);
+                if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
+                    points++;
+                    streak++;
+                    pointsEl.textContent = points;
+                    streakEl.textContent = streak;
+                    playConfettiAnimation();
+                }
             }
         }
 
@@ -573,6 +565,7 @@
         function dragStartOmorganiser(e) {
             draggedSpan = e.target;
             e.dataTransfer.setData('text', draggedSpan.dataset.word);
+            e.dataTransfer.setDragImage(draggedSpan, 0, 0); // Bruk selve elementet som drag-bilde
             setTimeout(() => {
                 draggedSpan.style.display = 'none';
             }, 0);

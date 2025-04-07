@@ -73,15 +73,18 @@
             background-color: #fff;
             color: #000;
             font-size: 16px;
-            line-height: 20px; /* Redusert litt for å passe bedre */
+            line-height: 24px; /* Matcher høyden nøyaktig */
             text-align: center;
             cursor: pointer;
-            display: flex; /* Legg til for perfekt sentrering */
+            display: flex;
             align-items: center;
             justify-content: center;
-            box-sizing: border-box; /* Sørger for at border inkluderes i størrelsen */
-            appearance: none;
-            -webkit-appearance: none;
+            box-sizing: border-box;
+            -webkit-appearance: none; /* For Safari */
+            appearance: none; /* For bred kompatibilitet */
+            min-width: 24px; /* Tvinger lik bredde */
+            min-height: 24px; /* Tvinger lik høyde */
+            padding: 0; /* Fjerner all padding som kan strekke */
         }
         .box {
             width: 120px;

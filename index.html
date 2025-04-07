@@ -15,6 +15,8 @@
             align-items: center;
             height: 100vh;
             overflow: hidden;
+            user-select: none; /* Beholdes for nå, kan endres til auto hvis nødvendig */
+            -webkit-user-select: none; /* For Safari/iPad */
         }
         #sentence {
             font-size: 30px;
@@ -47,6 +49,20 @@
         .word.direct-object { background-color: #3498db; color: white; border-radius: 5px; }
         .word.indirect-object { background-color: #9b59b6; color: white; border-radius: 5px; }
         .word.conjunction { background-color: #ccc; color: black; border-radius: 5px; }
+        #boxes {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+        }
+        .box-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+        }
         .box {
             width: 120px;
             height: 50px;
@@ -56,15 +72,20 @@
             border-radius: 8px;
             cursor: grab;
             user-select: none;
-            margin: 10px;
+            touch-action: none; /* Hindrer scrolling/zooming på iPad */
         }
-        #boxes {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
+        .info-btn {
+            width: 24px;
+            height: 24px;
+            margin-top: 10px; /* Avstand mellom boks og knapp */
+            border: 2px solid #000;
+            border-radius: 50%;
+            background-color: #fff;
+            color: #000;
+            font-size: 16px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
         }
         .subject { background-color: #e74c3c; }
         .verb { background-color: #2ecc71; }
@@ -427,11 +448,6 @@
             };
         }
 
-        function scrambleSentence(sentence) {
-            const parts = [...sentence.parts].sort(() => Math.random() - 0.5);
-            return { text: parts.join(' ') + '.' };
-        }
-
         function isSentenceValid(sentence) {
             const words = sentence.text.split(' ');
             if (words.length < 3) return false;
@@ -444,55 +460,48 @@
         function createBoxes() {
             boxesEl.innerHTML = '';
             functions.forEach(funcData => {
+                // Container for boks og knapp
+                const container = document.createElement('div');
+                container.classList.add('box-container');
+
+                // Kategoriboks (kun dra-og-slipp)
                 const box = document.createElement('div');
                 box.classList.add('box', funcData.color);
                 box.textContent = funcData.name;
                 box.dataset.function = funcData.name;
                 box.setAttribute('draggable', 'true');
 
-                let isDragging = false;
-                let dragStartX, dragStartY;
-
-                box.addEventListener('mousedown', (e) => {
-                    isDragging = false;
-                    dragStartX = e.clientX;
-                    dragStartY = e.clientY;
-                });
-
-                box.addEventListener('touchstart', (e) => {
-                    isDragging = false;
-                    const touch = e.touches[0];
-                    dragStartX = touch.clientX;
-                    dragStartY = touch.clientY;
-                });
-
-                const handleMove = (e) => {
-                    const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-                    const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-                    const deltaX = Math.abs(clientX - dragStartX);
-                    const deltaY = Math.abs(clientY - dragStartY);
-                    if (deltaX > 5 || deltaY > 5) {
-                        isDragging = true;
-                        box.dispatchEvent(new DragEvent('dragstart', { dataTransfer: new DataTransfer() }));
-                    }
-                };
-
-                const handleEnd = () => {
-                    if (!isDragging) {
-                        showPopup(funcData);
-                    }
-                };
-
-                box.addEventListener('mousemove', handleMove);
-                box.addEventListener('touchmove', handleMove);
-                box.addEventListener('mouseup', handleEnd);
-                box.addEventListener('touchend', handleEnd);
-
+                // Desktop: Dra-og-slipp
                 box.addEventListener('dragstart', (e) => {
                     e.dataTransfer.setData('text', funcData.name);
                 });
 
-                boxesEl.appendChild(box);
+                // iPad: Umiddelbar dra-og-slipp med touch
+                box.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text', funcData.name);
+                    const dragEvent = new DragEvent('dragstart', {
+                        dataTransfer: dataTransfer,
+                        clientX: touch.clientX,
+                        clientY: touch.clientY
+                    });
+                    box.dispatchEvent(dragEvent);
+                });
+
+                // Informasjonsknapp
+                const infoBtn = document.createElement('button');
+                infoBtn.classList.add('info-btn');
+                infoBtn.textContent = 'i';
+                infoBtn.addEventListener('click', () => {
+                    showPopup(funcData);
+                });
+
+                // Legg til boks og knapp i container
+                container.appendChild(box);
+                container.appendChild(infoBtn);
+                boxesEl.appendChild(container);
             });
         }
 
@@ -553,7 +562,7 @@
                     span.classList.add('word');
                     span.textContent = part;
                     span.dataset.word = part;
-                    if (currentSentence.correct[part]) { // Bare fargelegg interaktive ledd
+                    if (currentSentence.correct[part]) {
                         span.classList.add(currentSentence.correct[part]);
                         span.style.backgroundColor = getColor(currentSentence.correct[part]);
                     }
@@ -582,6 +591,7 @@
         function dragStartOmorganiser(e) {
             draggedSpan = e.target;
             e.dataTransfer.setData('text', draggedSpan.dataset.word);
+            e.dataTransfer.setDragImage(draggedSpan, 0, 0);
             setTimeout(() => {
                 draggedSpan.style.display = 'none';
             }, 0);

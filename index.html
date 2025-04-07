@@ -598,33 +598,86 @@
                 });
                 createBoxes();
             } else if (difficulty === "Omorganiser") {
-                currentSentence.parts.forEach(part => {
-                    const span = document.createElement('span');
-                    span.classList.add('word');
-                    span.textContent = part;
-                    span.dataset.word = part;
-                    if (currentSentence.correct[part]) { // Bare fargelegg interaktive ledd
-                        span.classList.add(currentSentence.correct[part]);
-                        span.style.backgroundColor = getColor(currentSentence.correct[part]);
+    currentSentence.parts.forEach(part => {
+        const span = document.createElement('span');
+        span.classList.add('word');
+        span.textContent = part;
+        span.dataset.word = part;
+        if (currentSentence.correct[part]) {
+            span.classList.add(currentSentence.correct[part]);
+            span.style.backgroundColor = getColor(currentSentence.correct[part]);
+        }
+        span.setAttribute('draggable', 'true');
+
+        // Desktop: HTML5 dra-og-slipp
+        span.addEventListener('dragstart', dragStartOmorganiser);
+        span.addEventListener('dragend', dragEndOmorganiser);
+        span.addEventListener('dragover', dragOverOmorganiser);
+        span.addEventListener('dragleave', dragLeaveOmorganiser);
+        span.addEventListener('drop', dropOmorganiser);
+
+        // iPad: Touch-håndtering med klone
+        span.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const clone = span.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.zIndex = '1000';
+            clone.style.left = `${touch.clientX - span.offsetWidth / 2}px`;
+            clone.style.top = `${touch.clientY - span.offsetHeight / 2}px`;
+            clone.style.opacity = '0.8';
+            document.body.appendChild(clone);
+
+            const moveHandler = (moveEvent) => {
+                const moveTouch = moveEvent.touches[0];
+                clone.style.left = `${moveTouch.clientX - span.offsetWidth / 2}px`;
+                clone.style.top = `${moveTouch.clientY - span.offsetHeight / 2}px`;
+            };
+
+            const endHandler = (endEvent) => {
+                const endTouch = endEvent.changedTouches[0];
+                clone.style.display = 'none'; // Skjul klonen før drop
+                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
+                if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
+                    const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                    const targetIndex = spans.indexOf(dropTarget);
+                    const rect = dropTarget.getBoundingClientRect();
+                    const midPoint = rect.left + rect.width / 2;
+                    if (endTouch.clientX < midPoint) {
+                        sentenceEl.insertBefore(span, dropTarget);
+                    } else {
+                        sentenceEl.insertBefore(span, dropTarget.nextSibling);
                     }
-                    span.setAttribute('draggable', 'true');
-                    span.addEventListener('dragstart', dragStartOmorganiser);
-                    span.addEventListener('dragend', dragEndOmorganiser);
-                    span.addEventListener('dragover', dragOverOmorganiser);
-                    span.addEventListener('dragleave', dragLeaveOmorganiser);
-                    span.addEventListener('drop', dropOmorganiser);
-                    sentenceEl.appendChild(span);
-                });
-                const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                const currentOrder = spans.map(span => span.dataset.word);
-                if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
-                    points++;
-                    streak++;
-                    pointsEl.textContent = points;
-                    streakEl.textContent = streak;
-                    playConfettiAnimation();
+                    const currentOrder = spans.map(s => s.dataset.word);
+                    if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
+                        points++;
+                        streak++;
+                        pointsEl.textContent = points;
+                        streakEl.textContent = streak;
+                        playConfettiAnimation();
+                    }
                 }
-            }
+                document.body.removeChild(clone);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+            };
+
+            document.addEventListener('touchmove', moveHandler);
+            document.addEventListener('touchend', endHandler);
+        });
+
+        sentenceEl.appendChild(span);
+    });
+    const spans = Array.from(sentenceEl.querySelectorAll('span'));
+    const currentOrder = spans.map(span => span.dataset.word);
+    if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
+        points++;
+        streak++;
+        pointsEl.textContent = points;
+        streakEl.textContent = streak;
+        playConfettiAnimation();
+    }
+}
         }
 
         let draggedSpan = null;

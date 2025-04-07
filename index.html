@@ -67,15 +67,19 @@
         .info-btn {
             width: 24px;
             height: 24px;
-            margin-top: 10px; /* Avstand mellom boks og knapp */
+            margin-top: 10px;
             border: 2px solid #000;
             border-radius: 50%;
             background-color: #fff;
             color: #000;
             font-size: 16px;
-            line-height: 20px;
+            line-height: 20px; /* Redusert litt for å passe bedre */
             text-align: center;
             cursor: pointer;
+            display: flex; /* Legg til for perfekt sentrering */
+            align-items: center;
+            justify-content: center;
+            box-sizing: border-box; /* Sørger for at border inkluderes i størrelsen */
         }
         .box {
             width: 120px;
@@ -466,11 +470,9 @@
         function createBoxes() {
     boxesEl.innerHTML = '';
     functions.forEach(funcData => {
-        // Container for boks og knapp
         const container = document.createElement('div');
         container.classList.add('box-container');
 
-        // Kategoriboks (fast element)
         const box = document.createElement('div');
         box.classList.add('box', funcData.color);
         box.textContent = funcData.name;
@@ -486,16 +488,14 @@
         box.addEventListener('touchstart', (e) => {
             e.preventDefault();
             const touch = e.touches[0];
-            // Lag en klone av boksen
             const clone = box.cloneNode(true);
             clone.style.position = 'absolute';
             clone.style.zIndex = '1000';
             clone.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
             clone.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
-            clone.style.opacity = '0.8'; // Litt gjennomsiktig for å vise at det er en kopi
+            clone.style.opacity = '0.8';
             document.body.appendChild(clone);
 
-            // Håndter dragging
             const moveHandler = (moveEvent) => {
                 const moveTouch = moveEvent.touches[0];
                 clone.style.left = `${moveTouch.clientX - box.offsetWidth / 2}px`;
@@ -504,6 +504,8 @@
 
             const endHandler = (endEvent) => {
                 const endTouch = endEvent.changedTouches[0];
+                // Skjul klonen før vi finner drop-målet
+                clone.style.display = 'none';
                 const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
                 if (dropTarget && dropTarget.classList.contains('word')) {
                     const dataTransfer = new DataTransfer();
@@ -511,7 +513,8 @@
                     const dropEvent = new DragEvent('drop', {
                         dataTransfer: dataTransfer,
                         clientX: endTouch.clientX,
-                        clientY: endTouch.clientY
+                        clientY: endTouch.clientY,
+                        bubbles: true // Sørger for at eventet bobler opp
                     });
                     dropTarget.dispatchEvent(dropEvent);
                 }
@@ -525,15 +528,13 @@
             document.addEventListener('touchend', endHandler);
         });
 
-        // Informasjonsknapp
         const infoBtn = document.createElement('button');
         infoBtn.classList.add('info-btn');
-        infoBtn.textContent = '?'; // Endret fra "i" til "?"
+        infoBtn.textContent = '?';
         infoBtn.addEventListener('click', () => {
             showPopup(funcData);
         });
 
-        // Legg til boks og knapp i container
         container.appendChild(box);
         container.appendChild(infoBtn);
         boxesEl.appendChild(container);

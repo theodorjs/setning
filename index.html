@@ -47,6 +47,36 @@
         .word.direct-object { background-color: #3498db; color: white; border-radius: 5px; }
         .word.indirect-object { background-color: #9b59b6; color: white; border-radius: 5px; }
         .word.conjunction { background-color: #ccc; color: black; border-radius: 5px; }
+       
+        #boxes {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            position: fixed;
+            bottom: 20px;
+            width: 100%;
+            overflow: visible; /* Lagt til tidligere av deg */
+        }
+        .box-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin: 10px;
+            min-height: 84px; /* Sikrer plass til boks + knapp, hindrer kollaps */
+        }
+        .info-btn {
+            width: 24px;
+            height: 24px;
+            margin-top: 10px; /* Avstand mellom boks og knapp */
+            border: 2px solid #000;
+            border-radius: 50%;
+            background-color: #fff;
+            color: #000;
+            font-size: 16px;
+            line-height: 20px;
+            text-align: center;
+            cursor: pointer;
+        }
         .box {
             width: 120px;
             height: 50px;
@@ -56,16 +86,7 @@
             border-radius: 8px;
             cursor: grab;
             user-select: none;
-            margin: 10px;
-        }
-        #boxes {
-            overflow: visible;
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
+            touch-action: none; /* Hindrer scrolling/zooming */
         }
         .subject { background-color: #e74c3c; }
         .verb { background-color: #2ecc71; }
@@ -449,7 +470,7 @@
         const container = document.createElement('div');
         container.classList.add('box-container');
 
-        // Kategoriboks (kun dra-og-slipp)
+        // Kategoriboks (fast element)
         const box = document.createElement('div');
         box.classList.add('box', funcData.color);
         box.textContent = funcData.name;
@@ -461,61 +482,53 @@
             e.dataTransfer.setData('text', funcData.name);
         });
 
-        // iPad: Full manuell touch-håndtering
-        let isDragging = false;
-        let originalPosition = null;
-
+        // iPad: Touch-håndtering med klone
         box.addEventListener('touchstart', (e) => {
             e.preventDefault();
-            isDragging = true;
             const touch = e.touches[0];
-            originalPosition = {
-                left: box.offsetLeft,
-                top: box.offsetTop
+            // Lag en klone av boksen
+            const clone = box.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.zIndex = '1000';
+            clone.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
+            clone.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
+            clone.style.opacity = '0.8'; // Litt gjennomsiktig for å vise at det er en kopi
+            document.body.appendChild(clone);
+
+            // Håndter dragging
+            const moveHandler = (moveEvent) => {
+                const moveTouch = moveEvent.touches[0];
+                clone.style.left = `${moveTouch.clientX - box.offsetWidth / 2}px`;
+                clone.style.top = `${moveTouch.clientY - box.offsetHeight / 2}px`;
             };
-            box.style.position = 'absolute';
-            box.style.zIndex = '1000';
-            box.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
-            box.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
-            box.style.opacity = '1'; // Sørg for synlighet
-        });
 
-        box.addEventListener('touchmove', (e) => {
-            if (isDragging) {
-                const touch = e.touches[0];
-                box.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
-                box.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
-            }
-        });
-
-        box.addEventListener('touchend', (e) => {
-            if (isDragging) {
-                isDragging = false;
-                const touch = e.changedTouches[0];
-                const dropTarget = document.elementFromPoint(touch.clientX, touch.clientY);
+            const endHandler = (endEvent) => {
+                const endTouch = endEvent.changedTouches[0];
+                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
                 if (dropTarget && dropTarget.classList.contains('word')) {
                     const dataTransfer = new DataTransfer();
                     dataTransfer.setData('text', funcData.name);
                     const dropEvent = new DragEvent('drop', {
                         dataTransfer: dataTransfer,
-                        clientX: touch.clientX,
-                        clientY: touch.clientY
+                        clientX: endTouch.clientX,
+                        clientY: endTouch.clientY
                     });
                     dropTarget.dispatchEvent(dropEvent);
                 }
-                // Tilbakestill posisjon
-                box.style.position = '';
-                box.style.left = '';
-                box.style.top = '';
-                box.style.zIndex = '';
-                box.style.opacity = ''; // Tilbakestill opacity
-            }
+                // Fjern klonen
+                document.body.removeChild(clone);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+            };
+
+            document.addEventListener('touchmove', moveHandler);
+            document.addEventListener('touchend', endHandler);
         });
 
         // Informasjonsknapp
         const infoBtn = document.createElement('button');
         infoBtn.classList.add('info-btn');
-        infoBtn.textContent = 'i';
+        infoBtn.textContent = '?'; // Endret fra "i" til "?"
         infoBtn.addEventListener('click', () => {
             showPopup(funcData);
         });

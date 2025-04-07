@@ -455,12 +455,12 @@
         box.dataset.function = funcData.name;
         box.setAttribute('draggable', 'true');
 
-        // Desktop: Dra-og-slipp
+        // Desktop: Dra-og-slipp med HTML5
         box.addEventListener('dragstart', (e) => {
             e.dataTransfer.setData('text', funcData.name);
         });
 
-        // iPad: Full touch-håndtering
+        // iPad: Full manuell touch-håndtering
         let isDragging = false;
         let originalPosition = null;
 
@@ -476,13 +476,7 @@
             box.style.zIndex = '1000';
             box.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
             box.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
-            const dataTransfer = new DataTransfer();
-            dataTransfer.setData('text', funcData.name);
-            box.dispatchEvent(new DragEvent('dragstart', {
-                dataTransfer: dataTransfer,
-                clientX: touch.clientX,
-                clientY: touch.clientY
-            }));
+            box.style.opacity = '1'; // Sørg for synlighet
         });
 
         box.addEventListener('touchmove', (e) => {
@@ -513,6 +507,7 @@
                 box.style.left = '';
                 box.style.top = '';
                 box.style.zIndex = '';
+                box.style.opacity = ''; // Tilbakestill opacity
             }
         });
 

@@ -653,22 +653,24 @@
             };
 
             const endHandler = (endEvent) => {
-                const endTouch = endEvent.changedTouches[0];
-                clone.style.display = 'none';
-                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
-                if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
-                    const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                    const targetIndex = spans.indexOf(dropTarget);
-                    const rect = dropTarget.getBoundingClientRect();
-                    const midPoint = rect.left + rect.width / 2;
-                    if (endTouch.clientX < midPoint) {
-                        sentenceEl.insertBefore(span, dropTarget);
-                    } else {
-                        sentenceEl.insertBefore(span, dropTarget.nextSibling);
-                    }
-                    // Oppdater rekkefølgen etter flytting
-                    const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
-                    const currentOrder = updatedSpans.map(s => s.dataset.word);
+    const endTouch = endEvent.changedTouches[0];
+    clone.style.display = 'none'; // Skjul klonen før drop
+    const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
+    if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
+        const spans = Array.from(sentenceEl.querySelectorAll('span'));
+        const targetIndex = spans.indexOf(dropTarget);
+        const rect = dropTarget.getBoundingClientRect();
+        const midPoint = rect.left + rect.width / 2;
+        if (endTouch.clientX < midPoint) {
+            sentenceEl.insertBefore(span, dropTarget);
+        } else {
+            sentenceEl.insertBefore(span, dropTarget.nextSibling);
+        }
+        // Oppdater rekkefølgen etter flytting
+        const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
+        const currentOrder = updatedSpans.map(s => s.dataset.word);
+        console.log('Current order:', currentOrder);
+        console.log('Correct order:', currentSentence.correctParts);
                     if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
                         points++;
                         streak++;

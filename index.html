@@ -626,8 +626,8 @@
             clone.style.zIndex = '1000';
             clone.style.width = `${span.offsetWidth}px`;
             clone.style.height = `${span.offsetHeight}px`;
-            clone.style.fontSize = getComputedStyle(span).fontSize; // Kopier tekststørrelse
-            clone.style.padding = '2px 6px'; // Match .word padding
+            clone.style.fontSize = getComputedStyle(span).fontSize;
+            clone.style.padding = '2px 6px';
             clone.style.left = `${touch.clientX - span.offsetWidth / 2}px`;
             clone.style.top = `${touch.clientY - span.offsetHeight / 2}px`;
             clone.style.opacity = '0.8';
@@ -669,7 +669,6 @@
                         sentenceEl.insertBefore(span, dropTarget.nextSibling);
                     }
                 }
-                // Sjekk rekkefølgen etter all flytting
                 const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
                 const currentOrder = updatedSpans.map(s => s.dataset.word);
                 if (currentOrder.join('') === currentSentence.correctParts.join('')) {
@@ -678,7 +677,7 @@
                     pointsEl.textContent = points;
                     streakEl.textContent = streak;
                     playConfettiAnimation();
-                    setTimeout(loadSentence, 2000); // Match konfettiens 2 sekunder
+                    setTimeout(loadSentence, 2000); // Én kall etter 2 sekunder
                 }
                 document.body.removeChild(clone);
                 document.removeEventListener('touchmove', moveHandler);
@@ -699,7 +698,7 @@
         pointsEl.textContent = points;
         streakEl.textContent = streak;
         playConfettiAnimation();
-        setTimeout(loadSentence, 2000); // Match konfettiens 2 sekunder
+        setTimeout(loadSentence, 2000); // Én kall etter 2 sekunder
     }
 }
         }
@@ -782,30 +781,29 @@
         }
 
         function playConfettiAnimation() {
-            const rect = sentenceEl.getBoundingClientRect();
-            const text = sentenceEl.textContent;
-            for (const char of text) {
-                if (char === ' ') continue;
-                for (let i = 0; i < 25; i++) {
-                    const confetti = document.createElement('span');
-                    confetti.classList.add('confetti');
-                    confetti.textContent = char;
-                    const x = Math.random() * rect.width;
-                    const y = Math.random() * rect.height;
-                    confetti.style.left = `${rect.left + x}px`;
-                    confetti.style.top = `${rect.top + y}px`;
-                    const dx = (Math.random() - 0.5) * 600;
-                    const dy = (Math.random() - 0.5) * 600;
-                    confetti.style.setProperty('--dx', `${dx}px`);
-                    confetti.style.setProperty('--dy', `${dy}px`);
-                    const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
-                    confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-                    document.body.appendChild(confetti);
-                    setTimeout(() => confetti.remove(), 1000);
-                }
-            }
-            setTimeout(loadSentence, 1500);
+    const rect = sentenceEl.getBoundingClientRect();
+    const text = sentenceEl.textContent;
+    for (const char of text) {
+        if (char === ' ') continue;
+        for (let i = 0; i < 25; i++) {
+            const confetti = document.createElement('span');
+            confetti.classList.add('confetti');
+            confetti.textContent = char;
+            const x = Math.random() * rect.width;
+            const y = Math.random() * rect.height;
+            confetti.style.left = `${rect.left + x}px`;
+            confetti.style.top = `${rect.top + y}px`;
+            const dx = (Math.random() - 0.5) * 600;
+            const dy = (Math.random() - 0.5) * 600;
+            confetti.style.setProperty('--dx', `${dx}px`);
+            confetti.style.setProperty('--dy', `${dy}px`);
+            const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
+            confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 1000);
         }
+    }
+}
 
         modeToggleBtn.addEventListener('click', () => {
             document.body.classList.toggle('dark-mode');

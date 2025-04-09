@@ -626,6 +626,8 @@
             clone.style.zIndex = '1000';
             clone.style.width = `${span.offsetWidth}px`;
             clone.style.height = `${span.offsetHeight}px`;
+            clone.style.fontSize = getComputedStyle(span).fontSize; // Kopier tekststørrelse
+            clone.style.padding = '2px 6px'; // Match .word padding
             clone.style.left = `${touch.clientX - span.offsetWidth / 2}px`;
             clone.style.top = `${touch.clientY - span.offsetHeight / 2}px`;
             clone.style.opacity = '0.8';
@@ -653,32 +655,30 @@
             };
 
             const endHandler = (endEvent) => {
-    const endTouch = endEvent.changedTouches[0];
-    clone.style.display = 'none'; // Skjul klonen før drop
-    const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
-    if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
-        const spans = Array.from(sentenceEl.querySelectorAll('span'));
-        const targetIndex = spans.indexOf(dropTarget);
-        const rect = dropTarget.getBoundingClientRect();
-        const midPoint = rect.left + rect.width / 2;
-        if (endTouch.clientX < midPoint) {
-            sentenceEl.insertBefore(span, dropTarget);
-        } else {
-            sentenceEl.insertBefore(span, dropTarget.nextSibling);
-        }
-        // Oppdater rekkefølgen etter flytting
-        const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
-        const currentOrder = updatedSpans.map(s => s.dataset.word);
-        console.log('Current order:', currentOrder);
-        console.log('Correct order:', currentSentence.correctParts);
-                    if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
-                        points++;
-                        streak++;
-                        pointsEl.textContent = points;
-                        streakEl.textContent = streak;
-                        playConfettiAnimation();
-                        setTimeout(loadSentence, 1500); // Last ny setning etter konfetti
+                const endTouch = endEvent.changedTouches[0];
+                clone.style.display = 'none';
+                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
+                if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
+                    const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                    const targetIndex = spans.indexOf(dropTarget);
+                    const rect = dropTarget.getBoundingClientRect();
+                    const midPoint = rect.left + rect.width / 2;
+                    if (endTouch.clientX < midPoint) {
+                        sentenceEl.insertBefore(span, dropTarget);
+                    } else {
+                        sentenceEl.insertBefore(span, dropTarget.nextSibling);
                     }
+                }
+                // Sjekk rekkefølgen etter all flytting
+                const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
+                const currentOrder = updatedSpans.map(s => s.dataset.word);
+                if (currentOrder.join('') === currentSentence.correctParts.join('')) {
+                    points++;
+                    streak++;
+                    pointsEl.textContent = points;
+                    streakEl.textContent = streak;
+                    playConfettiAnimation();
+                    setTimeout(loadSentence, 2000); // Match konfettiens 2 sekunder
                 }
                 document.body.removeChild(clone);
                 document.removeEventListener('touchmove', moveHandler);
@@ -693,13 +693,13 @@
     });
     const spans = Array.from(sentenceEl.querySelectorAll('span'));
     const currentOrder = spans.map(span => span.dataset.word);
-    if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
+    if (currentOrder.join('') === currentSentence.correctParts.join('')) {
         points++;
         streak++;
         pointsEl.textContent = points;
         streakEl.textContent = streak;
         playConfettiAnimation();
-        setTimeout(loadSentence, 1500); // Last ny setning hvis korrekt ved start
+        setTimeout(loadSentence, 2000); // Match konfettiens 2 sekunder
     }
 }
         }

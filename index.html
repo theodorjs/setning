@@ -758,16 +758,17 @@
         }
 
         function checkCompletion() {
-            const correctWords = sentenceEl.querySelectorAll('.correct').length;
-            const total = currentSentence.interactiveParts.length;
-            if (correctWords === total) {
-                points++;
-                streak++;
-                pointsEl.textContent = points;
-                streakEl.textContent = streak;
-                playConfettiAnimation();
-            }
-        }
+    const correctWords = sentenceEl.querySelectorAll('.correct').length;
+    const total = currentSentence.interactiveParts.length;
+    if (correctWords === total && difficulty !== "Omorganiser") {
+        points++;
+        streak++;
+        pointsEl.textContent = points;
+        streakEl.textContent = streak;
+        playConfettiAnimation();
+        setTimeout(loadSentence, 2000); // Last ny setning etter 2 sekunder
+    }
+}
 
         function getColor(colorName) {
             switch (colorName) {

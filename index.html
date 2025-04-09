@@ -6,19 +6,33 @@
     <title>Setningsanalyse</title>
     <style>
         body {
-            font-family: Arial, sans-serif;
+            font-family: 'Futura', 'Arial', sans-serif;
+            background-color: #f0f0f0;
+            margin: 0;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f0f0;
+            height: 100vh;
+            overflow: hidden;
         }
         #sentence {
-            font-size: 24px;
-            margin-bottom: 20px;
+            font-size: 30px;
+            color: #000;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
             text-align: center;
-            min-height: 50px;
+            min-height: 60px;
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 80%;
+            box-sizing: border-box;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 5px;
         }
         .word {
             display: inline-block;
@@ -26,8 +40,15 @@
             padding: 2px 6px;
             cursor: grab;
             transition: all 0.3s ease;
-            touch-action: none; /* Fjerner touch-forsinkelser */
+            touch-action: none;
         }
+        .word.correct, .word.subject { background-color: #e74c3c; color: white; border-radius: 5px; }
+        .word.verb { background-color: #2ecc71; color: white; border-radius: 5px; }
+        .word.adverbial, .word.manner, .word.place { background-color: #f39c12; color: white; border-radius: 5px; }
+        .word.direct-object { background-color: #3498db; color: white; border-radius: 5px; }
+        .word.indirect-object { background-color: #9b59b6; color: white; border-radius: 5px; }
+        .word.conjunction { background-color: #ccc; color: black; border-radius: 5px; }
+       
         #boxes {
             display: flex;
             justify-content: center;
@@ -35,25 +56,14 @@
             position: fixed;
             bottom: 20px;
             width: 100%;
-            overflow: visible;
+            overflow: visible; /* Lagt til tidligere av deg */
         }
         .box-container {
             display: flex;
             flex-direction: column;
             align-items: center;
             margin: 10px;
-            min-height: 84px; /* Sikrer plass til boks + knapp */
-        }
-        .box {
-            width: 120px;
-            height: 50px;
-            color: white;
-            text-align: center;
-            line-height: 50px;
-            border-radius: 8px;
-            cursor: grab;
-            user-select: none;
-            touch-action: none;
+            min-height: 84px; /* Sikrer plass til boks + knapp, hindrer kollaps */
         }
         .info-btn {
             width: 24px;
@@ -64,53 +74,72 @@
             background-color: #fff;
             color: #000;
             font-size: 16px;
-            line-height: 24px;
+            line-height: 24px; /* Matcher høyden nøyaktig */
             text-align: center;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             box-sizing: border-box;
-            -webkit-appearance: none;
-            appearance: none;
-            min-width: 24px;
-            min-height: 24px;
-            padding: 0;
+            -webkit-appearance: none; /* For Safari */
+            appearance: none; /* For bred kompatibilitet */
+            min-width: 24px; /* Tvinger lik bredde */
+            min-height: 24px; /* Tvinger lik høyde */
+            padding: 0; /* Fjerner all padding som kan strekke */
         }
-        .red { background-color: #e74c3c; }
-        .green { background-color: #2ecc71; }
-        .yellow { background-color: #f1c40f; }
-        .blue { background-color: #3498db; }
-        .purple { background-color: #9b59b6; }
-        .correct { border: 2px solid #000; }
-        #controls {
-            margin-bottom: 20px;
-            display: flex;
-            gap: 10px;
+        .box {
+            width: 120px;
+            height: 50px;
+            color: white;
+            text-align: center;
+            line-height: 50px;
+            border-radius: 8px;
+            cursor: grab;
+            user-select: none;
+            touch-action: none; /* Hindrer scrolling/zooming */
+        }
+        .subject { background-color: #e74c3c; }
+        .verb { background-color: #2ecc71; }
+        .adverbial { background-color: #f39c12; }
+        .direct-object { background-color: #3498db; }
+        .indirect-object { background-color: #9b59b6; }
+        #score {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            font-size: 20px;
         }
         #popup {
-            display: none;
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: white;
-            padding: 20px;
+            position: absolute;
+            background-color: #fff;
             border: 2px solid #000;
-            border-radius: 8px;
-            z-index: 1000;
-            max-width: 80%;
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 250px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            z-index: 10;
+            display: none;
+            font-size: 16px;
         }
-        #popup-content { margin-bottom: 10px; }
-        #close-popup {
-            padding: 5px 10px;
-            cursor: pointer;
-            background-color: #3498db;
-            color: white;
+        #modeToggle {
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 8px 16px;
+            background-color: #ddd;
             border: none;
             border-radius: 5px;
+            cursor: pointer;
+            z-index: 20;
         }
+        body.dark-mode { background-color: #121212; color: #f0f0f0; }
+        body.dark-mode #sentence { background-color: #333; color: #f0f0f0; }
+        body.dark-mode .box { opacity: 0.8; }
+        body.dark-mode #modeToggle { background-color: #444; color: #fff; }
+        body.dark-mode #popup { background-color: #333; color: #f0f0f0; border-color: #fff; }
+        body.dark-mode #difficulty-buttons button { background-color: #444; color: #fff; }
+        body.dark-mode #difficulty-buttons button.active { background-color: #3498db; color: #fff; }
         @keyframes explode {
             0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
             100% { transform: translate(var(--dx), var(--dy)) rotate(720deg); opacity: 0; }
@@ -119,273 +148,132 @@
             position: absolute;
             font-size: 20px;
             pointer-events: none;
-            animation: explode 2s forwards ease-out; /* 2 sekunder */
+            animation: explode 2s forwards ease-out;
+        }
+        #difficulty-buttons {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            display: flex;
+            flex-direction: column;
+            z-index: 30;
+        }
+        #difficulty-buttons button {
+            margin-bottom: 10px;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background-color: #ddd;
+        }
+        #difficulty-buttons button.active {
+            background-color: #3498db;
+            color: #fff;
+        }
+        @media only screen and (max-width: 600px) {
+            #score { top: 70px; right: auto; left: 50%; transform: translateX(-50%); }
         }
     </style>
 </head>
 <body>
-    <div id="controls">
-        <button onclick="setDifficulty('Enkel')">Enkel</button>
-        <button onclick="setDifficulty('Middels')">Middels</button>
-        <button onclick="setDifficulty('Vanskelig')">Vanskelig</button>
-        <button onclick="setDifficulty('Omorganiser')">Omorganiser</button>
-        <span>Poeng: <span id="points">0</span></span>
-        <span>Streak: <span id="streak">0</span></span>
+    <div id="difficulty-buttons">
+        <button data-difficulty="Enkel">Enkel</button>
+        <button data-difficulty="Middels" class="active">Middels</button>
+        <button data-difficulty="Vanskelig">Vanskelig</button>
+        <button data-difficulty="Omorganiser">Omorganiser</button>
+    </div>
+    <button id="modeToggle">Dark Mode</button>
+    <div id="score">
+        ⭐ Poeng: <span id="points">0</span> | 🔥 Streak: <span id="streak">0</span>
     </div>
     <div id="sentence"></div>
     <div id="boxes"></div>
-    <div id="popup">
-        <div id="popup-content"></div>
-        <button id="close-popup" onclick="hidePopup()">Lukk</button>
-    </div>
+    <div id="popup"></div>
 
     <script>
         const sentenceEl = document.getElementById('sentence');
         const boxesEl = document.getElementById('boxes');
+        const popupEl = document.getElementById('popup');
         const pointsEl = document.getElementById('points');
         const streakEl = document.getElementById('streak');
-        const popupEl = document.getElementById('popup');
-        const popupContentEl = document.getElementById('popup-content');
-        let currentSentence, lastSentence;
-        let difficulty = 'Enkel';
+        const modeToggleBtn = document.getElementById('modeToggle');
+        const difficultyButtons = document.querySelectorAll('#difficulty-buttons button');
         let points = 0;
         let streak = 0;
+        let lastSentence = null;
+        let currentPopupFunc = null;
+        let popupTimer = null;
+        let difficulty = "Middels";
 
         const functions = [
-            { name: 'Subjekt', color: 'red', description: 'Den som utfører handlingen i setningen.' },
-            { name: 'Verbal', color: 'green', description: 'Handlingen i setningen.' },
-            { name: 'Direkte objekt', color: 'yellow', description: 'Det som blir påvirket av handlingen.' },
-            { name: 'Indirekte objekt', color: 'blue', description: 'Mottakeren av handlingen.' },
-            { name: 'Adverbial', color: 'purple', description: 'Tilleggsinformasjon om handlingen.' }
+            { name: 'Subjekt', color: 'subject', desc: 'Den som utfører handlingen i setningen.' },
+            { name: 'Verbal', color: 'verb', desc: 'Handlingen eller tilstanden i setningen.' },
+            { name: 'Adverbial', color: 'adverbial', desc: 'Gir informasjon om tid, sted, måte eller omstendigheter.' },
+            { name: 'Direkte objekt', color: 'direct-object', desc: 'Det som blir direkte påvirket av handlingen.' },
+            { name: 'Indirekte objekt', color: 'indirect-object', desc: 'Mottakeren av det direkte objektet.' }
         ];
 
-        const sentences = [
+        const subjects = [
+            { text: 'Barna', preferredMannerAdverbials: ['raskt', 'stille'] },
+            { text: 'Postmannen', preferredMannerAdverbials: ['raskt', 'forsiktig'] },
+            { text: 'Jeg', preferredMannerAdverbials: ['rolig', 'nøyaktig'] },
+            { text: 'Læreren', preferredMannerAdverbials: ['nøyaktig', 'rolig'] },
+            { text: 'Katten', preferredMannerAdverbials: ['stille', 'raskt'] },
+            { text: 'Hunden', preferredMannerAdverbials: ['høyt', 'raskt'] }
+        ];
+
+        const verbs = [
             {
-                parts: ['Jeg', 'spiser', 'eplet', 'raskt'],
-                interactiveParts: ['Jeg', 'spiser', 'eplet', 'raskt'],
-                correct: { 'Jeg': 'red', 'spiser': 'green', 'eplet': 'yellow', 'raskt': 'purple' },
-                correctParts: ['Jeg', 'spiser', 'eplet', 'raskt']
+                text: 'gir',
+                transitive: true,
+                requiresIndirect: true,
+                compatibleObjects: ['ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken'],
+                compatibleIndirect: ['meg', 'henne', 'ham', 'barna', 'læreren', 'deg'],
+                compatibleMannerAdverbials: ['raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig'],
+                compatiblePlaceAdverbials: ['hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen'],
+                compatibleTimeAdverbials: ['i dag', 'i morgen', 'i går', 'nå', 'snart']
             },
             {
-                parts: ['Hun', 'ga', 'barnet', 'en bok', 'i går'],
-                interactiveParts: ['Hun', 'ga', 'barnet', 'en bok', 'i går'],
-                correct: { 'Hun': 'red', 'ga': 'green', 'barnet': 'blue', 'en bok': 'yellow', 'i går': 'purple' },
-                correctParts: ['Hun', 'ga', 'barnet', 'en bok', 'i går']
+                text: 'løper',
+                transitive: false,
+                compatibleMannerAdverbials: ['raskt', 'sakte', 'rolig', 'stille', 'klønete'],
+                compatiblePlaceAdverbials: ['i parken', 'hjemme', 'ute', 'på skolen', 'i skogen'],
+                compatibleTimeAdverbials: ['i dag', 'i går', 'nå']
+            },
+            {
+                text: 'roper',
+                transitive: false,
+                compatibleMannerAdverbials: ['høyt', 'lavt', 'klart', 'stille'],
+                compatiblePlaceAdverbials: ['i parken', 'på skolen', 'ute', 'hjemme'],
+                compatibleTimeAdverbials: ['i dag', 'i morgen', 'nå']
             }
         ];
 
-        function generateSentence() {
-            let sentence;
-            do {
-                sentence = sentences[Math.floor(Math.random() * sentences.length)];
-            } while (sentence === lastSentence);
-            if (difficulty === "Omorganiser") {
-                const shuffled = [...sentence.parts];
-                for (let i = shuffled.length - 1; i > 0; i--) {
-                    const j = Math.floor(Math.random() * (i + 1));
-                    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
-                }
-                return { ...sentence, parts: shuffled };
-            }
-            return sentence;
-        }
+        const conflictingAdverbials = [
+            ['raskt', 'sakte'],
+            ['høyt', 'lavt'],
+            ['rolig', 'klønete']
+        ];
 
-        function getColor(colorClass) {
-            const colors = { red: '#e74c3c', green: '#2ecc71', yellow: '#f1c40f', blue: '#3498db', purple: '#9b59b6' };
-            return colors[colorClass] || '#000';
-        }
-
-        function loadSentence() {
-            currentSentence = generateSentence();
-            lastSentence = currentSentence;
-            sentenceEl.innerHTML = '';
-            if (difficulty !== "Omorganiser") {
-                currentSentence.parts.forEach(part => {
-                    if (currentSentence.interactiveParts.includes(part)) {
-                        const span = document.createElement('span');
-                        span.classList.add('word');
-                        span.textContent = part;
-                        span.dataset.word = part;
-                        span.addEventListener('dragover', dragOver);
-                        span.addEventListener('drop', drop);
-                        sentenceEl.appendChild(span);
-                    } else {
-                        const textNode = document.createTextNode(part + ' ');
-                        sentenceEl.appendChild(textNode);
-                    }
-                });
-                createBoxes();
-            } else if (difficulty === "Omorganiser") {
-                currentSentence.parts.forEach(part => {
-                    const span = document.createElement('span');
-                    span.classList.add('word');
-                    span.textContent = part;
-                    span.dataset.word = part;
-                    if (currentSentence.correct[part]) {
-                        span.classList.add(currentSentence.correct[part]);
-                        span.style.backgroundColor = getColor(currentSentence.correct[part]);
-                    }
-                    span.setAttribute('draggable', 'true');
-
-                    span.addEventListener('dragstart', dragStartOmorganiser);
-                    span.addEventListener('dragend', dragEndOmorganiser);
-                    span.addEventListener('dragover', dragOverOmorganiser);
-                    span.addEventListener('dragleave', dragLeaveOmorganiser);
-                    span.addEventListener('drop', dropOmorganiser);
-
-                    span.addEventListener('touchstart', (e) => {
-                        e.preventDefault();
-                        const touch = e.touches[0];
-                        const clone = span.cloneNode(true);
-                        clone.style.position = 'absolute';
-                        clone.style.zIndex = '1000';
-                        clone.style.width = `${span.offsetWidth}px`;
-                        clone.style.height = `${span.offsetHeight}px`;
-                        clone.style.fontSize = getComputedStyle(span).fontSize;
-                        clone.style.padding = '2px 6px';
-                        clone.style.left = `${touch.clientX - span.offsetWidth / 2}px`;
-                        clone.style.top = `${touch.clientY - span.offsetHeight / 2}px`;
-                        clone.style.opacity = '0.8';
-                        clone.style.borderRadius = '5px';
-                        document.body.appendChild(clone);
-
-                        const moveHandler = (moveEvent) => {
-                            moveEvent.preventDefault();
-                            const moveTouch = moveEvent.touches[0];
-                            clone.style.left = `${moveTouch.clientX - span.offsetWidth / 2}px`;
-                            clone.style.top = `${moveTouch.clientY - span.offsetHeight / 2}px`;
-
-                            const dropTarget = document.elementFromPoint(moveTouch.clientX, moveTouch.clientY);
-                            if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
-                                const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                                const targetIndex = spans.indexOf(dropTarget);
-                                const rect = dropTarget.getBoundingClientRect();
-                                const midPoint = rect.left + rect.width / 2;
-                                if (moveTouch.clientX < midPoint) {
-                                    sentenceEl.insertBefore(span, dropTarget);
-                                } else {
-                                    sentenceEl.insertBefore(span, dropTarget.nextSibling);
-                                }
-                            }
-                        };
-
-                        const endHandler = (endEvent) => {
-                            const endTouch = endEvent.changedTouches[0];
-                            clone.style.display = 'none';
-                            const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
-                            if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
-                                const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                                const targetIndex = spans.indexOf(dropTarget);
-                                const rect = dropTarget.getBoundingClientRect();
-                                const midPoint = rect.left + rect.width / 2;
-                                if (endTouch.clientX < midPoint) {
-                                    sentenceEl.insertBefore(span, dropTarget);
-                                } else {
-                                    sentenceEl.insertBefore(span, dropTarget.nextSibling);
-                                }
-                            }
-                            const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
-                            const currentOrder = updatedSpans.map(s => s.dataset.word);
-                            if (currentOrder.join('') === currentSentence.correctParts.join('')) {
-                                points++;
-                                streak++;
-                                pointsEl.textContent = points;
-                                streakEl.textContent = streak;
-                                playConfettiAnimation();
-                                setTimeout(loadSentence, 2000);
-                            }
-                            document.body.removeChild(clone);
-                            document.removeEventListener('touchmove', moveHandler);
-                            document.removeEventListener('touchend', endHandler);
-                        };
-
-                        document.addEventListener('touchmove', moveHandler, { passive: false });
-                        document.addEventListener('touchend', endHandler);
-                    });
-
-                    sentenceEl.appendChild(span);
-                });
-                const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                const currentOrder = spans.map(span => span.dataset.word);
-                if (currentOrder.join('') === currentSentence.correctParts.join('')) {
-                    points++;
-                    streak++;
-                    pointsEl.textContent = points;
-                    streakEl.textContent = streak;
-                    playConfettiAnimation();
-                    setTimeout(loadSentence, 2000);
-                }
-            }
-        }
-
-        function createBoxes() {
-            boxesEl.innerHTML = '';
-            functions.forEach(funcData => {
-                const container = document.createElement('div');
-                container.classList.add('box-container');
-
-                const box = document.createElement('div');
-                box.classList.add('box', funcData.color);
-                box.textContent = funcData.name;
-                box.dataset.function = funcData.name;
-                box.setAttribute('draggable', 'true');
-
-                box.addEventListener('dragstart', (e) => {
-                    e.dataTransfer.setData('text', funcData.name);
-                });
-
-                box.addEventListener('touchstart', (e) => {
-                    e.preventDefault();
-                    const touch = e.touches[0];
-                    const clone = box.cloneNode(true);
-                    clone.style.position = 'absolute';
-                    clone.style.zIndex = '1000';
-                    clone.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
-                    clone.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
-                    clone.style.opacity = '0.8';
-                    document.body.appendChild(clone);
-
-                    const moveHandler = (moveEvent) => {
-                        const moveTouch = moveEvent.touches[0];
-                        clone.style.left = `${moveTouch.clientX - box.offsetWidth / 2}px`;
-                        clone.style.top = `${moveTouch.clientY - box.offsetHeight / 2}px`;
-                    };
-
-                    const endHandler = (endEvent) => {
-                        const endTouch = endEvent.changedTouches[0];
-                        clone.style.display = 'none';
-                        const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
-                        if (dropTarget && dropTarget.classList.contains('word')) {
-                            const dataTransfer = new DataTransfer();
-                            dataTransfer.setData('text', funcData.name);
-                            const dropEvent = new DragEvent('drop', {
-                                dataTransfer: dataTransfer,
-                                clientX: endTouch.clientX,
-                                clientY: endTouch.clientY,
-                                bubbles: true
-                            });
-                            dropTarget.dispatchEvent(dropEvent);
-                        }
-                        document.body.removeChild(clone);
-                        document.removeEventListener('touchmove', moveHandler);
-                        document.removeEventListener('touchend', endHandler);
-                    };
-
-                    document.addEventListener('touchmove', moveHandler);
-                    document.addEventListener('touchend', endHandler);
-                });
-
-                const infoBtn = document.createElement('button');
-                infoBtn.classList.add('info-btn');
-                infoBtn.textContent = '?';
-                infoBtn.addEventListener('click', () => {
-                    showPopup(funcData);
-                });
-
-                container.appendChild(box);
-                container.appendChild(infoBtn);
-                boxesEl.appendChild(container);
+        difficultyButtons.forEach(btn => {
+            btn.addEventListener('click', () => {
+                difficulty = btn.getAttribute('data-difficulty');
+                difficultyButtons.forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                loadSentence();
             });
+        });
+
+        function replaceUnderscores(str) {
+            return str.replace(/_/g, ' ');
+        }
+
+        function capitalize(word) {
+            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
+        }
+
+        function checkConflict(a1, a2) {
+            return conflictingAdverbials.some(pair => pair.includes(a1) && pair.includes(a2));
         }
 
         function dragOver(e) {
@@ -405,99 +293,522 @@
             }
         }
 
-        function checkCompletion() {
-            const correctWords = sentenceEl.querySelectorAll('.correct').length;
-            const total = currentSentence.interactiveParts.length;
-            if (correctWords === total && difficulty !== "Omorganiser") {
-                points++;
-                streak++;
-                pointsEl.textContent = points;
-                streakEl.textContent = streak;
-                playConfettiAnimation();
-                setTimeout(loadSentence, 2000);
+        function generateSentence() {
+            let sentence;
+
+            if (difficulty === "Enkel") {
+                const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                sentence = {
+                    parts: [s, verb.text, a],
+                    interactiveParts: [s, verb.text, a],
+                    text: `${s} ${verb.text} ${a}.`,
+                    correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' },
+                    verb: verb
+                };
+            } else if (difficulty === "Middels") {
+                const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
+                const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
+                const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                const parts = [s, verb.text, i, d, a].filter(part => part);
+                sentence = {
+                    parts: parts,
+                    interactiveParts: parts,
+                    text: `${s} ${verb.text} ${i} ${d} ${a}.`.replace(/\s+/g, ' ').trim(),
+                    correct: { 
+                        [s]: 'subject', 
+                        [verb.text]: 'verb', 
+                        ...(i && { [i]: 'indirect-object' }), 
+                        ...(d && { [d]: 'direct-object' }), 
+                        [a]: 'adverbial' 
+                    },
+                    verb: verb
+                };
+            } else if (difficulty === "Vanskelig") {
+                const verb = verbs.find(v => v.text === 'gir');
+                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
+                const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
+                let a1, a2;
+                do {
+                    a1 = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                    a2 = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                } while (a1 === a2 || checkConflict(a1, a2));
+                const p = replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]);
+                sentence = {
+                    parts: [s, verb.text, i, d, a1, "og", a2, p],
+                    interactiveParts: [s, verb.text, i, d, a1, a2, p],
+                    text: `${s} ${verb.text} ${i} ${d} ${a1} og ${a2} ${p}.`,
+                    correct: { 
+                        [s]: 'subject', 
+                        [verb.text]: 'verb', 
+                        [i]: 'indirect-object', 
+                        [d]: 'direct-object', 
+                        [a1]: 'adverbial', 
+                        [a2]: 'adverbial', 
+                        [p]: 'adverbial' 
+                    },
+                    verb: verb
+                };
+            } else if (difficulty === "Omorganiser") {
+                const baseSentence = generateBaseSentence();
+                const scrambledParts = [...baseSentence.parts].sort(() => Math.random() - 0.5);
+                sentence = {
+                    parts: scrambledParts,
+                    correctParts: baseSentence.parts,
+                    interactiveParts: scrambledParts,
+                    text: scrambledParts.join(' ') + '.',
+                    correct: baseSentence.correct,
+                    verb: baseSentence.verb
+                };
             }
+
+            if (difficulty === "Enkel" || difficulty === "Middels") {
+                let maxAttempts = 10;
+                for (let attempt = 0; attempt < maxAttempts; attempt++) {
+                    let tempSentence = { ...sentence };
+                    if (isSentenceValid(tempSentence)) {
+                        let variationOK = true;
+                        if (lastSentence) {
+                            let newWords = Object.keys(tempSentence.correct);
+                            let oldWords = Object.keys(lastSentence.correct);
+                            let common = newWords.filter(word => oldWords.includes(word)).length;
+                            let diff = newWords.length - common;
+                            if (difficulty === "Enkel" && newWords.length === 3 && diff < 1) variationOK = false;
+                            else if (difficulty === "Middels" && (newWords.length === 4 || newWords.length === 5) && diff < 2) variationOK = false;
+                        }
+                        if (variationOK) {
+                            sentence = tempSentence;
+                            break;
+                        }
+                    }
+
+                    if (difficulty === "Enkel") {
+                        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                        const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                        sentence = {
+                            parts: [s, verb.text, a],
+                            interactiveParts: [s, verb.text, a],
+                            text: `${s} ${verb.text} ${a}.`,
+                            correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' },
+                            verb: verb
+                        };
+                    } else if (difficulty === "Middels") {
+                        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+                        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+                        const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
+                        const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
+                        const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                        const parts = [s, verb.text, i, d, a].filter(part => part);
+                        sentence = {
+                            parts: parts,
+                            interactiveParts: parts,
+                            text: `${s} ${verb.text} ${i} ${d} ${a}.`.replace(/\s+/g, ' ').trim(),
+                            correct: { 
+                                [s]: 'subject', 
+                                [verb.text]: 'verb', 
+                                ...(i && { [i]: 'indirect-object' }), 
+                                ...(d && { [d]: 'direct-object' }), 
+                                [a]: 'adverbial' 
+                            },
+                            verb: verb
+                        };
+                    }
+                }
+                if (!isSentenceValid(sentence)) {
+                    console.error("Kunne ikke generere gyldig setning etter maks forsøk.");
+                    sentence.text = "Feil i setningsgenerering.";
+                    sentence.parts = ["Feil"];
+                    sentence.interactiveParts = ["Feil"];
+                }
+            }
+
+            if (difficulty === "Vanskelig" && !isSentenceValid(sentence)) {
+                console.error("Kunne ikke generere gyldig setning for Vanskelig.");
+                sentence.text = "Feil i setningsgenerering.";
+                sentence.parts = ["Feil"];
+                sentence.interactiveParts = ["Feil"];
+            }
+
+            return sentence;
         }
 
+        function generateBaseSentence() {
+            const verb = verbs[Math.floor(Math.random() * verbs.length)];
+            const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+            const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
+            const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
+            const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+            const p = replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]);
+            const parts = [s, verb.text, i, d, a, p].filter(part => part);
+            return {
+                parts: parts,
+                correct: { 
+                    [s]: 'subject', 
+                    [verb.text]: 'verb', 
+                    ...(i && { [i]: 'indirect-object' }), 
+                    ...(d && { [d]: 'direct-object' }), 
+                    [a]: 'adverbial', 
+                    [p]: 'adverbial' 
+                },
+                verb: verb
+            };
+        }
+
+        function scrambleSentence(sentence) {
+            const parts = [...sentence.parts].sort(() => Math.random() - 0.5);
+            return { text: parts.join(' ') + '.' };
+        }
+
+        function isSentenceValid(sentence) {
+            const words = sentence.text.split(' ');
+            if (words.length < 3) return false;
+            if (words.includes('gir') && !Object.values(sentence.correct).includes('direct-object')) return false;
+            return true;
+        }
+
+        let currentSentence = null;
+
+        function createBoxes() {
+    boxesEl.innerHTML = '';
+    functions.forEach(funcData => {
+        const container = document.createElement('div');
+        container.classList.add('box-container');
+
+        const box = document.createElement('div');
+        box.classList.add('box', funcData.color);
+        box.textContent = funcData.name;
+        box.dataset.function = funcData.name;
+        box.setAttribute('draggable', 'true');
+
+        // Desktop: Dra-og-slipp med HTML5
+        box.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text', funcData.name);
+        });
+
+        // iPad: Touch-håndtering med klone
+        box.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const clone = box.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.zIndex = '1000';
+            clone.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
+            clone.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
+            clone.style.opacity = '0.8';
+            document.body.appendChild(clone);
+
+            const moveHandler = (moveEvent) => {
+                const moveTouch = moveEvent.touches[0];
+                clone.style.left = `${moveTouch.clientX - box.offsetWidth / 2}px`;
+                clone.style.top = `${moveTouch.clientY - box.offsetHeight / 2}px`;
+            };
+
+            const endHandler = (endEvent) => {
+                const endTouch = endEvent.changedTouches[0];
+                // Skjul klonen før vi finner drop-målet
+                clone.style.display = 'none';
+                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
+                if (dropTarget && dropTarget.classList.contains('word')) {
+                    const dataTransfer = new DataTransfer();
+                    dataTransfer.setData('text', funcData.name);
+                    const dropEvent = new DragEvent('drop', {
+                        dataTransfer: dataTransfer,
+                        clientX: endTouch.clientX,
+                        clientY: endTouch.clientY,
+                        bubbles: true // Sørger for at eventet bobler opp
+                    });
+                    dropTarget.dispatchEvent(dropEvent);
+                }
+                // Fjern klonen
+                document.body.removeChild(clone);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+            };
+
+            document.addEventListener('touchmove', moveHandler);
+            document.addEventListener('touchend', endHandler);
+        });
+
+        const infoBtn = document.createElement('button');
+        infoBtn.classList.add('info-btn');
+        infoBtn.textContent = '?';
+        infoBtn.addEventListener('click', () => {
+            showPopup(funcData);
+        });
+
+        container.appendChild(box);
+        container.appendChild(infoBtn);
+        boxesEl.appendChild(container);
+    });
+}
+
+        function showPopup(funcData) {
+            if (popupEl.style.display === 'block' && currentPopupFunc === funcData.color) {
+                popupEl.style.display = 'none';
+                currentPopupFunc = null;
+                clearTimeout(popupTimer);
+                return;
+            }
+            clearTimeout(popupTimer);
+            const exampleEntry = Object.entries(currentSentence.correct).find(([word, func]) => func === funcData.color);
+            const exampleWord = exampleEntry ? exampleEntry[0] : '';
+            let explanation = '';
+            switch (funcData.color) {
+                case 'subject': explanation = `I "${currentSentence.text}" er "${exampleWord}" subjektet fordi det er den som utfører handlingen.`; break;
+                case 'verb': explanation = `I "${currentSentence.text}" er "${exampleWord}" verbalet fordi det beskriver handlingen.`; break;
+                case 'adverbial': explanation = `I "${currentSentence.text}" er "${exampleWord}" et adverbial fordi det sier noe om ${['raskt', 'sakte'].includes(exampleWord) ? 'måte' : ['hjemme', 'på skolen'].includes(exampleWord) ? 'sted' : 'tid'}.`; break;
+                case 'direct-object': explanation = `I "${currentSentence.text}" er "${exampleWord}" direkte objekt fordi det er det som blir påvirket av handlingen.`; break;
+                case 'indirect-object': explanation = `I "${currentSentence.text}" er "${exampleWord}" indirekte objekt fordi det er mottakeren av det direkte objektet.`; break;
+            }
+            popupEl.innerHTML = `${funcData.desc}<br><br>${explanation}`;
+            popupEl.style.display = 'block';
+            currentPopupFunc = funcData.color;
+            const box = boxesEl.querySelector(`.${funcData.color}`);
+            const rect = box.getBoundingClientRect();
+            popupEl.style.left = `${rect.left}px`;
+            popupEl.style.top = `${rect.top - popupEl.offsetHeight - 10}px`;
+            popupTimer = setTimeout(() => {
+                popupEl.style.display = 'none';
+                currentPopupFunc = null;
+            }, 10000);
+        }
+
+        function loadSentence() {
+    currentSentence = generateSentence();
+    lastSentence = currentSentence;
+    sentenceEl.innerHTML = '';
+    if (difficulty !== "Omorganiser") {
+        currentSentence.parts.forEach(part => {
+            if (currentSentence.interactiveParts.includes(part)) {
+                const span = document.createElement('span');
+                span.classList.add('word');
+                span.textContent = part;
+                span.dataset.word = part;
+                span.addEventListener('dragover', dragOver);
+                span.addEventListener('drop', drop);
+                sentenceEl.appendChild(span);
+            } else {
+                const textNode = document.createTextNode(part + ' ');
+                sentenceEl.appendChild(textNode);
+            }
+        });
+        createBoxes();
+    } else if (difficulty === "Omorganiser") {
+    currentSentence.parts.forEach(part => {
+        const span = document.createElement('span');
+        span.classList.add('word');
+        span.textContent = part;
+        span.dataset.word = part;
+        if (currentSentence.correct[part]) {
+            span.classList.add(currentSentence.correct[part]);
+            span.style.backgroundColor = getColor(currentSentence.correct[part]);
+        }
+        span.setAttribute('draggable', 'true');
+
+        // Desktop: HTML5 dra-og-slipp
+        span.addEventListener('dragstart', dragStartOmorganiser);
+        span.addEventListener('dragend', dragEndOmorganiser);
+        span.addEventListener('dragover', dragOverOmorganiser);
+        span.addEventListener('dragleave', dragLeaveOmorganiser);
+        span.addEventListener('drop', dropOmorganiser);
+
+        // iPad: Touch-håndtering med klone
+        span.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const touch = e.touches[0];
+            const clone = span.cloneNode(true);
+            clone.style.position = 'absolute';
+            clone.style.zIndex = '1000';
+            clone.style.width = `${span.offsetWidth}px`;
+            clone.style.height = `${span.offsetHeight}px`;
+            clone.style.fontSize = getComputedStyle(span).fontSize;
+            clone.style.padding = '2px 6px';
+            clone.style.left = `${touch.clientX - span.offsetWidth / 2}px`;
+            clone.style.top = `${touch.clientY - span.offsetHeight / 2}px`;
+            clone.style.opacity = '0.8';
+            clone.style.borderRadius = '5px';
+            document.body.appendChild(clone);
+
+            const moveHandler = (moveEvent) => {
+                moveEvent.preventDefault();
+                const moveTouch = moveEvent.touches[0];
+                clone.style.left = `${moveTouch.clientX - span.offsetWidth / 2}px`;
+                clone.style.top = `${moveTouch.clientY - span.offsetHeight / 2}px`;
+
+                const dropTarget = document.elementFromPoint(moveTouch.clientX, moveTouch.clientY);
+                if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
+                    const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                    const targetIndex = spans.indexOf(dropTarget);
+                    const rect = dropTarget.getBoundingClientRect();
+                    const midPoint = rect.left + rect.width / 2;
+                    if (moveTouch.clientX < midPoint) {
+                        sentenceEl.insertBefore(span, dropTarget);
+                    } else {
+                        sentenceEl.insertBefore(span, dropTarget.nextSibling);
+                    }
+                }
+            };
+
+            const endHandler = (endEvent) => {
+                const endTouch = endEvent.changedTouches[0];
+                clone.style.display = 'none';
+                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
+                if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
+                    const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                    const targetIndex = spans.indexOf(dropTarget);
+                    const rect = dropTarget.getBoundingClientRect();
+                    const midPoint = rect.left + rect.width / 2;
+                    if (endTouch.clientX < midPoint) {
+                        sentenceEl.insertBefore(span, dropTarget);
+                    } else {
+                        sentenceEl.insertBefore(span, dropTarget.nextSibling);
+                    }
+                }
+                const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
+                const currentOrder = updatedSpans.map(s => s.dataset.word);
+                if (currentOrder.join('') === currentSentence.correctParts.join('')) {
+                    points++;
+                    streak++;
+                    pointsEl.textContent = points;
+                    streakEl.textContent = streak;
+                    playConfettiAnimation();
+                    setTimeout(loadSentence, 2000); // Én kall etter 2 sekunder
+                }
+                document.body.removeChild(clone);
+                document.removeEventListener('touchmove', moveHandler);
+                document.removeEventListener('touchend', endHandler);
+            };
+
+            document.addEventListener('touchmove', moveHandler, { passive: false });
+            document.addEventListener('touchend', endHandler);
+        });
+
+        sentenceEl.appendChild(span);
+    });
+    const spans = Array.from(sentenceEl.querySelectorAll('span'));
+    const currentOrder = spans.map(span => span.dataset.word);
+    if (currentOrder.join('') === currentSentence.correctParts.join('')) {
+        points++;
+        streak++;
+        pointsEl.textContent = points;
+        streakEl.textContent = streak;
+        playConfettiAnimation();
+        setTimeout(loadSentence, 2000); // Én kall etter 2 sekunder
+    }
+}
+        }
+
+        let draggedSpan = null;
+
         function dragStartOmorganiser(e) {
-            e.dataTransfer.setData('text', e.target.dataset.word);
-            e.target.style.opacity = '0.5';
+            draggedSpan = e.target;
+            e.dataTransfer.setData('text', draggedSpan.dataset.word);
+            setTimeout(() => {
+                draggedSpan.style.display = 'none';
+            }, 0);
         }
 
         function dragEndOmorganiser(e) {
-            e.target.style.opacity = '1';
+            if (draggedSpan) {
+                draggedSpan.style.display = 'inline-block';
+                draggedSpan = null;
+            }
         }
 
         function dragOverOmorganiser(e) {
             e.preventDefault();
+            const targetSpan = e.target;
+            if (draggedSpan && targetSpan !== draggedSpan) {
+                const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                const targetIndex = spans.indexOf(targetSpan);
+                const rect = targetSpan.getBoundingClientRect();
+                const midPoint = rect.left + rect.width / 2;
+                if (e.clientX < midPoint) {
+                    sentenceEl.insertBefore(draggedSpan, targetSpan);
+                } else {
+                    sentenceEl.insertBefore(draggedSpan, targetSpan.nextSibling);
+                }
+                draggedSpan.style.display = 'inline-block';
+            }
         }
 
         function dragLeaveOmorganiser(e) {
-            e.target.style.border = '';
+            // Ingen handling nødvendig her
         }
 
         function dropOmorganiser(e) {
             e.preventDefault();
-            const word = e.dataTransfer.getData('text');
-            const spans = Array.from(sentenceEl.querySelectorAll('span'));
-            const draggedSpan = spans.find(span => span.dataset.word === word);
-            const targetSpan = e.target;
-            const targetIndex = spans.indexOf(targetSpan);
-            const rect = targetSpan.getBoundingClientRect();
-            const midPoint = rect.left + rect.width / 2;
-            if (e.clientX < midPoint) {
-                sentenceEl.insertBefore(draggedSpan, targetSpan);
-            } else {
-                sentenceEl.insertBefore(draggedSpan, targetSpan.nextSibling);
+            if (draggedSpan) {
+                const spans = Array.from(sentenceEl.querySelectorAll('span'));
+                const currentOrder = spans.map(span => span.dataset.word);
+                if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
+                    points++;
+                    streak++;
+                    pointsEl.textContent = points;
+                    streakEl.textContent = streak;
+                    playConfettiAnimation();
+                }
+                draggedSpan = null;
             }
-            const currentOrder = spans.map(span => span.dataset.word);
-            if (currentOrder.join('') === currentSentence.correctParts.join('')) {
+        }
+
+        function checkCompletion() {
+            const correctWords = sentenceEl.querySelectorAll('.correct').length;
+            const total = currentSentence.interactiveParts.length;
+            if (correctWords === total) {
                 points++;
                 streak++;
                 pointsEl.textContent = points;
                 streakEl.textContent = streak;
                 playConfettiAnimation();
-                setTimeout(loadSentence, 2000);
+            }
+        }
+
+        function getColor(colorName) {
+            switch (colorName) {
+                case 'subject': return '#e74c3c';
+                case 'verb': return '#2ecc71';
+                case 'adverbial': return '#f39c12';
+                case 'direct-object': return '#3498db';
+                case 'indirect-object': return '#9b59b6';
+                default: return '#000';
             }
         }
 
         function playConfettiAnimation() {
-            const rect = sentenceEl.getBoundingClientRect();
-            const text = sentenceEl.textContent;
-            for (const char of text) {
-                if (char === ' ') continue;
-                for (let i = 0; i < 25; i++) {
-                    const confetti = document.createElement('span');
-                    confetti.classList.add('confetti');
-                    confetti.textContent = char;
-                    const x = Math.random() * rect.width;
-                    const y = Math.random() * rect.height;
-                    confetti.style.left = `${rect.left + x}px`;
-                    confetti.style.top = `${rect.top + y}px`;
-                    const dx = (Math.random() - 0.5) * 600;
-                    const dy = (Math.random() - 0.5) * 600;
-                    confetti.style.setProperty('--dx', `${dx}px`);
-                    confetti.style.setProperty('--dy', `${dy}px`);
-                    const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
-                    confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-                    document.body.appendChild(confetti);
-                    setTimeout(() => confetti.remove(), 1000);
-                }
-            }
+    const rect = sentenceEl.getBoundingClientRect();
+    const text = sentenceEl.textContent;
+    for (const char of text) {
+        if (char === ' ') continue;
+        for (let i = 0; i < 25; i++) {
+            const confetti = document.createElement('span');
+            confetti.classList.add('confetti');
+            confetti.textContent = char;
+            const x = Math.random() * rect.width;
+            const y = Math.random() * rect.height;
+            confetti.style.left = `${rect.left + x}px`;
+            confetti.style.top = `${rect.top + y}px`;
+            const dx = (Math.random() - 0.5) * 600;
+            const dy = (Math.random() - 0.5) * 600;
+            confetti.style.setProperty('--dx', `${dx}px`);
+            confetti.style.setProperty('--dy', `${dy}px`);
+            const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
+            confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
+            document.body.appendChild(confetti);
+            setTimeout(() => confetti.remove(), 1000);
         }
+    }
+}
 
-        function showPopup(funcData) {
-            popupContentEl.textContent = `${funcData.name}: ${funcData.description}`;
-            popupEl.style.display = 'block';
-        }
-
-        function hidePopup() {
-            popupEl.style.display = 'none';
-        }
-
-        function setDifficulty(level) {
-            difficulty = level;
-            loadSentence();
-        }
+        modeToggleBtn.addEventListener('click', () => {
+            document.body.classList.toggle('dark-mode');
+            modeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+        });
 
         loadSentence();
     </script>

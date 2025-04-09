@@ -214,45 +214,205 @@
         ];
 
         const subjects = [
-            { text: 'Barna', preferredMannerAdverbials: ['raskt', 'stille'] },
+            { text: 'Barna', preferredMannerAdverbials: ['raskt', 'stille', 'høyt'] },
             { text: 'Postmannen', preferredMannerAdverbials: ['raskt', 'forsiktig'] },
             { text: 'Jeg', preferredMannerAdverbials: ['rolig', 'nøyaktig'] },
             { text: 'Læreren', preferredMannerAdverbials: ['nøyaktig', 'rolig'] },
             { text: 'Katten', preferredMannerAdverbials: ['stille', 'raskt'] },
-            { text: 'Hunden', preferredMannerAdverbials: ['høyt', 'raskt'] }
+            { text: 'Hunden', preferredMannerAdverbials: ['høyt', 'raskt'] },
+            { text: 'Hun', preferredMannerAdverbials: ['stille', 'rolig', 'raskt'] },
+            { text: 'Han', preferredMannerAdverbials: ['raskt', 'nøyaktig', 'rolig'] },
+            { text: 'Vinden', preferredMannerAdverbials: ['sterkt', 'svakt'] },
+            { text: 'Vaktmesteren', preferredMannerAdverbials: ['raskt', 'effektivt'] },
+            { text: 'De', preferredMannerAdverbials: ['raskt', 'stille'] },
+            { text: 'Familien', preferredMannerAdverbials: ['stille', 'rolig'] },
+            // Nye forslag
+            { text: 'Gutten', preferredMannerAdverbials: ['raskt', 'høyt'] },
+            { text: 'Jenta', preferredMannerAdverbials: ['stille', 'rolig'] },
+            { text: 'Bussen', preferredMannerAdverbials: ['raskt', 'sakte'] }
         ];
 
         const verbs = [
-            {
-                text: 'gir',
-                transitive: true,
-                requiresIndirect: true,
-                compatibleObjects: ['ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken'],
-                compatibleIndirect: ['meg', 'henne', 'ham', 'barna', 'læreren', 'deg'],
-                compatibleMannerAdverbials: ['raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig'],
-                compatiblePlaceAdverbials: ['hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen'],
-                compatibleTimeAdverbials: ['i dag', 'i morgen', 'i går', 'nå', 'snart']
-            },
-            {
-                text: 'løper',
-                transitive: false,
-                compatibleMannerAdverbials: ['raskt', 'sakte', 'rolig', 'stille', 'klønete'],
-                compatiblePlaceAdverbials: ['i parken', 'hjemme', 'ute', 'på skolen', 'i skogen'],
-                compatibleTimeAdverbials: ['i dag', 'i går', 'nå']
-            },
-            {
-                text: 'roper',
-                transitive: false,
-                compatibleMannerAdverbials: ['høyt', 'lavt', 'klart', 'stille'],
-                compatiblePlaceAdverbials: ['i parken', 'på skolen', 'ute', 'hjemme'],
-                compatibleTimeAdverbials: ['i dag', 'i morgen', 'nå']
-            }
-        ];
+        // Eksisterende
+        {
+            text: 'gir',
+            transitive: true,
+            requiresIndirect: true,
+            compatibleObjects: ['ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken'],
+            compatibleIndirect: ['meg', 'henne', 'ham', 'barna', 'læreren', 'deg'],
+            compatibleMannerAdverbials: ['raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig'],
+            compatiblePlaceAdverbials: ['hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen'],
+            compatibleTimeAdverbials: ['i dag', 'i morgen', 'i går', 'nå', 'snart']
+        },
+        {
+            text: 'løper',
+            transitive: false,
+            compatibleMannerAdverbials: ['raskt', 'sakte', 'rolig', 'stille', 'klønete'],
+            compatiblePlaceAdverbials: ['i parken', 'hjemme', 'ute', 'på skolen', 'i skogen'],
+            compatibleTimeAdverbials: ['i dag', 'i går', 'nå']
+        },
+        {
+            text: 'roper',
+            transitive: false,
+            compatibleMannerAdverbials: ['høyt', 'lavt', 'klart', 'stille'],
+            compatiblePlaceAdverbials: ['i parken', 'på skolen', 'ute', 'hjemme'],
+            compatibleTimeAdverbials: ['i dag', 'i morgen', 'nå']
+        },
+        // Nye fra dine setninger
+        {
+            text: 'tok med',
+            transitive: true,
+            requiresIndirect: true,
+            compatibleObjects: ['boka', 'mat', 'vannflaska'],
+            compatibleIndirect: ['seg'],
+            compatibleMannerAdverbials: ['raskt', 'sakte'],
+            compatiblePlaceAdverbials: ['hjemme', 'på skolen'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        },
+        {
+            text: 'laget',
+            transitive: true,
+            requiresIndirect: true,
+            compatibleObjects: ['mat', 'en kake'],
+            compatibleIndirect: ['seg'],
+            compatibleMannerAdverbials: ['raskt', 'nøyaktig'],
+            compatiblePlaceAdverbials: ['hjemme', 'på kjøkkenet'],
+            compatibleTimeAdverbials: ['i dag', 'i går']
+        },
+        {
+            text: 'badet',
+            transitive: false,
+            compatibleMannerAdverbials: ['rolig', 'stille'],
+            compatiblePlaceAdverbials: ['i badekaret', 'i vannet'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        },
+        {
+            text: 'jaget',
+            transitive: true,
+            compatibleObjects: ['en ball', 'katten'],
+            compatibleMannerAdverbials: ['raskt', 'vilt'],
+            compatiblePlaceAdverbials: ['i parken', 'ute'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        },
+        {
+            text: 'blåser',
+            transitive: false,
+            compatibleMannerAdverbials: ['sterkt', 'svakt'],
+            compatiblePlaceAdverbials: ['i trærne', 'i parken'],
+            compatibleTimeAdverbials: ['nå', 'i dag']
+        },
+        {
+            text: 'ser på',
+            transitive: true,
+            compatibleObjects: ['tv', 'filmen'],
+            compatibleMannerAdverbials: ['stille', 'oppmerksomt'],
+            compatiblePlaceAdverbials: ['i stua', 'på kino'],
+            compatibleTimeAdverbials: ['nå', 'i kveld']
+        },
+        {
+            text: 'tente',
+            transitive: true,
+            compatibleObjects: ['en stor lampe', 'et lys'],
+            compatibleMannerAdverbials: ['raskt', 'forsiktig'],
+            compatiblePlaceAdverbials: ['i det mørke rommet', 'hjemme'],
+            compatibleTimeAdverbials: ['i kveld', 'nå']
+        },
+        {
+            text: 'gikk',
+            transitive: true,
+            compatibleObjects: ['en tur'],
+            compatibleMannerAdverbials: ['rolig', 'raskt'],
+            compatiblePlaceAdverbials: ['ute', 'i parken'],
+            compatibleTimeAdverbials: ['på kvelden', 'i dag']
+        },
+        {
+            text: 'reparerte',
+            transitive: true,
+            compatibleObjects: ['lampa', 'en bil'],
+            compatibleMannerAdverbials: ['raskt', 'effektivt', 'nøyaktig'],
+            compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        },
+        {
+            text: 'kjørte',
+            transitive: false,
+            compatibleMannerAdverbials: ['raskt', 'sakte'],
+            compatiblePlaceAdverbials: ['i butikken', 'på veien'],
+            compatibleTimeAdverbials: ['seint om kvelden', 'i dag']
+        },
+        {
+            text: 'spilte',
+            transitive: false,
+            compatibleMannerAdverbials: ['bra', 'dårlig'],
+            compatiblePlaceAdverbials: ['i skuespillet', 'på teateret'],
+            compatibleTimeAdverbials: ['i dag', 'i kveld']
+        },
+        {
+            text: 'flyttet',
+            transitive: true,
+            compatibleObjects: ['mange kasser', 'møbler'],
+            compatibleMannerAdverbials: ['raskt', 'forsiktig'],
+            compatiblePlaceAdverbials: ['i den nye leiligheten', 'hjemme'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        },
+        {
+            text: 'lekte',
+            transitive: true,
+            compatibleObjects: ['snøballkrig', 'med leker'],
+            compatibleMannerAdverbials: ['høyt', 'stille'],
+            compatiblePlaceAdverbials: ['i parken', 'ute'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        },
+        {
+            text: 'leste',
+            transitive: true,
+            compatibleObjects: ['avisa', 'en bok'],
+            compatibleMannerAdverbials: ['stille', 'rolig'],
+            compatiblePlaceAdverbials: ['på café', 'hjemme'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        },
+        // Nye forslag
+        {
+            text: 'sang',
+            transitive: true,
+            compatibleObjects: ['en sang', 'en melodi'],
+            compatibleMannerAdverbials: ['høyt', 'vakkert'],
+            compatiblePlaceAdverbials: ['i kirken', 'hjemme'],
+            compatibleTimeAdverbials: ['i kveld', 'nå']
+        },
+        {
+            text: 'tegnet',
+            transitive: true,
+            compatibleObjects: ['et bilde', 'en tegning'],
+            compatibleMannerAdverbials: ['nøyaktig', 'raskt'],
+            compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
+            compatibleTimeAdverbials: ['i dag', 'nå']
+        }
+    ];
 
         const conflictingAdverbials = [
             ['raskt', 'sakte'],
             ['høyt', 'lavt'],
             ['rolig', 'klønete']
+        ];
+
+        const directObjects = [
+        'ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken', 'mat', 'en kake', 'en ball',
+        'tv', 'filmen', 'en stor lampe', 'et lys', 'en tur', 'lampa', 'en bil', 'mange kasser',
+        'møbler', 'snøballkrig', 'med leker', 'avisa', 'en sang', 'en melodi', 'et bilde', 'en tegning'
+    ];
+
+        const mannerAdverbials = [
+        'raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig', 'høyt', 'lavt', 'klart', 'klønete',
+        'sterkt', 'svakt', 'oppmerksomt', 'effektivt', 'vilt', 'bra', 'dårlig', 'vakkert'
+    ];
+        const placeAdverbials = [
+            'hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen', 'i skogen', 'på kjøkkenet',
+            'i badekaret', 'i vannet', 'i trærne', 'i stua', 'på kino', 'i det mørke rommet', 'på teateret',
+            'i den nye leiligheten', 'på café', 'i kirken', 'på veien'
+        ];
+        const timeAdverbials = [
+            'i dag', 'i morgen', 'i går', 'nå', 'snart', 'på kvelden', 'seint om kvelden', 'i kveld'
         ];
 
         difficultyButtons.forEach(btn => {
@@ -295,171 +455,202 @@
         }
     }
 
-        function generateSentence() {
-            let sentence;
+    function generateSentence() {
+    let sentence;
 
+    if (difficulty === "Enkel") {
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+        const a = verb.compatibleMannerAdverbials ? 
+            replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
+            mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
+        const parts = verb.transitive ? 
+            [s, verb.text, directObjects[Math.floor(Math.random() * directObjects.length)], a] : 
+            [s, verb.text, a];
+        sentence = {
+            parts: parts.filter(p => p),
+            interactiveParts: parts.filter(p => p),
+            text: parts.join(' ') + '.',
+            correct: { 
+                [s]: 'subject', 
+                [verb.text]: 'verb', 
+                ...(verb.transitive && { [parts[2]]: 'direct-object' }), 
+                [parts[verb.transitive ? 3 : 2]]: 'adverbial' 
+            },
+            verb: verb
+        };
+    } else if (difficulty === "Middels") {
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+        const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+        const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+        const a = verb.compatibleMannerAdverbials ? 
+            replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
+            mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
+        const p = verb.compatiblePlaceAdverbials ? 
+            replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
+            placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
+        const parts = [s, verb.text, i, d, a, p].filter(part => part);
+        sentence = {
+            parts: parts,
+            interactiveParts: parts,
+            text: parts.join(' ') + '.',
+            correct: { 
+                [s]: 'subject', 
+                [verb.text]: 'verb', 
+                ...(i && { [i]: 'indirect-object' }), 
+                ...(d && { [d]: 'direct-object' }), 
+                [a]: 'adverbial', 
+                ...(p && { [p]: 'adverbial' }) 
+            },
+            verb: verb
+        };
+    } else if (difficulty === "Vanskelig") {
+        const verb = verbs[Math.floor(Math.random() * verbs.length)];
+        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+        const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+        const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+        let a1, a2;
+        do {
+            a1 = verb.compatibleMannerAdverbials ? 
+                replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
+                mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
+            a2 = verb.compatibleMannerAdverbials ? 
+                replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
+                mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
+        } while (a1 === a2 || checkConflict(a1, a2));
+        const p = verb.compatiblePlaceAdverbials ? 
+            replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
+            placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
+        const parts = [s, verb.text, i, d, a1, "og", a2, p].filter(part => part);
+        sentence = {
+            parts: parts,
+            interactiveParts: parts.filter(p => p !== "og"),
+            text: parts.join(' ') + '.',
+            correct: { 
+                [s]: 'subject', 
+                [verb.text]: 'verb', 
+                ...(i && { [i]: 'indirect-object' }), 
+                ...(d && { [d]: 'direct-object' }), 
+                [a1]: 'adverbial', 
+                [a2]: 'adverbial', 
+                [p]: 'adverbial' 
+            },
+            verb: verb
+        };
+    } else if (difficulty === "Omorganiser") {
+        const baseSentence = generateBaseSentence();
+        const scrambledParts = [...baseSentence.parts].sort(() => Math.random() - 0.5);
+        sentence = {
+            parts: scrambledParts,
+            correctParts: baseSentence.parts,
+            interactiveParts: scrambledParts,
+            text: scrambledParts.join(' ') + '.',
+            correct: baseSentence.correct,
+            verb: baseSentence.verb
+        };
+    }
+
+    // Validering og variasjon (som før)
+    if (difficulty === "Enkel" || difficulty === "Middels") {
+        let maxAttempts = 10;
+        for (let attempt = 0; attempt < maxAttempts; attempt++) {
+            let tempSentence = { ...sentence };
+            if (isSentenceValid(tempSentence)) {
+                let variationOK = true;
+                if (lastSentence) {
+                    let newWords = Object.keys(tempSentence.correct);
+                    let oldWords = Object.keys(lastSentence.correct);
+                    let common = newWords.filter(word => oldWords.includes(word)).length;
+                    let diff = newWords.length - common;
+                    if (difficulty === "Enkel" && newWords.length >= 3 && diff < 1) variationOK = false;
+                    else if (difficulty === "Middels" && newWords.length >= 4 && diff < 2) variationOK = false;
+                }
+                if (variationOK) {
+                    sentence = tempSentence;
+                    break;
+                }
+            }
+            // Generer ny setning ved mislykket forsøk (kopi av logikk ovenfor)
             if (difficulty === "Enkel") {
                 const verb = verbs[Math.floor(Math.random() * verbs.length)];
                 const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-                const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
+                const a = verb.compatibleMannerAdverbials ? 
+                    replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
+                    mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
+                const parts = verb.transitive ? 
+                    [s, verb.text, directObjects[Math.floor(Math.random() * directObjects.length)], a] : 
+                    [s, verb.text, a];
                 sentence = {
-                    parts: [s, verb.text, a],
-                    interactiveParts: [s, verb.text, a],
-                    text: `${s} ${verb.text} ${a}.`,
-                    correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' },
+                    parts: parts.filter(p => p),
+                    interactiveParts: parts.filter(p => p),
+                    text: parts.join(' ') + '.',
+                    correct: { 
+                        [s]: 'subject', 
+                        [verb.text]: 'verb', 
+                        ...(verb.transitive && { [parts[2]]: 'direct-object' }), 
+                        [parts[verb.transitive ? 3 : 2]]: 'adverbial' 
+                    },
                     verb: verb
                 };
             } else if (difficulty === "Middels") {
                 const verb = verbs[Math.floor(Math.random() * verbs.length)];
                 const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-                const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
-                const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
-                const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
-                const parts = [s, verb.text, i, d, a].filter(part => part);
+                const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+                const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+                const a = verb.compatibleMannerAdverbials ? 
+                    replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
+                    mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
+                const p = verb.compatiblePlaceAdverbials ? 
+                    replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
+                    placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
+                const parts = [s, verb.text, i, d, a, p].filter(part => part);
                 sentence = {
                     parts: parts,
                     interactiveParts: parts,
-                    text: `${s} ${verb.text} ${i} ${d} ${a}.`.replace(/\s+/g, ' ').trim(),
+                    text: parts.join(' ') + '.',
                     correct: { 
                         [s]: 'subject', 
                         [verb.text]: 'verb', 
                         ...(i && { [i]: 'indirect-object' }), 
                         ...(d && { [d]: 'direct-object' }), 
-                        [a]: 'adverbial' 
+                        [a]: 'adverbial', 
+                        ...(p && { [p]: 'adverbial' }) 
                     },
                     verb: verb
                 };
-            } else if (difficulty === "Vanskelig") {
-                const verb = verbs.find(v => v.text === 'gir');
-                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-                const i = verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)];
-                const d = verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)];
-                let a1, a2;
-                do {
-                    a1 = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
-                    a2 = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
-                } while (a1 === a2 || checkConflict(a1, a2));
-                const p = replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]);
-                sentence = {
-                    parts: [s, verb.text, i, d, a1, "og", a2, p],
-                    interactiveParts: [s, verb.text, i, d, a1, a2, p],
-                    text: `${s} ${verb.text} ${i} ${d} ${a1} og ${a2} ${p}.`,
-                    correct: { 
-                        [s]: 'subject', 
-                        [verb.text]: 'verb', 
-                        [i]: 'indirect-object', 
-                        [d]: 'direct-object', 
-                        [a1]: 'adverbial', 
-                        [a2]: 'adverbial', 
-                        [p]: 'adverbial' 
-                    },
-                    verb: verb
-                };
-            } else if (difficulty === "Omorganiser") {
-                const baseSentence = generateBaseSentence();
-                const scrambledParts = [...baseSentence.parts].sort(() => Math.random() - 0.5);
-                sentence = {
-                    parts: scrambledParts,
-                    correctParts: baseSentence.parts,
-                    interactiveParts: scrambledParts,
-                    text: scrambledParts.join(' ') + '.',
-                    correct: baseSentence.correct,
-                    verb: baseSentence.verb
-                };
             }
-
-            if (difficulty === "Enkel" || difficulty === "Middels") {
-                let maxAttempts = 10;
-                for (let attempt = 0; attempt < maxAttempts; attempt++) {
-                    let tempSentence = { ...sentence };
-                    if (isSentenceValid(tempSentence)) {
-                        let variationOK = true;
-                        if (lastSentence) {
-                            let newWords = Object.keys(tempSentence.correct);
-                            let oldWords = Object.keys(lastSentence.correct);
-                            let common = newWords.filter(word => oldWords.includes(word)).length;
-                            let diff = newWords.length - common;
-                            if (difficulty === "Enkel" && newWords.length === 3 && diff < 1) variationOK = false;
-                            else if (difficulty === "Middels" && (newWords.length === 4 || newWords.length === 5) && diff < 2) variationOK = false;
-                        }
-                        if (variationOK) {
-                            sentence = tempSentence;
-                            break;
-                        }
-                    }
-
-                    if (difficulty === "Enkel") {
-                        const verb = verbs[Math.floor(Math.random() * verbs.length)];
-                        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-                        const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
-                        sentence = {
-                            parts: [s, verb.text, a],
-                            interactiveParts: [s, verb.text, a],
-                            text: `${s} ${verb.text} ${a}.`,
-                            correct: { [s]: 'subject', [verb.text]: 'verb', [a]: 'adverbial' },
-                            verb: verb
-                        };
-                    } else if (difficulty === "Middels") {
-                        const verb = verbs[Math.floor(Math.random() * verbs.length)];
-                        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-                        const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
-                        const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
-                        const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
-                        const parts = [s, verb.text, i, d, a].filter(part => part);
-                        sentence = {
-                            parts: parts,
-                            interactiveParts: parts,
-                            text: `${s} ${verb.text} ${i} ${d} ${a}.`.replace(/\s+/g, ' ').trim(),
-                            correct: { 
-                                [s]: 'subject', 
-                                [verb.text]: 'verb', 
-                                ...(i && { [i]: 'indirect-object' }), 
-                                ...(d && { [d]: 'direct-object' }), 
-                                [a]: 'adverbial' 
-                            },
-                            verb: verb
-                        };
-                    }
-                }
-                if (!isSentenceValid(sentence)) {
-                    console.error("Kunne ikke generere gyldig setning etter maks forsøk.");
-                    sentence.text = "Feil i setningsgenerering.";
-                    sentence.parts = ["Feil"];
-                    sentence.interactiveParts = ["Feil"];
-                }
-            }
-
-            if (difficulty === "Vanskelig" && !isSentenceValid(sentence)) {
-                console.error("Kunne ikke generere gyldig setning for Vanskelig.");
-                sentence.text = "Feil i setningsgenerering.";
-                sentence.parts = ["Feil"];
-                sentence.interactiveParts = ["Feil"];
-            }
-
-            return sentence;
         }
+    }
 
-        function generateBaseSentence() {
-            const verb = verbs[Math.floor(Math.random() * verbs.length)];
-            const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-            const i = verb.requiresIndirect ? verb.compatibleIndirect[Math.floor(Math.random() * verb.compatibleIndirect.length)] : '';
-            const d = verb.transitive ? verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)] : '';
-            const a = replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]);
-            const p = replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]);
-            const parts = [s, verb.text, i, d, a, p].filter(part => part);
-            return {
-                parts: parts,
-                correct: { 
-                    [s]: 'subject', 
-                    [verb.text]: 'verb', 
-                    ...(i && { [i]: 'indirect-object' }), 
-                    ...(d && { [d]: 'direct-object' }), 
-                    [a]: 'adverbial', 
-                    [p]: 'adverbial' 
-                },
-                verb: verb
-            };
-        }
+    return sentence;
+}
+
+function generateBaseSentence() {
+    const verb = verbs[Math.floor(Math.random() * verbs.length)];
+    const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+    const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+    const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+    const a = verb.compatibleMannerAdverbials ? 
+        replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
+        mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
+    const p = verb.compatiblePlaceAdverbials ? 
+        replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
+        placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
+    const parts = [s, verb.text, i, d, a, p].filter(part => part);
+    return {
+        parts: parts,
+        correct: { 
+            [s]: 'subject', 
+            [verb.text]: 'verb', 
+            ...(i && { [i]: 'indirect-object' }), 
+            ...(d && { [d]: 'direct-object' }), 
+            [a]: 'adverbial', 
+            ...(p && { [p]: 'adverbial' }) 
+        },
+        verb: verb
+    };
+}
 
         function scrambleSentence(sentence) {
             const parts = [...sentence.parts].sort(() => Math.random() - 0.5);

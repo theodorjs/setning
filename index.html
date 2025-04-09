@@ -281,17 +281,19 @@
         }
 
         function drop(e) {
-            e.preventDefault();
-            const wordEl = e.target;
-            const func = e.dataTransfer.getData('text');
-            const correctFunc = currentSentence.correct[wordEl.dataset.word];
-            const funcData = functions.find(f => f.name === func);
-            if (correctFunc === funcData.color) {
+        e.preventDefault();
+        const wordEl = e.target;
+        const func = e.dataTransfer.getData('text');
+        const correctFunc = currentSentence.correct[wordEl.dataset.word];
+        const funcData = functions.find(f => f.name === func);
+        if (correctFunc === funcData.color) {
+            requestAnimationFrame(() => {
                 wordEl.classList.add('correct', funcData.color);
                 wordEl.style.backgroundColor = getColor(funcData.color);
                 checkCompletion();
-            }
+            });
         }
+    }
 
         function generateSentence() {
             let sentence;
@@ -742,33 +744,33 @@
         }
 
         function dropOmorganiser(e) {
-            e.preventDefault();
-            if (draggedSpan) {
-                const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                const currentOrder = spans.map(span => span.dataset.word);
-                if (JSON.stringify(currentOrder) === JSON.stringify(currentSentence.correctParts)) {
-                    points++;
-                    streak++;
-                    pointsEl.textContent = points;
-                    streakEl.textContent = streak;
-                    playConfettiAnimation();
-                }
-                draggedSpan = null;
+        e.preventDefault();
+        if (draggedSpan) {
+            const spans = Array.from(sentenceEl.querySelectorAll('span'));
+            const currentOrder = spans.map(span => span.dataset.word);
+            if (currentOrder.join('') === currentSentence.correctParts.join('')) {
+                points++;
+                streak++;
+                pointsEl.textContent = points;
+                streakEl.textContent = streak;
+                playConfettiAnimation();
+                setTimeout(loadSentence, 2000);
             }
+            draggedSpan = null;
         }
-
-        function checkCompletion() {
-    const correctWords = sentenceEl.querySelectorAll('.correct').length;
-    const total = currentSentence.interactiveParts.length;
-    if (correctWords === total && difficulty !== "Omorganiser") {
-        points++;
-        streak++;
-        pointsEl.textContent = points;
-        streakEl.textContent = streak;
-        playConfettiAnimation();
-        setTimeout(loadSentence, 2000); // Last ny setning etter 2 sekunder
     }
-}
+        function checkCompletion() {
+        const correctWords = sentenceEl.querySelectorAll('.correct').length;
+        const total = currentSentence.interactiveParts.length;
+        if (correctWords === total && difficulty !== "Omorganiser") {
+            points++;
+            streak++;
+            pointsEl.textContent = points;
+            streakEl.textContent = streak;
+            playConfettiAnimation();
+            setTimeout(loadSentence, 2500); // Litt ekstra tid etter konfetti
+        }
+    }
 
         function getColor(colorName) {
             switch (colorName) {

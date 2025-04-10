@@ -214,181 +214,198 @@
         ];
 
         const subjects = [
-            { text: 'Barna', preferredMannerAdverbials: ['raskt', 'stille', 'høyt'] },
-            { text: 'Postmannen', preferredMannerAdverbials: ['raskt', 'forsiktig'] },
-            { text: 'Jeg', preferredMannerAdverbials: ['rolig', 'nøyaktig'] },
-            { text: 'Læreren', preferredMannerAdverbials: ['nøyaktig', 'rolig'] },
-            { text: 'Katten', preferredMannerAdverbials: ['stille', 'raskt'] },
-            { text: 'Hunden', preferredMannerAdverbials: ['høyt', 'raskt'] },
-            { text: 'Hun', preferredMannerAdverbials: ['stille', 'rolig', 'raskt'] },
-            { text: 'Han', preferredMannerAdverbials: ['raskt', 'nøyaktig', 'rolig'] },
-            { text: 'Vinden', preferredMannerAdverbials: ['sterkt', 'svakt'] },
-            { text: 'Vaktmesteren', preferredMannerAdverbials: ['raskt', 'effektivt'] },
-            { text: 'De', preferredMannerAdverbials: ['raskt', 'stille'] },
-            { text: 'Familien', preferredMannerAdverbials: ['stille', 'rolig'] },
-            // Nye forslag
-            { text: 'Gutten', preferredMannerAdverbials: ['raskt', 'høyt'] },
-            { text: 'Jenta', preferredMannerAdverbials: ['stille', 'rolig'] },
-            { text: 'Bussen', preferredMannerAdverbials: ['raskt', 'sakte'] }
-        ];
-
-        const verbs = [
-        // Eksisterende
-        {
-            text: 'gir',
-            transitive: true,
-            requiresIndirect: true,
-            compatibleObjects: ['ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken'],
-            compatibleIndirect: ['meg', 'henne', 'ham', 'barna', 'læreren', 'deg'],
-            compatibleMannerAdverbials: ['raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig'],
-            compatiblePlaceAdverbials: ['hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen'],
-            compatibleTimeAdverbials: ['i dag', 'i morgen', 'i går', 'nå', 'snart']
-        },
-        {
-            text: 'løper',
-            transitive: false,
-            compatibleMannerAdverbials: ['raskt', 'sakte', 'rolig', 'stille', 'klønete'],
-            compatiblePlaceAdverbials: ['i parken', 'hjemme', 'ute', 'på skolen', 'i skogen'],
-            compatibleTimeAdverbials: ['i dag', 'i går', 'nå']
-        },
-        {
-            text: 'roper',
-            transitive: false,
-            compatibleMannerAdverbials: ['høyt', 'lavt', 'klart', 'stille'],
-            compatiblePlaceAdverbials: ['i parken', 'på skolen', 'ute', 'hjemme'],
-            compatibleTimeAdverbials: ['i dag', 'i morgen', 'nå']
-        },
-        // Nye fra dine setninger
-        {
-            text: 'tok med',
-            transitive: true,
-            requiresIndirect: true,
-            compatibleObjects: ['boka', 'mat', 'vannflaska'],
-            compatibleIndirect: ['seg'],
-            compatibleMannerAdverbials: ['raskt', 'sakte'],
-            compatiblePlaceAdverbials: ['hjemme', 'på skolen'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        },
-        {
-            text: 'laget',
-            transitive: true,
-            requiresIndirect: true,
-            compatibleObjects: ['mat', 'en kake'],
-            compatibleIndirect: ['seg'],
-            compatibleMannerAdverbials: ['raskt', 'nøyaktig'],
-            compatiblePlaceAdverbials: ['hjemme', 'på kjøkkenet'],
-            compatibleTimeAdverbials: ['i dag', 'i går']
-        },
-        {
-            text: 'badet',
-            transitive: false,
-            compatibleMannerAdverbials: ['rolig', 'stille'],
-            compatiblePlaceAdverbials: ['i badekaret', 'i vannet'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        },
-        {
-            text: 'jaget',
-            transitive: true,
-            compatibleObjects: ['en ball', 'katten'],
-            compatibleMannerAdverbials: ['raskt', 'vilt'],
-            compatiblePlaceAdverbials: ['i parken', 'ute'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        },
-        {
-            text: 'blåser',
-            transitive: false,
-            compatibleMannerAdverbials: ['sterkt', 'svakt'],
-            compatiblePlaceAdverbials: ['i trærne', 'i parken'],
-            compatibleTimeAdverbials: ['nå', 'i dag']
-        },
-        {
-            text: 'ser på',
-            transitive: true,
-            compatibleObjects: ['tv', 'filmen'],
-            compatibleMannerAdverbials: ['stille', 'oppmerksomt'],
-            compatiblePlaceAdverbials: ['i stua', 'på kino'],
-            compatibleTimeAdverbials: ['nå', 'i kveld']
-        },
-        {
-            text: 'tente',
-            transitive: true,
-            compatibleObjects: ['en stor lampe', 'et lys'],
-            compatibleMannerAdverbials: ['raskt', 'forsiktig'],
-            compatiblePlaceAdverbials: ['i det mørke rommet', 'hjemme'],
-            compatibleTimeAdverbials: ['i kveld', 'nå']
-        },
-        {
-            text: 'gikk',
-            transitive: true,
-            compatibleObjects: ['en tur'],
-            compatibleMannerAdverbials: ['rolig', 'raskt'],
-            compatiblePlaceAdverbials: ['ute', 'i parken'],
-            compatibleTimeAdverbials: ['på kvelden', 'i dag']
-        },
-        {
-            text: 'reparerte',
-            transitive: true,
-            compatibleObjects: ['lampa', 'en bil'],
-            compatibleMannerAdverbials: ['raskt', 'effektivt', 'nøyaktig'],
-            compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        },
-        {
-            text: 'kjørte',
-            transitive: false,
-            compatibleMannerAdverbials: ['raskt', 'sakte'],
-            compatiblePlaceAdverbials: ['i butikken', 'på veien'],
-            compatibleTimeAdverbials: ['seint om kvelden', 'i dag']
-        },
-        {
-            text: 'spilte',
-            transitive: false,
-            compatibleMannerAdverbials: ['bra', 'dårlig'],
-            compatiblePlaceAdverbials: ['i skuespillet', 'på teateret'],
-            compatibleTimeAdverbials: ['i dag', 'i kveld']
-        },
-        {
-            text: 'flyttet',
-            transitive: true,
-            compatibleObjects: ['mange kasser', 'møbler'],
-            compatibleMannerAdverbials: ['raskt', 'forsiktig'],
-            compatiblePlaceAdverbials: ['i den nye leiligheten', 'hjemme'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        },
-        {
-            text: 'lekte',
-            transitive: true,
-            compatibleObjects: ['snøballkrig', 'med leker'],
-            compatibleMannerAdverbials: ['høyt', 'stille'],
-            compatiblePlaceAdverbials: ['i parken', 'ute'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        },
-        {
-            text: 'leste',
-            transitive: true,
-            compatibleObjects: ['avisa', 'en bok'],
-            compatibleMannerAdverbials: ['stille', 'rolig'],
-            compatiblePlaceAdverbials: ['på café', 'hjemme'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        },
-        // Nye forslag
-        {
-            text: 'sang',
-            transitive: true,
-            compatibleObjects: ['en sang', 'en melodi'],
-            compatibleMannerAdverbials: ['høyt', 'vakkert'],
-            compatiblePlaceAdverbials: ['i kirken', 'hjemme'],
-            compatibleTimeAdverbials: ['i kveld', 'nå']
-        },
-        {
-            text: 'tegnet',
-            transitive: true,
-            compatibleObjects: ['et bilde', 'en tegning'],
-            compatibleMannerAdverbials: ['nøyaktig', 'raskt'],
-            compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
-            compatibleTimeAdverbials: ['i dag', 'nå']
-        }
+        // Levende
+        { text: 'Barna', type: 'living', preferredMannerAdverbials: ['raskt', 'stille', 'høyt'] },
+        { text: 'Postmannen', type: 'living', preferredMannerAdverbials: ['raskt', 'forsiktig'] },
+        { text: 'Jeg', type: 'living', preferredMannerAdverbials: ['rolig', 'nøyaktig'] },
+        { text: 'Læreren', type: 'living', preferredMannerAdverbials: ['nøyaktig', 'rolig'] },
+        { text: 'Katten', type: 'living', preferredMannerAdverbials: ['stille', 'raskt'] },
+        { text: 'Hunden', type: 'living', preferredMannerAdverbials: ['høyt', 'raskt'] },
+        { text: 'Hun', type: 'living', preferredMannerAdverbials: ['stille', 'rolig', 'raskt'] },
+        { text: 'Han', type: 'living', preferredMannerAdverbials: ['raskt', 'nøyaktig', 'rolig'] },
+        { text: 'Vaktmesteren', type: 'living', preferredMannerAdverbials: ['raskt', 'effektivt'] },
+        { text: 'De', type: 'living', preferredMannerAdverbials: ['raskt', 'stille'] },
+        { text: 'Familien', type: 'living', preferredMannerAdverbials: ['stille', 'rolig'] },
+        { text: 'Gutten', type: 'living', preferredMannerAdverbials: ['raskt', 'høyt'] },
+        { text: 'Jenta', type: 'living', preferredMannerAdverbials: ['stille', 'rolig'] },
+        // Ikke-levende
+        { text: 'Vinden', type: 'non-living', preferredMannerAdverbials: ['sterkt', 'svakt'] },
+        { text: 'Bussen', type: 'non-living', preferredMannerAdverbials: ['raskt', 'sakte'] }
     ];
+
+    const verbs = [
+    {
+        text: 'gir',
+        transitive: true,
+        requiresIndirect: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken'],
+        compatibleIndirect: ['meg', 'henne', 'ham', 'barna', 'læreren', 'deg'],
+        compatibleMannerAdverbials: ['raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig'],
+        compatiblePlaceAdverbials: ['hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen'],
+        compatibleTimeAdverbials: ['i dag', 'i morgen', 'i går', 'nå', 'snart']
+    },
+    {
+        text: 'løper',
+        transitive: false,
+        compatibleSubjects: ['living'],
+        compatibleMannerAdverbials: ['raskt', 'sakte', 'rolig', 'stille', 'klønete'],
+        compatiblePlaceAdverbials: ['i parken', 'hjemme', 'ute', 'på skolen', 'i skogen'],
+        compatibleTimeAdverbials: ['i dag', 'i går', 'nå']
+    },
+    {
+        text: 'roper',
+        transitive: false,
+        compatibleSubjects: ['living'],
+        compatibleMannerAdverbials: ['høyt', 'lavt', 'klart', 'stille'],
+        compatiblePlaceAdverbials: ['i parken', 'på skolen', 'ute', 'hjemme'],
+        compatibleTimeAdverbials: ['i dag', 'i morgen', 'nå']
+    },
+    {
+        text: 'tok med',
+        transitive: true,
+        requiresIndirect: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['boka', 'mat', 'vannflaska'],
+        compatibleIndirect: ['seg'],
+        compatibleMannerAdverbials: ['raskt', 'sakte'],
+        compatiblePlaceAdverbials: ['hjemme', 'på skolen'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    },
+    {
+        text: 'laget',
+        transitive: true,
+        requiresIndirect: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['mat', 'en kake'],
+        compatibleIndirect: ['seg'],
+        compatibleMannerAdverbials: ['raskt', 'nøyaktig'],
+        compatiblePlaceAdverbials: ['hjemme', 'på kjøkkenet'],
+        compatibleTimeAdverbials: ['i dag', 'i går']
+    },
+    {
+        text: 'badet',
+        transitive: false,
+        compatibleSubjects: ['living'],
+        compatibleMannerAdverbials: ['rolig', 'stille'],
+        compatiblePlaceAdverbials: ['i badekaret', 'i vannet'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    },
+    {
+        text: 'jaget',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['en ball', 'katten'],
+        compatibleMannerAdverbials: ['raskt', 'vilt'],
+        compatiblePlaceAdverbials: ['i parken', 'ute'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    },
+    {
+        text: 'blåser',
+        transitive: false,
+        compatibleSubjects: ['non-living'],
+        compatibleMannerAdverbials: ['sterkt', 'svakt'],
+        compatiblePlaceAdverbials: ['i trærne', 'i parken'],
+        compatibleTimeAdverbials: ['nå', 'i dag']
+    },
+    {
+        text: 'ser på',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['tv', 'filmen'],
+        compatibleMannerAdverbials: ['stille', 'oppmerksomt'],
+        compatiblePlaceAdverbials: ['i stua', 'på kino'],
+        compatibleTimeAdverbials: ['nå', 'i kveld']
+    },
+    {
+        text: 'tente',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['en stor lampe', 'et lys'],
+        compatibleMannerAdverbials: ['raskt', 'forsiktig'],
+        compatiblePlaceAdverbials: ['i det mørke rommet', 'hjemme'],
+        compatibleTimeAdverbials: ['i kveld', 'nå']
+    },
+    {
+        text: 'gikk',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['en tur'],
+        compatibleMannerAdverbials: ['rolig', 'raskt'],
+        compatiblePlaceAdverbials: ['ute', 'i parken'],
+        compatibleTimeAdverbials: ['på kvelden', 'i dag']
+    },
+    {
+        text: 'reparerte',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['lampa', 'en bil'],
+        compatibleMannerAdverbials: ['raskt', 'effektivt', 'nøyaktig'],
+        compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    },
+    {
+        text: 'kjørte',
+        transitive: false,
+        compatibleSubjects: ['living', 'non-living'],
+        compatibleMannerAdverbials: ['raskt', 'sakte'],
+        compatiblePlaceAdverbials: ['i butikken', 'på veien'],
+        compatibleTimeAdverbials: ['seint om kvelden', 'i dag']
+    },
+    {
+        text: 'spilte',
+        transitive: false,
+        compatibleSubjects: ['living'],
+        compatibleMannerAdverbials: ['bra', 'dårlig'],
+        compatiblePlaceAdverbials: ['i skuespillet', 'på teateret'],
+        compatibleTimeAdverbials: ['i dag', 'i kveld']
+    },
+    {
+        text: 'flyttet',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['mange kasser', 'møbler'],
+        compatibleMannerAdverbials: ['raskt', 'forsiktig'],
+        compatiblePlaceAdverbials: ['i den nye leiligheten', 'hjemme'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    },
+    {
+        text: 'lekte',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['snøballkrig', 'med leker'],
+        compatibleMannerAdverbials: ['høyt', 'stille'],
+        compatiblePlaceAdverbials: ['i parken', 'ute'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    },
+    {
+        text: 'leste',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['avisa', 'en bok'],
+        compatibleMannerAdverbials: ['stille', 'rolig'],
+        compatiblePlaceAdverbials: ['på café', 'hjemme'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    },
+    {
+        text: 'sang',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['en sang', 'en melodi'],
+        compatibleMannerAdverbials: ['høyt', 'vakkert'],
+        compatiblePlaceAdverbials: ['i kirken', 'hjemme'],
+        compatibleTimeAdverbials: ['i kveld', 'nå']
+    },
+    {
+        text: 'tegnet',
+        transitive: true,
+        compatibleSubjects: ['living'],
+        compatibleObjects: ['et bilde', 'en tegning'],
+        compatibleMannerAdverbials: ['nøyaktig', 'raskt'],
+        compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
+        compatibleTimeAdverbials: ['i dag', 'nå']
+    }
+];
 
         const conflictingAdverbials = [
             ['raskt', 'sakte'],
@@ -458,14 +475,21 @@
     function generateSentence() {
     let sentence;
 
+    // Velg et subjekt først
+    const sObj = subjects[Math.floor(Math.random() * subjects.length)];
+    const s = sObj.text;
+    const subjectType = sObj.type;
+
+    // Filtrer verbaler basert på subjekt-type
+    const compatibleVerbs = verbs.filter(v => v.compatibleSubjects.includes(subjectType));
+
     if (difficulty === "Enkel") {
-        const verb = verbs[Math.floor(Math.random() * verbs.length)];
-        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
+        const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
         const a = verb.compatibleMannerAdverbials ? 
             replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
             mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
         const parts = verb.transitive ? 
-            [s, verb.text, directObjects[Math.floor(Math.random() * directObjects.length)], a] : 
+            [s, verb.text, verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)], a] : 
             [s, verb.text, a];
         sentence = {
             parts: parts.filter(p => p),
@@ -480,10 +504,11 @@
             verb: verb
         };
     } else if (difficulty === "Middels") {
-        const verb = verbs[Math.floor(Math.random() * verbs.length)];
-        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-        const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-        const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+        const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
+        const i = verb.requiresIndirect ? 
+            (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+        const d = verb.transitive ? 
+            (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
         const a = verb.compatibleMannerAdverbials ? 
             replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
             mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
@@ -506,10 +531,11 @@
             verb: verb
         };
     } else if (difficulty === "Vanskelig") {
-        const verb = verbs[Math.floor(Math.random() * verbs.length)];
-        const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-        const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-        const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+        const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
+        const i = verb.requiresIndirect ? 
+            (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+        const d = verb.transitive ? 
+            (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
         let a1, a2;
         do {
             a1 = verb.compatibleMannerAdverbials ? 
@@ -551,7 +577,7 @@
         };
     }
 
-    // Validering og variasjon (som før)
+    // Validering og variasjon
     if (difficulty === "Enkel" || difficulty === "Middels") {
         let maxAttempts = 10;
         for (let attempt = 0; attempt < maxAttempts; attempt++) {
@@ -571,15 +597,18 @@
                     break;
                 }
             }
-            // Generer ny setning ved mislykket forsøk (kopi av logikk ovenfor)
+            // Generer ny setning ved mislykket forsøk
+            const sObj = subjects[Math.floor(Math.random() * subjects.length)];
+            const s = sObj.text;
+            const subjectType = sObj.type;
+            const compatibleVerbs = verbs.filter(v => v.compatibleSubjects.includes(subjectType));
+            const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
             if (difficulty === "Enkel") {
-                const verb = verbs[Math.floor(Math.random() * verbs.length)];
-                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
                 const a = verb.compatibleMannerAdverbials ? 
                     replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
                     mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
                 const parts = verb.transitive ? 
-                    [s, verb.text, directObjects[Math.floor(Math.random() * directObjects.length)], a] : 
+                    [s, verb.text, verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)], a] : 
                     [s, verb.text, a];
                 sentence = {
                     parts: parts.filter(p => p),
@@ -594,10 +623,10 @@
                     verb: verb
                 };
             } else if (difficulty === "Middels") {
-                const verb = verbs[Math.floor(Math.random() * verbs.length)];
-                const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-                const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-                const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+                const i = verb.requiresIndirect ? 
+                    (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+                const d = verb.transitive ? 
+                    (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
                 const a = verb.compatibleMannerAdverbials ? 
                     replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
                     mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
@@ -627,10 +656,15 @@
 }
 
 function generateBaseSentence() {
-    const verb = verbs[Math.floor(Math.random() * verbs.length)];
-    const s = subjects[Math.floor(Math.random() * subjects.length)].text;
-    const i = verb.requiresIndirect ? (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-    const d = verb.transitive ? (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
+    const sObj = subjects[Math.floor(Math.random() * subjects.length)];
+    const s = sObj.text;
+    const subjectType = sObj.type;
+    const compatibleVerbs = verbs.filter(v => v.compatibleSubjects.includes(subjectType));
+    const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
+    const i = verb.requiresIndirect ? 
+        (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
+    const d = verb.transitive ? 
+        (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
     const a = verb.compatibleMannerAdverbials ? 
         replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
         mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];

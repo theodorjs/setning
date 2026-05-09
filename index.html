@@ -2,1043 +2,1770 @@
 <html lang="no">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Setningsanalyse</title>
-    <style>
-        body {
-            font-family: 'Futura', 'Arial', sans-serif;
-            background-color: #f0f0f0;
-            margin: 0;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100vh;
-            overflow: hidden;
-        }
-        #sentence {
-            font-size: 30px;
-            color: #000;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 10px;
-            text-align: center;
-            min-height: 60px;
-            position: absolute;
-            top: 50%;
-            transform: translateY(-50%);
-            width: 80%;
-            box-sizing: border-box;
-            display: flex;
-            flex-wrap: wrap;
-            justify-content: center;
-            gap: 5px;
-        }
-        .word {
-            display: inline-block;
-            margin: 0 5px;
-            padding: 2px 6px;
-            cursor: grab;
-            transition: all 0.3s ease;
-            touch-action: none;
-        }
-        .word.correct, .word.subject { background-color: #e74c3c; color: white; border-radius: 5px; }
-        .word.verb { background-color: #2ecc71; color: white; border-radius: 5px; }
-        .word.adverbial, .word.manner, .word.place { background-color: #f39c12; color: white; border-radius: 5px; }
-        .word.direct-object { background-color: #3498db; color: white; border-radius: 5px; }
-        .word.indirect-object { background-color: #9b59b6; color: white; border-radius: 5px; }
-        .word.conjunction { background-color: #ccc; color: black; border-radius: 5px; }
-       
-        #boxes {
-            display: flex;
-            justify-content: center;
-            flex-wrap: wrap;
-            position: fixed;
-            bottom: 20px;
-            width: 100%;
-            overflow: visible; /* Lagt til tidligere av deg */
-        }
-        .box-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin: 10px;
-            min-height: 84px; /* Sikrer plass til boks + knapp, hindrer kollaps */
-        }
-        .info-btn {
-            width: 24px;
-            height: 24px;
-            margin-top: 10px;
-            border: 2px solid #000;
-            border-radius: 50%;
-            background-color: #fff;
-            color: #000;
-            font-size: 16px;
-            line-height: 24px; /* Matcher høyden nøyaktig */
-            text-align: center;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-sizing: border-box;
-            -webkit-appearance: none; /* For Safari */
-            appearance: none; /* For bred kompatibilitet */
-            min-width: 24px; /* Tvinger lik bredde */
-            min-height: 24px; /* Tvinger lik høyde */
-            padding: 0; /* Fjerner all padding som kan strekke */
-        }
-        .box {
-            width: 120px;
-            height: 50px;
-            color: white;
-            text-align: center;
-            line-height: 50px;
-            border-radius: 8px;
-            cursor: grab;
-            user-select: none;
-            touch-action: none; /* Hindrer scrolling/zooming */
-        }
-        .subject { background-color: #e74c3c; }
-        .verb { background-color: #2ecc71; }
-        .adverbial { background-color: #f39c12; }
-        .direct-object { background-color: #3498db; }
-        .indirect-object { background-color: #9b59b6; }
-        #score {
-            position: absolute;
-            top: 20px;
-            right: 20px;
-            font-size: 20px;
-        }
-        #popup {
-            position: absolute;
-            background-color: #fff;
-            border: 2px solid #000;
-            padding: 10px;
-            border-radius: 5px;
-            max-width: 250px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-            z-index: 10;
-            display: none;
-            font-size: 16px;
-        }
-        #modeToggle {
-            position: absolute;
-            top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 8px 16px;
-            background-color: #ddd;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            z-index: 20;
-        }
-        body.dark-mode { background-color: #121212; color: #f0f0f0; }
-        body.dark-mode #sentence { background-color: #333; color: #f0f0f0; }
-        body.dark-mode .box { opacity: 0.8; }
-        body.dark-mode #modeToggle { background-color: #444; color: #fff; }
-        body.dark-mode #popup { background-color: #333; color: #f0f0f0; border-color: #fff; }
-        body.dark-mode #difficulty-buttons button { background-color: #444; color: #fff; }
-        body.dark-mode #difficulty-buttons button.active { background-color: #3498db; color: #fff; }
-        @keyframes explode {
-            0% { transform: translate(0, 0) rotate(0deg); opacity: 1; }
-            100% { transform: translate(var(--dx), var(--dy)) rotate(720deg); opacity: 0; }
-        }
-        .confetti {
-            position: absolute;
-            font-size: 20px;
-            pointer-events: none;
-            animation: explode 2s forwards ease-out;
-        }
-        #difficulty-buttons {
-            position: fixed;
-            left: 20px;
-            top: 20px;
-            display: flex;
-            flex-direction: column;
-            z-index: 30;
-        }
-        #difficulty-buttons button {
-            margin-bottom: 10px;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            background-color: #ddd;
-        }
-        #difficulty-buttons button.active {
-            background-color: #3498db;
-            color: #fff;
-        }
-        @media only screen and (max-width: 600px) {
-            #score { top: 70px; right: auto; left: 50%; transform: translateX(-50%); }
-        }
-    </style>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Setningsverksted</title>
+    <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div id="difficulty-buttons">
-        <button data-difficulty="Enkel">Enkel</button>
-        <button data-difficulty="Middels" class="active">Middels</button>
-        <button data-difficulty="Vanskelig">Vanskelig</button>
-        <button data-difficulty="Omorganiser">Omorganiser</button>
+    <div class="starfield" aria-hidden="true">
+        <span class="stars-layer stars-far"></span>
+        <span class="stars-layer stars-mid"></span>
+        <span class="stars-layer stars-near"></span>
     </div>
-    <button id="modeToggle">Dark Mode</button>
-    <div id="score">
-        ⭐ Poeng: <span id="points">0</span> | 🔥 Streak: <span id="streak">0</span>
-    </div>
-    <div id="sentence"></div>
-    <div id="boxes"></div>
-    <div id="popup"></div>
+    <div id="app"></div>
+    <canvas id="celebration-canvas" aria-hidden="true"></canvas>
 
     <script>
-        const sentenceEl = document.getElementById('sentence');
-        const boxesEl = document.getElementById('boxes');
-        const popupEl = document.getElementById('popup');
-        const pointsEl = document.getElementById('points');
-        const streakEl = document.getElementById('streak');
-        const modeToggleBtn = document.getElementById('modeToggle');
-        const difficultyButtons = document.querySelectorAll('#difficulty-buttons button');
-        let points = 0;
-        let streak = 0;
-        let lastSentence = null;
-        let currentPopupFunc = null;
-        let popupTimer = null;
-        let difficulty = "Middels";
-
-        const functions = [
-            { name: 'Subjekt', color: 'subject', desc: 'Den som utfører handlingen i setningen.' },
-            { name: 'Verbal', color: 'verb', desc: 'Handlingen eller tilstanden i setningen.' },
-            { name: 'Adverbial', color: 'adverbial', desc: 'Gir informasjon om tid, sted, måte eller omstendigheter.' },
-            { name: 'Direkte objekt', color: 'direct-object', desc: 'Det som blir direkte påvirket av handlingen.' },
-            { name: 'Indirekte objekt', color: 'indirect-object', desc: 'Mottakeren av det direkte objektet.' }
-        ];
-
-        const subjects = [
-        // Levende
-        { text: 'Barna', type: 'living', preferredMannerAdverbials: ['raskt', 'stille', 'høyt'] },
-        { text: 'Postmannen', type: 'living', preferredMannerAdverbials: ['raskt', 'forsiktig'] },
-        { text: 'Jeg', type: 'living', preferredMannerAdverbials: ['rolig', 'nøyaktig'] },
-        { text: 'Læreren', type: 'living', preferredMannerAdverbials: ['nøyaktig', 'rolig'] },
-        { text: 'Katten', type: 'living', preferredMannerAdverbials: ['stille', 'raskt'] },
-        { text: 'Hunden', type: 'living', preferredMannerAdverbials: ['høyt', 'raskt'] },
-        { text: 'Hun', type: 'living', preferredMannerAdverbials: ['stille', 'rolig', 'raskt'] },
-        { text: 'Han', type: 'living', preferredMannerAdverbials: ['raskt', 'nøyaktig', 'rolig'] },
-        { text: 'Vaktmesteren', type: 'living', preferredMannerAdverbials: ['raskt', 'effektivt'] },
-        { text: 'De', type: 'living', preferredMannerAdverbials: ['raskt', 'stille'] },
-        { text: 'Familien', type: 'living', preferredMannerAdverbials: ['stille', 'rolig'] },
-        { text: 'Gutten', type: 'living', preferredMannerAdverbials: ['raskt', 'høyt'] },
-        { text: 'Jenta', type: 'living', preferredMannerAdverbials: ['stille', 'rolig'] },
-        // Ikke-levende
-        { text: 'Vinden', type: 'non-living', preferredMannerAdverbials: ['sterkt', 'svakt'] },
-        { text: 'Bussen', type: 'non-living', preferredMannerAdverbials: ['raskt', 'sakte'] }
-    ];
-
-    const verbs = [
-    {
-        text: 'gir',
-        transitive: true,
-        requiresIndirect: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken'],
-        compatibleIndirect: ['meg', 'henne', 'ham', 'barna', 'læreren', 'deg'],
-        compatibleMannerAdverbials: ['raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig'],
-        compatiblePlaceAdverbials: ['hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen'],
-        compatibleTimeAdverbials: ['i dag', 'i morgen', 'i går', 'nå', 'snart']
-    },
-    {
-        text: 'løper',
-        transitive: false,
-        compatibleSubjects: ['living'],
-        compatibleMannerAdverbials: ['raskt', 'sakte', 'rolig', 'stille', 'klønete'],
-        compatiblePlaceAdverbials: ['i parken', 'hjemme', 'ute', 'på skolen', 'i skogen'],
-        compatibleTimeAdverbials: ['i dag', 'i går', 'nå']
-    },
-    {
-        text: 'roper',
-        transitive: false,
-        compatibleSubjects: ['living'],
-        compatibleMannerAdverbials: ['høyt', 'lavt', 'klart', 'stille'],
-        compatiblePlaceAdverbials: ['i parken', 'på skolen', 'ute', 'hjemme'],
-        compatibleTimeAdverbials: ['i dag', 'i morgen', 'nå']
-    },
-    {
-        text: 'tok med',
-        transitive: true,
-        requiresIndirect: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['boka', 'mat', 'vannflaska'],
-        compatibleIndirect: ['seg'],
-        compatibleMannerAdverbials: ['raskt', 'sakte'],
-        compatiblePlaceAdverbials: ['hjemme', 'på skolen'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    },
-    {
-        text: 'laget',
-        transitive: true,
-        requiresIndirect: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['mat', 'en kake'],
-        compatibleIndirect: ['seg'],
-        compatibleMannerAdverbials: ['raskt', 'nøyaktig'],
-        compatiblePlaceAdverbials: ['hjemme', 'på kjøkkenet'],
-        compatibleTimeAdverbials: ['i dag', 'i går']
-    },
-    {
-        text: 'badet',
-        transitive: false,
-        compatibleSubjects: ['living'],
-        compatibleMannerAdverbials: ['rolig', 'stille'],
-        compatiblePlaceAdverbials: ['i badekaret', 'i vannet'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    },
-    {
-        text: 'jaget',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['en ball', 'katten'],
-        compatibleMannerAdverbials: ['raskt', 'vilt'],
-        compatiblePlaceAdverbials: ['i parken', 'ute'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    },
-    {
-        text: 'blåser',
-        transitive: false,
-        compatibleSubjects: ['non-living'],
-        compatibleMannerAdverbials: ['sterkt', 'svakt'],
-        compatiblePlaceAdverbials: ['i trærne', 'i parken'],
-        compatibleTimeAdverbials: ['nå', 'i dag']
-    },
-    {
-        text: 'ser på',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['tv', 'filmen'],
-        compatibleMannerAdverbials: ['stille', 'oppmerksomt'],
-        compatiblePlaceAdverbials: ['i stua', 'på kino'],
-        compatibleTimeAdverbials: ['nå', 'i kveld']
-    },
-    {
-        text: 'tente',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['en stor lampe', 'et lys'],
-        compatibleMannerAdverbials: ['raskt', 'forsiktig'],
-        compatiblePlaceAdverbials: ['i det mørke rommet', 'hjemme'],
-        compatibleTimeAdverbials: ['i kveld', 'nå']
-    },
-    {
-        text: 'gikk',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['en tur'],
-        compatibleMannerAdverbials: ['rolig', 'raskt'],
-        compatiblePlaceAdverbials: ['ute', 'i parken'],
-        compatibleTimeAdverbials: ['på kvelden', 'i dag']
-    },
-    {
-        text: 'reparerte',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['lampa', 'en bil'],
-        compatibleMannerAdverbials: ['raskt', 'effektivt', 'nøyaktig'],
-        compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    },
-    {
-        text: 'kjørte',
-        transitive: false,
-        compatibleSubjects: ['living', 'non-living'],
-        compatibleMannerAdverbials: ['raskt', 'sakte'],
-        compatiblePlaceAdverbials: ['i butikken', 'på veien'],
-        compatibleTimeAdverbials: ['seint om kvelden', 'i dag']
-    },
-    {
-        text: 'spilte',
-        transitive: false,
-        compatibleSubjects: ['living'],
-        compatibleMannerAdverbials: ['bra', 'dårlig'],
-        compatiblePlaceAdverbials: ['i skuespillet', 'på teateret'],
-        compatibleTimeAdverbials: ['i dag', 'i kveld']
-    },
-    {
-        text: 'flyttet',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['mange kasser', 'møbler'],
-        compatibleMannerAdverbials: ['raskt', 'forsiktig'],
-        compatiblePlaceAdverbials: ['i den nye leiligheten', 'hjemme'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    },
-    {
-        text: 'lekte',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['snøballkrig', 'med leker'],
-        compatibleMannerAdverbials: ['høyt', 'stille'],
-        compatiblePlaceAdverbials: ['i parken', 'ute'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    },
-    {
-        text: 'leste',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['avisa', 'en bok'],
-        compatibleMannerAdverbials: ['stille', 'rolig'],
-        compatiblePlaceAdverbials: ['på café', 'hjemme'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    },
-    {
-        text: 'sang',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['en sang', 'en melodi'],
-        compatibleMannerAdverbials: ['høyt', 'vakkert'],
-        compatiblePlaceAdverbials: ['i kirken', 'hjemme'],
-        compatibleTimeAdverbials: ['i kveld', 'nå']
-    },
-    {
-        text: 'tegnet',
-        transitive: true,
-        compatibleSubjects: ['living'],
-        compatibleObjects: ['et bilde', 'en tegning'],
-        compatibleMannerAdverbials: ['nøyaktig', 'raskt'],
-        compatiblePlaceAdverbials: ['på skolen', 'hjemme'],
-        compatibleTimeAdverbials: ['i dag', 'nå']
-    }
-];
-
-        const conflictingAdverbials = [
-            ['raskt', 'sakte'],
-            ['høyt', 'lavt'],
-            ['rolig', 'klønete']
-        ];
-
-        const directObjects = [
-        'ballen', 'gaven', 'vannflaska', 'boka', 'pennen', 'leken', 'mat', 'en kake', 'en ball',
-        'tv', 'filmen', 'en stor lampe', 'et lys', 'en tur', 'lampa', 'en bil', 'mange kasser',
-        'møbler', 'snøballkrig', 'med leker', 'avisa', 'en sang', 'en melodi', 'et bilde', 'en tegning'
-    ];
-
-        const mannerAdverbials = [
-        'raskt', 'sakte', 'forsiktig', 'nøyaktig', 'stille', 'rolig', 'høyt', 'lavt', 'klart', 'klønete',
-        'sterkt', 'svakt', 'oppmerksomt', 'effektivt', 'vilt', 'bra', 'dårlig', 'vakkert'
-    ];
-        const placeAdverbials = [
-            'hjemme', 'på skolen', 'i parken', 'på jobben', 'ute', 'i hagen', 'i skogen', 'på kjøkkenet',
-            'i badekaret', 'i vannet', 'i trærne', 'i stua', 'på kino', 'i det mørke rommet', 'på teateret',
-            'i den nye leiligheten', 'på café', 'i kirken', 'på veien'
-        ];
-        const timeAdverbials = [
-            'i dag', 'i morgen', 'i går', 'nå', 'snart', 'på kvelden', 'seint om kvelden', 'i kveld'
-        ];
-
-        difficultyButtons.forEach(btn => {
-            btn.addEventListener('click', () => {
-                difficulty = btn.getAttribute('data-difficulty');
-                difficultyButtons.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                loadSentence();
-            });
-        });
-
-        function replaceUnderscores(str) {
-            return str.replace(/_/g, ' ');
-        }
-
-        function capitalize(word) {
-            return word.charAt(0).toUpperCase() + word.slice(1).toLowerCase();
-        }
-
-        function checkConflict(a1, a2) {
-            return conflictingAdverbials.some(pair => pair.includes(a1) && pair.includes(a2));
-        }
-
-        function dragOver(e) {
-            e.preventDefault();
-        }
-
-        function drop(e) {
-        e.preventDefault();
-        const wordEl = e.target;
-        const func = e.dataTransfer.getData('text');
-        const correctFunc = currentSentence.correct[wordEl.dataset.word];
-        const funcData = functions.find(f => f.name === func);
-        if (correctFunc === funcData.color) {
-            requestAnimationFrame(() => {
-                wordEl.classList.add('correct', funcData.color);
-                wordEl.style.backgroundColor = getColor(funcData.color);
-                checkCompletion();
-            });
-        }
-    }
-
-    function generateSentence() {
-    let sentence;
-
-    // Velg et subjekt først
-    const sObj = subjects[Math.floor(Math.random() * subjects.length)];
-    const s = sObj.text;
-    const subjectType = sObj.type;
-
-    // Filtrer verbaler basert på subjekt-type
-    const compatibleVerbs = verbs.filter(v => v.compatibleSubjects.includes(subjectType));
-
-    if (difficulty === "Enkel") {
-        const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
-        const a = verb.compatibleMannerAdverbials ? 
-            replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
-            mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
-        const parts = verb.transitive ? 
-            [s, verb.text, verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)], a] : 
-            [s, verb.text, a];
-        sentence = {
-            parts: parts.filter(p => p),
-            interactiveParts: parts.filter(p => p),
-            text: parts.join(' ') + '.',
-            correct: { 
-                [s]: 'subject', 
-                [verb.text]: 'verb', 
-                ...(verb.transitive && { [parts[2]]: 'direct-object' }), 
-                [parts[verb.transitive ? 3 : 2]]: 'adverbial' 
+        const WORD_CLASSES = [
+            {
+                id: "substantiv",
+                label: "Substantiv",
+                color: "#2563eb",
+                description: "Substantiv er navn på personer, steder, ting og begreper.",
+                facts: ["Kan ofte ha en, ei eller et foran seg.", "Bøyes vanligvis i entall og flertall, bestemt og ubestemt."],
+                examples: ["elev", "skole", "bok", "glede"],
+                sample: [
+                    { text: "Eleven", cls: "substantiv" },
+                    { text: "leser", cls: "verb" },
+                    { text: "boka", cls: "substantiv" }
+                ]
             },
-            verb: verb
-        };
-    } else if (difficulty === "Middels") {
-        const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
-        const i = verb.requiresIndirect ? 
-            (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-        const d = verb.transitive ? 
-            (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
-        const a = verb.compatibleMannerAdverbials ? 
-            replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
-            mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
-        const p = verb.compatiblePlaceAdverbials ? 
-            replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
-            placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
-        const parts = [s, verb.text, i, d, a, p].filter(part => part);
-        sentence = {
-            parts: parts,
-            interactiveParts: parts,
-            text: parts.join(' ') + '.',
-            correct: { 
-                [s]: 'subject', 
-                [verb.text]: 'verb', 
-                ...(i && { [i]: 'indirect-object' }), 
-                ...(d && { [d]: 'direct-object' }), 
-                [a]: 'adverbial', 
-                ...(p && { [p]: 'adverbial' }) 
+            {
+                id: "verb",
+                label: "Verb",
+                color: "#16a34a",
+                description: "Verb forteller hva noen gjør, eller hva som skjer.",
+                facts: ["Kan stå i infinitiv med å foran seg.", "Bøyes i tid: presens, preteritum og perfektum."],
+                examples: ["å lese", "løper", "skrev", "har funnet"],
+                sample: [
+                    { text: "Nora", cls: "substantiv" },
+                    { text: "skriver", cls: "verb" },
+                    { text: "rolig", cls: "adverb" }
+                ]
             },
-            verb: verb
-        };
-    } else if (difficulty === "Vanskelig") {
-        const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
-        const i = verb.requiresIndirect ? 
-            (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-        const d = verb.transitive ? 
-            (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
-        let a1, a2;
-        do {
-            a1 = verb.compatibleMannerAdverbials ? 
-                replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
-                mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
-            a2 = verb.compatibleMannerAdverbials ? 
-                replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
-                mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
-        } while (a1 === a2 || checkConflict(a1, a2));
-        const p = verb.compatiblePlaceAdverbials ? 
-            replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
-            placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
-        const parts = [s, verb.text, i, d, a1, "og", a2, p].filter(part => part);
-        sentence = {
-            parts: parts,
-            interactiveParts: parts.filter(p => p !== "og"),
-            text: parts.join(' ') + '.',
-            correct: { 
-                [s]: 'subject', 
-                [verb.text]: 'verb', 
-                ...(i && { [i]: 'indirect-object' }), 
-                ...(d && { [d]: 'direct-object' }), 
-                [a1]: 'adverbial', 
-                [a2]: 'adverbial', 
-                [p]: 'adverbial' 
+            {
+                id: "adjektiv",
+                label: "Adjektiv",
+                color: "#d97706",
+                description: "Adjektiv beskriver substantiv og pronomen.",
+                facts: ["Forteller hvordan noe eller noen er.", "Kan ofte gradbøyes: fin, finere, finest."],
+                examples: ["rød", "glad", "vanskelig", "større"],
+                sample: [
+                    { text: "Den", cls: "determinativ" },
+                    { text: "lille", cls: "adjektiv" },
+                    { text: "hunden", cls: "substantiv" },
+                    { text: "sover", cls: "verb" }
+                ]
             },
-            verb: verb
-        };
-    } else if (difficulty === "Omorganiser") {
-        const baseSentence = generateBaseSentence();
-        const scrambledParts = [...baseSentence.parts].sort(() => Math.random() - 0.5);
-        sentence = {
-            parts: scrambledParts,
-            correctParts: baseSentence.parts,
-            interactiveParts: scrambledParts,
-            text: scrambledParts.join(' ') + '.',
-            correct: baseSentence.correct,
-            verb: baseSentence.verb
-        };
-    }
-
-    // Validering og variasjon
-    if (difficulty === "Enkel" || difficulty === "Middels") {
-        let maxAttempts = 10;
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            let tempSentence = { ...sentence };
-            if (isSentenceValid(tempSentence)) {
-                let variationOK = true;
-                if (lastSentence) {
-                    let newWords = Object.keys(tempSentence.correct);
-                    let oldWords = Object.keys(lastSentence.correct);
-                    let common = newWords.filter(word => oldWords.includes(word)).length;
-                    let diff = newWords.length - common;
-                    if (difficulty === "Enkel" && newWords.length >= 3 && diff < 1) variationOK = false;
-                    else if (difficulty === "Middels" && newWords.length >= 4 && diff < 2) variationOK = false;
-                }
-                if (variationOK) {
-                    sentence = tempSentence;
-                    break;
-                }
+            {
+                id: "pronomen",
+                label: "Pronomen",
+                color: "#7c3aed",
+                description: "Pronomen kan stå i stedet for et substantiv.",
+                facts: ["Viser til personer, ting eller grupper.", "Noen pronomen har subjektform og objektform."],
+                examples: ["jeg", "du", "han", "dem"],
+                sample: [
+                    { text: "Hun", cls: "pronomen" },
+                    { text: "fant", cls: "verb" },
+                    { text: "den", cls: "pronomen" }
+                ]
+            },
+            {
+                id: "adverb",
+                label: "Adverb",
+                color: "#0891b2",
+                description: "Adverb sier mer om verb, adjektiv eller andre adverb.",
+                facts: ["Kan fortelle om tid, sted, måte eller grad.", "Mange adverb svarer på hvordan, hvor eller når."],
+                examples: ["raskt", "hjemme", "ofte", "ganske"],
+                sample: [
+                    { text: "Barna", cls: "substantiv" },
+                    { text: "synger", cls: "verb" },
+                    { text: "høyt", cls: "adverb" }
+                ]
+            },
+            {
+                id: "preposisjon",
+                label: "Preposisjon",
+                color: "#e11d48",
+                description: "Preposisjoner står ofte foran et substantiv eller pronomen.",
+                facts: ["Forteller gjerne om plass, tid eller retning.", "Danner uttrykk som i skogen, på bordet og til henne."],
+                examples: ["i", "på", "under", "til"],
+                sample: [
+                    { text: "Ballen", cls: "substantiv" },
+                    { text: "ligger", cls: "verb" },
+                    { text: "under", cls: "preposisjon" },
+                    { text: "bordet", cls: "substantiv" }
+                ]
+            },
+            {
+                id: "determinativ",
+                label: "Determinativ",
+                color: "#4f46e5",
+                description: "Determinativ bestemmer eller peker ut substantiv.",
+                facts: ["Kan vise hvem noe hører til.", "Kan fortelle mengde eller peke på noe bestemt."],
+                examples: ["en", "den", "min", "disse"],
+                sample: [
+                    { text: "Denne", cls: "determinativ" },
+                    { text: "oppgaven", cls: "substantiv" },
+                    { text: "er", cls: "verb" },
+                    { text: "lett", cls: "adjektiv" }
+                ]
+            },
+            {
+                id: "konjunksjon",
+                label: "Konjunksjon",
+                color: "#64748b",
+                description: "Konjunksjoner binder sammen ord, ledd eller setninger.",
+                facts: ["Sidestiller deler som har lik funksjon.", "De vanligste er og, eller, men og for."],
+                examples: ["og", "eller", "men", "for"],
+                sample: [
+                    { text: "Nora", cls: "substantiv" },
+                    { text: "og", cls: "konjunksjon" },
+                    { text: "Ali", cls: "substantiv" },
+                    { text: "tegner", cls: "verb" }
+                ]
+            },
+            {
+                id: "subjunksjon",
+                label: "Subjunksjon",
+                color: "#db2777",
+                description: "Subjunksjoner innleder ofte leddsetninger.",
+                facts: ["Knytter en leddsetning til en helsetning.", "Vanlige subjunksjoner er fordi, hvis, at og da."],
+                examples: ["fordi", "hvis", "at", "da"],
+                sample: [
+                    { text: "Hvis", cls: "subjunksjon" },
+                    { text: "det", cls: "pronomen" },
+                    { text: "regner", cls: "verb" },
+                    { text: "leser", cls: "verb" },
+                    { text: "vi", cls: "pronomen" }
+                ]
+            },
+            {
+                id: "interjeksjon",
+                label: "Interjeksjon",
+                color: "#65a30d",
+                description: "Interjeksjoner uttrykker følelser, lyder eller korte utrop.",
+                facts: ["Kan ofte stå alene som et utrop.", "Brukes i tale og dialog for å vise reaksjoner."],
+                examples: ["hei", "au", "hurra", "å"],
+                sample: [
+                    { text: "Hei", cls: "interjeksjon" },
+                    { text: "sa", cls: "verb" },
+                    { text: "Nora", cls: "substantiv" }
+                ]
             }
-            // Generer ny setning ved mislykket forsøk
-            const sObj = subjects[Math.floor(Math.random() * subjects.length)];
-            const s = sObj.text;
-            const subjectType = sObj.type;
-            const compatibleVerbs = verbs.filter(v => v.compatibleSubjects.includes(subjectType));
-            const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
-            if (difficulty === "Enkel") {
-                const a = verb.compatibleMannerAdverbials ? 
-                    replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
-                    mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
-                const parts = verb.transitive ? 
-                    [s, verb.text, verb.compatibleObjects[Math.floor(Math.random() * verb.compatibleObjects.length)], a] : 
-                    [s, verb.text, a];
-                sentence = {
-                    parts: parts.filter(p => p),
-                    interactiveParts: parts.filter(p => p),
-                    text: parts.join(' ') + '.',
-                    correct: { 
-                        [s]: 'subject', 
-                        [verb.text]: 'verb', 
-                        ...(verb.transitive && { [parts[2]]: 'direct-object' }), 
-                        [parts[verb.transitive ? 3 : 2]]: 'adverbial' 
-                    },
-                    verb: verb
-                };
-            } else if (difficulty === "Middels") {
-                const i = verb.requiresIndirect ? 
-                    (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-                const d = verb.transitive ? 
-                    (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
-                const a = verb.compatibleMannerAdverbials ? 
-                    replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
-                    mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
-                const p = verb.compatiblePlaceAdverbials ? 
-                    replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
-                    placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
-                const parts = [s, verb.text, i, d, a, p].filter(part => part);
-                sentence = {
-                    parts: parts,
-                    interactiveParts: parts,
-                    text: parts.join(' ') + '.',
-                    correct: { 
-                        [s]: 'subject', 
-                        [verb.text]: 'verb', 
-                        ...(i && { [i]: 'indirect-object' }), 
-                        ...(d && { [d]: 'direct-object' }), 
-                        [a]: 'adverbial', 
-                        ...(p && { [p]: 'adverbial' }) 
-                    },
-                    verb: verb
-                };
+        ];
+
+        const WORD_CLASS_BY_ID = Object.fromEntries(WORD_CLASSES.map((item) => [item.id, item]));
+        const INFLECTABLE_CLASSES = ["substantiv", "verb", "adjektiv", "pronomen", "determinativ"];
+
+        const FUNCTION_ROLES = [
+            { id: "subject", label: "Subjekt", color: "#ef4444", description: "Den som gjør det som skjer i setningen." },
+            { id: "verbal", label: "Verbal", color: "#16a34a", description: "Det som skjer, eller det noen gjør, i setningen." },
+            { id: "directObject", label: "Direkte objekt", color: "#2563eb", description: "Det handlingen går ut over." },
+            { id: "indirectObject", label: "Indirekte objekt", color: "#7c3aed", description: "Den som får eller mottar noe." },
+            { id: "adverbial", label: "Adverbial", color: "#d97706", description: "Sier noe om tid, sted, måte eller grunn." },
+            { id: "predicative", label: "Predikativ", color: "#0891b2", description: "Forteller hvordan subjektet eller objektet er." }
+        ];
+
+        const ROLE_BY_ID = Object.fromEntries(FUNCTION_ROLES.map((item) => [item.id, item]));
+
+        const DIFFICULTIES = [
+            { id: "lett", label: "Lett", points: 1, description: "Korte setninger og de vanligste ordene." },
+            { id: "middels", label: "Middels", points: 2, description: "Flere setningsledd og flere ordklasser." },
+            { id: "vanskelig", label: "Vanskelig", points: 3, description: "Lengre setninger, leddsetninger og mer presis analyse." }
+        ];
+
+        const ACTIVITIES = [
+            {
+                id: "analysis",
+                title: "Setningsanalyse",
+                short: "På tide med litt big brain energi. Klarer du å finne alle delene av setningen?",
+                accent: "#ef4444"
+            },
+            {
+                id: "find",
+                title: "Finn ordet!",
+                short: "Finner du ordet, finner du svaret!",
+                accent: "#2563eb"
+            },
+            {
+                id: "sort",
+                title: "Sorter ordene",
+                short: "Setningene har blitt stokket om. Klarer du å fikse dem?",
+                accent: "#16a34a"
+            },
+            {
+                id: "inflect",
+                title: "Bøy ordene",
+                short: "Øv deg på ordbøying",
+                accent: "#d97706"
+            },
+            {
+                id: "learn",
+                title: "Lær om ordklassene",
+                short: "Fyll på med litt kunnskap",
+                accent: "#7c3aed"
+            }
+        ];
+
+        const ACTIVITY_BY_ID = Object.fromEntries(ACTIVITIES.map((item) => [item.id, item]));
+
+        const ANALYSIS_SENTENCES = {
+            lett: [
+                {
+                    id: "analyse-lett-1",
+                    words: [
+                        { text: "Katten", cls: "substantiv" },
+                        { text: "sover", cls: "verb" },
+                        { text: "i", cls: "preposisjon" },
+                        { text: "stolen", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Katten", role: "subject" },
+                        { id: "c2", text: "sover", role: "verbal" },
+                        { id: "c3", text: "i stolen", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-lett-2",
+                    words: [
+                        { text: "Jenta", cls: "substantiv" },
+                        { text: "leser", cls: "verb" },
+                        { text: "boka", cls: "substantiv" },
+                        { text: "hjemme", cls: "adverb" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Jenta", role: "subject" },
+                        { id: "c2", text: "leser", role: "verbal" },
+                        { id: "c3", text: "boka", role: "directObject" },
+                        { id: "c4", text: "hjemme", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-lett-3",
+                    words: [
+                        { text: "Han", cls: "pronomen" },
+                        { text: "tegner", cls: "verb" },
+                        { text: "et", cls: "determinativ" },
+                        { text: "hus", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Han", role: "subject" },
+                        { id: "c2", text: "tegner", role: "verbal" },
+                        { id: "c3", text: "et hus", role: "directObject" }
+                    ]
+                }
+            ],
+            middels: [
+                {
+                    id: "analyse-middels-1",
+                    words: [
+                        { text: "Læreren", cls: "substantiv" },
+                        { text: "gir", cls: "verb" },
+                        { text: "eleven", cls: "substantiv" },
+                        { text: "en", cls: "determinativ" },
+                        { text: "bok", cls: "substantiv" },
+                        { text: "i", cls: "preposisjon" },
+                        { text: "klasserommet", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Læreren", role: "subject" },
+                        { id: "c2", text: "gir", role: "verbal" },
+                        { id: "c3", text: "eleven", role: "indirectObject" },
+                        { id: "c4", text: "en bok", role: "directObject" },
+                        { id: "c5", text: "i klasserommet", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-middels-2",
+                    words: [
+                        { text: "Den", cls: "determinativ" },
+                        { text: "lille", cls: "adjektiv" },
+                        { text: "hunden", cls: "substantiv" },
+                        { text: "sover", cls: "verb" },
+                        { text: "rolig", cls: "adverb" },
+                        { text: "under", cls: "preposisjon" },
+                        { text: "bordet", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Den lille hunden", role: "subject" },
+                        { id: "c2", text: "sover", role: "verbal" },
+                        { id: "c3", text: "rolig", role: "adverbial" },
+                        { id: "c4", text: "under bordet", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-middels-3",
+                    words: [
+                        { text: "Bestefar", cls: "substantiv" },
+                        { text: "sendte", cls: "verb" },
+                        { text: "Nora", cls: "substantiv" },
+                        { text: "et", cls: "determinativ" },
+                        { text: "kort", cls: "substantiv" },
+                        { text: "fra", cls: "preposisjon" },
+                        { text: "hytta", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Bestefar", role: "subject" },
+                        { id: "c2", text: "sendte", role: "verbal" },
+                        { id: "c3", text: "Nora", role: "indirectObject" },
+                        { id: "c4", text: "et kort", role: "directObject" },
+                        { id: "c5", text: "fra hytta", role: "adverbial" }
+                    ]
+                }
+            ],
+            vanskelig: [
+                {
+                    id: "analyse-vanskelig-1",
+                    words: [
+                        { text: "Da", cls: "subjunksjon" },
+                        { text: "sola", cls: "substantiv" },
+                        { text: "skinte", cls: "verb" },
+                        { text: "syklet", cls: "verb" },
+                        { text: "de", cls: "determinativ" },
+                        { text: "glade", cls: "adjektiv" },
+                        { text: "barna", cls: "substantiv" },
+                        { text: "til", cls: "preposisjon" },
+                        { text: "biblioteket", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Da sola skinte", role: "adverbial" },
+                        { id: "c2", text: "syklet", role: "verbal" },
+                        { id: "c3", text: "de glade barna", role: "subject" },
+                        { id: "c4", text: "til biblioteket", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-vanskelig-2",
+                    words: [
+                        { text: "Læreren", cls: "substantiv" },
+                        { text: "fortalte", cls: "verb" },
+                        { text: "klassen", cls: "substantiv" },
+                        { text: "en", cls: "determinativ" },
+                        { text: "spennende", cls: "adjektiv" },
+                        { text: "historie", cls: "substantiv" },
+                        { text: "etter", cls: "preposisjon" },
+                        { text: "friminuttet", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Læreren", role: "subject" },
+                        { id: "c2", text: "fortalte", role: "verbal" },
+                        { id: "c3", text: "klassen", role: "indirectObject" },
+                        { id: "c4", text: "en spennende historie", role: "directObject" },
+                        { id: "c5", text: "etter friminuttet", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-vanskelig-3",
+                    words: [
+                        { text: "På", cls: "preposisjon" },
+                        { text: "fredag", cls: "substantiv" },
+                        { text: "skal", cls: "verb" },
+                        { text: "laget", cls: "substantiv" },
+                        { text: "spille", cls: "verb" },
+                        { text: "kamp", cls: "substantiv" },
+                        { text: "på", cls: "preposisjon" },
+                        { text: "stadion", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "På fredag", role: "adverbial" },
+                        { id: "c2", text: "skal spille", role: "verbal" },
+                        { id: "c3", text: "laget", role: "subject" },
+                        { id: "c4", text: "kamp", role: "directObject" },
+                        { id: "c5", text: "på stadion", role: "adverbial" }
+                    ]
+                }
+            ]
+        };
+
+        const WORD_SENTENCES = {
+            lett: [
+                makeWordSentence("finn-lett-1", [
+                    ["Katten", "substantiv"],
+                    ["sover", "verb"],
+                    ["i", "preposisjon"],
+                    ["stolen", "substantiv"]
+                ]),
+                makeWordSentence("finn-lett-2", [
+                    ["Hun", "pronomen"],
+                    ["leser", "verb"],
+                    ["en", "determinativ"],
+                    ["spennende", "adjektiv"],
+                    ["bok", "substantiv"]
+                ]),
+                makeWordSentence("finn-lett-3", [
+                    ["Barna", "substantiv"],
+                    ["synger", "verb"],
+                    ["høyt", "adverb"]
+                ])
+            ],
+            middels: [
+                makeWordSentence("finn-middels-1", [
+                    ["Den", "determinativ"],
+                    ["røde", "adjektiv"],
+                    ["bussen", "substantiv"],
+                    ["stopper", "verb"],
+                    ["foran", "preposisjon"],
+                    ["skolen", "substantiv"]
+                ]),
+                makeWordSentence("finn-middels-2", [
+                    ["Jeg", "pronomen"],
+                    ["skriver", "verb"],
+                    ["fordi", "subjunksjon"],
+                    ["læreren", "substantiv"],
+                    ["venter", "verb"]
+                ]),
+                makeWordSentence("finn-middels-3", [
+                    ["Nora", "substantiv"],
+                    ["og", "konjunksjon"],
+                    ["Emil", "substantiv"],
+                    ["tegner", "verb"],
+                    ["stille", "adverb"]
+                ])
+            ],
+            vanskelig: [
+                makeWordSentence("finn-vanskelig-1", [
+                    ["Hei", "interjeksjon"],
+                    ["sa", "verb"],
+                    ["Nora", "substantiv"],
+                    ["da", "subjunksjon"],
+                    ["klokka", "substantiv"],
+                    ["ringte", "verb"]
+                ]),
+                makeWordSentence("finn-vanskelig-2", [
+                    ["Hvis", "subjunksjon"],
+                    ["elevene", "substantiv"],
+                    ["samarbeider", "verb"],
+                    ["blir", "verb"],
+                    ["teksten", "substantiv"],
+                    ["bedre", "adjektiv"]
+                ]),
+                makeWordSentence("finn-vanskelig-3", [
+                    ["Denne", "determinativ"],
+                    ["ganske", "adverb"],
+                    ["vanskelige", "adjektiv"],
+                    ["oppgaven", "substantiv"],
+                    ["løste", "verb"],
+                    ["de", "pronomen"],
+                    ["sammen", "adverb"]
+                ])
+            ]
+        };
+
+        const SORT_SENTENCES = {
+            lett: [
+                makeWordSentence("sort-lett-1", [
+                    ["Katten", "substantiv"],
+                    ["sover", "verb"],
+                    ["i", "preposisjon"],
+                    ["stolen", "substantiv"]
+                ]),
+                makeWordSentence("sort-lett-2", [
+                    ["Vi", "pronomen"],
+                    ["lager", "verb"],
+                    ["gode", "adjektiv"],
+                    ["pannekaker", "substantiv"]
+                ]),
+                makeWordSentence("sort-lett-3", [
+                    ["Sola", "substantiv"],
+                    ["skinner", "verb"],
+                    ["varmt", "adverb"],
+                    ["i", "preposisjon"],
+                    ["hagen", "substantiv"]
+                ])
+            ],
+            middels: [
+                makeWordSentence("sort-middels-1", [
+                    ["Den", "determinativ"],
+                    ["lille", "adjektiv"],
+                    ["hunden", "substantiv"],
+                    ["sover", "verb"],
+                    ["under", "preposisjon"],
+                    ["bordet", "substantiv"]
+                ]),
+                makeWordSentence("sort-middels-2", [
+                    ["Barna", "substantiv"],
+                    ["bygger", "verb"],
+                    ["en", "determinativ"],
+                    ["hytte", "substantiv"],
+                    ["i", "preposisjon"],
+                    ["skogen", "substantiv"]
+                ]),
+                makeWordSentence("sort-middels-3", [
+                    ["Nora", "substantiv"],
+                    ["og", "konjunksjon"],
+                    ["Ali", "substantiv"],
+                    ["skriver", "verb"],
+                    ["klare", "adjektiv"],
+                    ["setninger", "substantiv"]
+                ])
+            ],
+            vanskelig: [
+                makeWordSentence("sort-vanskelig-1", [
+                    ["Etter", "preposisjon"],
+                    ["skolen", "substantiv"],
+                    ["skriver", "verb"],
+                    ["Nora", "substantiv"],
+                    ["en", "determinativ"],
+                    ["lang", "adjektiv"],
+                    ["melding", "substantiv"],
+                    ["til", "preposisjon"],
+                    ["bestefar", "substantiv"]
+                ]),
+                makeWordSentence("sort-vanskelig-2", [
+                    ["Fordi", "subjunksjon"],
+                    ["været", "substantiv"],
+                    ["var", "verb"],
+                    ["kaldt", "adjektiv"],
+                    ["hentet", "verb"],
+                    ["de", "pronomen"],
+                    ["varme", "adjektiv"],
+                    ["jakker", "substantiv"]
+                ]),
+                makeWordSentence("sort-vanskelig-3", [
+                    ["Hvis", "subjunksjon"],
+                    ["laget", "substantiv"],
+                    ["øver", "verb"],
+                    ["grundig", "adverb"],
+                    ["spiller", "verb"],
+                    ["de", "pronomen"],
+                    ["kampen", "substantiv"],
+                    ["bedre", "adjektiv"]
+                ])
+            ]
+        };
+
+        const FIND_TARGETS = {
+            lett: ["substantiv", "verb", "adjektiv", "adverb"],
+            middels: ["pronomen", "determinativ", "preposisjon", "konjunksjon", "subjunksjon"],
+            vanskelig: ["substantiv", "adjektiv", "pronomen", "adverb", "determinativ", "subjunksjon", "interjeksjon"]
+        };
+
+        const INFLECTION_TASKS = {
+            substantiv: {
+                lett: [
+                    task("bok", "bestemt entall", "boka", ["bok", "boka", "bøker", "bøkene"], "I bestemt entall får bok endingen -a her: boka."),
+                    task("hund", "flertall ubestemt", "hunder", ["hund", "hunden", "hunder", "hundene"], "Flertall ubestemt får ofte endingen -er: hunder."),
+                    task("elev", "bestemt entall", "eleven", ["elev", "eleven", "elever", "elevene"], "Maskuline substantiv får ofte -en i bestemt entall.")
+                ],
+                middels: [
+                    task("jente", "flertall bestemt", "jentene", ["jente", "jenta", "jenter", "jentene"], "Jente blir jenter i flertall og jentene i bestemt flertall."),
+                    task("hus", "bestemt flertall", "husene", ["hus", "huset", "huser", "husene"], "Et hus, huset, flere hus, alle husene."),
+                    task("lærer", "flertall bestemt", "lærerne", ["lærer", "læreren", "lærerer", "lærerne"], "Mange ord på -er får formen -erne i bestemt flertall.")
+                ],
+                vanskelig: [
+                    task("museum", "bestemt flertall", "museene", ["museum", "museet", "museumer", "museene"], "Museum bøyes et museum, museet, museer, museene."),
+                    task("tre", "ubestemt flertall", "trær", ["tre", "treet", "trær", "treene"], "Tre har vokalskifte i flertall: trær."),
+                    task("bok", "ubestemt flertall", "bøker", ["bok", "boka", "bøker", "bøkene"], "Bok får vokalskifte fra o til ø i flertall.")
+                ]
+            },
+            verb: {
+                lett: [
+                    task("å lese", "presens", "leser", ["å lese", "leser", "leste", "har lest"], "Presens forteller hva som skjer nå: leser."),
+                    task("å hoppe", "preteritum", "hoppet", ["å hoppe", "hopper", "hoppet", "har hoppet"], "Preteritum forteller hva som skjedde før: hoppet."),
+                    task("å tegne", "presens", "tegner", ["å tegne", "tegner", "tegnet", "har tegnet"], "Mange verb får -r i presens.")
+                ],
+                middels: [
+                    task("å skrive", "preteritum", "skrev", ["å skrive", "skriver", "skrev", "har skrevet"], "Skrive har sterk bøying: skrive, skriver, skrev, har skrevet."),
+                    task("å finne", "perfektum", "har funnet", ["å finne", "finner", "fant", "har funnet"], "Perfektum bruker har og partisipp: har funnet."),
+                    task("å løpe", "perfektum", "har løpt", ["å løpe", "løper", "løp", "har løpt"], "Perfektum består av har og partisipp: har løpt.")
+                ],
+                vanskelig: [
+                    task("å være", "preteritum", "var", ["å være", "er", "var", "har vært"], "Være har uregelrett bøying: er, var, har vært."),
+                    task("å gå", "perfektum", "har gått", ["å gå", "går", "gikk", "har gått"], "Gå bøyes går, gikk, har gått."),
+                    task("å skrive", "perfektum", "har skrevet", ["å skrive", "skriver", "skrev", "har skrevet"], "Perfektum bruker har og partisipp: har skrevet.")
+                ]
+            },
+            adjektiv: {
+                lett: [
+                    task("fin", "intetkjønn", "fint", ["fin", "fint", "fine", "finere", "finest"], "Når adjektivet står til et intetkjønnsord, får det ofte -t."),
+                    task("gul", "flertall", "gule", ["gul", "gult", "gule", "gulere", "gulest"], "I flertall får mange adjektiv -e."),
+                    task("glad", "bestemt form", "glade", ["glad", "gladt", "glade", "gladere", "gladest"], "Bestemt form får ofte -e: den glade eleven.")
+                ],
+                middels: [
+                    task("stor", "komparativ", "større", ["stor", "stort", "store", "større", "størst"], "Stor har uregelrett gradbøying: stor, større, størst."),
+                    task("vanskelig", "superlativ", "vanskeligst", ["vanskelig", "vanskeligt", "vanskelige", "vanskeligere", "vanskeligst"], "Superlativ kan få -st: vanskeligst."),
+                    task("rask", "komparativ", "raskere", ["rask", "raskt", "raske", "raskere", "raskest"], "Komparativ sammenligner to: raskere.")
+                ],
+                vanskelig: [
+                    task("god", "superlativ", "best", ["god", "godt", "gode", "bedre", "best"], "God bøyes uregelrett: god, bedre, best."),
+                    task("liten", "flertall", "små", ["liten", "lite", "små", "mindre", "minst"], "Liten har formen små i flertall."),
+                    task("gammel", "komparativ", "eldre", ["gammel", "gammelt", "gamle", "eldre", "eldst"], "Gammel kan gradbøyes uregelrett: eldre, eldst.")
+                ]
+            },
+            pronomen: {
+                lett: [
+                    task("jeg", "objektform", "meg", ["jeg", "meg", "min", "mitt", "mine"], "Jeg blir meg når pronomenet er objekt."),
+                    task("du", "objektform", "deg", ["du", "deg", "din", "ditt", "dine"], "Du blir deg som objektform."),
+                    task("han", "objektform", "ham", ["han", "ham", "hans", "hun"], "Han kan bli ham i objektform.")
+                ],
+                middels: [
+                    task("vi", "objektform", "oss", ["vi", "oss", "vår", "vårt", "våre"], "Vi blir oss når gruppen er objekt."),
+                    task("de", "objektform", "dem", ["de", "dem", "deres", "dere"], "De blir dem i objektform."),
+                    task("hun", "objektform", "henne", ["hun", "henne", "hennes", "han"], "Hun blir henne som objektform.")
+                ],
+                vanskelig: [
+                    task("jeg", "eieform til et-ord", "mitt", ["jeg", "meg", "min", "mitt", "mine"], "Til et-ord bruker vi mitt: mitt hus."),
+                    task("du", "eieform flertall", "dine", ["du", "deg", "din", "ditt", "dine"], "Til flertall bruker vi dine: dine bøker."),
+                    task("vi", "eieform til en-ord", "vår", ["vi", "oss", "vår", "vårt", "våre"], "Til en-ord bruker vi vår: vår klasse.")
+                ]
+            },
+            determinativ: {
+                lett: [
+                    task("en", "intetkjønn", "et", ["en", "ei", "et", "den", "det"], "For intetkjønnsord bruker vi et: et hus."),
+                    task("den", "flertall", "de", ["den", "det", "de", "denne", "disse"], "Den blir de foran substantiv i flertall."),
+                    task("min", "intetkjønn", "mitt", ["min", "mi", "mitt", "mine"], "Min blir mitt foran et-ord.")
+                ],
+                middels: [
+                    task("denne", "flertall", "disse", ["denne", "dette", "disse", "den", "de"], "Denne og dette blir disse i flertall."),
+                    task("noen", "entall ubestemt", "noe", ["noen", "noe", "noens", "no"], "Noe brukes ofte foran et-ord eller alene."),
+                    task("vår", "flertall", "våre", ["vår", "vårt", "våre", "oss"], "Vår og vårt blir våre i flertall.")
+                ],
+                vanskelig: [
+                    task("all", "intetkjønn", "alt", ["all", "alt", "alle", "allt"], "All blir alt foran intetkjønnsord."),
+                    task("annen", "intetkjønn", "annet", ["annen", "anna", "annet", "andre"], "Annen blir annet foran et-ord."),
+                    task("hver", "intetkjønn", "hvert", ["hver", "hvert", "hvere", "alle"], "Hver blir hvert foran et-ord.")
+                ]
+            }
+        };
+
+        const state = {
+            view: "home",
+            activity: null,
+            difficulty: "middels",
+            selectedRole: "subject",
+            selectedLearnClass: "substantiv",
+            selectedInflectClass: "substantiv",
+            score: 0,
+            streak: 0,
+            completedTasks: 0,
+            challenge: null,
+            feedback: null,
+            lastIds: {}
+        };
+
+        const app = document.getElementById("app");
+        const celebrationCanvas = document.getElementById("celebration-canvas");
+        const celebrationContext = celebrationCanvas.getContext("2d");
+        let feedbackTimer = null;
+        let nextTimer = null;
+        let celebrationParticles = [];
+        let celebrationAnimation = null;
+        let confettiBurstTimer = null;
+
+        function makeWordSentence(id, pairs) {
+            return {
+                id,
+                words: pairs.map(([text, cls], index) => ({
+                    id: `${id}-w${index}`,
+                    text,
+                    cls
+                }))
+            };
+        }
+
+        function task(word, target, answer, options, explanation) {
+            return { word, target, answer, options: unique(options), explanation };
+        }
+
+        function unique(items) {
+            return [...new Set(items)];
+        }
+
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function classStyle(classId) {
+            return `style="--class-color: ${WORD_CLASS_BY_ID[classId].color}"`;
+        }
+
+        function roleStyle(roleId) {
+            return `style="--role-color: ${ROLE_BY_ID[roleId].color}"`;
+        }
+
+        function scoreLevel() {
+            return Math.max(1, Math.floor(state.score / 12) + 1);
+        }
+
+        function difficultyInfo() {
+            return DIFFICULTIES.find((item) => item.id === state.difficulty) || DIFFICULTIES[1];
+        }
+
+        function activityInfo() {
+            return ACTIVITY_BY_ID[state.activity] || null;
+        }
+
+        function render() {
+            window.clearTimeout(nextTimer);
+            app.innerHTML = `
+                <div class="app-shell">
+                    ${renderTopbar()}
+                    <main class="screen">
+                        ${renderCurrentView()}
+                    </main>
+                </div>
+            `;
+
+            if (state.view === "sort") {
+                window.requestAnimationFrame(setupSortable);
             }
         }
-    }
 
-    return sentence;
-}
-
-function generateBaseSentence() {
-    const sObj = subjects[Math.floor(Math.random() * subjects.length)];
-    const s = sObj.text;
-    const subjectType = sObj.type;
-    const compatibleVerbs = verbs.filter(v => v.compatibleSubjects.includes(subjectType));
-    const verb = compatibleVerbs[Math.floor(Math.random() * compatibleVerbs.length)];
-    const i = verb.requiresIndirect ? 
-        (verb.compatibleIndirect || ['seg'])[Math.floor(Math.random() * (verb.compatibleIndirect || ['seg']).length)] : '';
-    const d = verb.transitive ? 
-        (verb.compatibleObjects || directObjects)[Math.floor(Math.random() * (verb.compatibleObjects || directObjects).length)] : '';
-    const a = verb.compatibleMannerAdverbials ? 
-        replaceUnderscores(verb.compatibleMannerAdverbials[Math.floor(Math.random() * verb.compatibleMannerAdverbials.length)]) : 
-        mannerAdverbials[Math.floor(Math.random() * mannerAdverbials.length)];
-    const p = verb.compatiblePlaceAdverbials ? 
-        replaceUnderscores(verb.compatiblePlaceAdverbials[Math.floor(Math.random() * verb.compatiblePlaceAdverbials.length)]) : 
-        placeAdverbials[Math.floor(Math.random() * placeAdverbials.length)];
-    const parts = [s, verb.text, i, d, a, p].filter(part => part);
-    return {
-        parts: parts,
-        correct: { 
-            [s]: 'subject', 
-            [verb.text]: 'verb', 
-            ...(i && { [i]: 'indirect-object' }), 
-            ...(d && { [d]: 'direct-object' }), 
-            [a]: 'adverbial', 
-            ...(p && { [p]: 'adverbial' }) 
-        },
-        verb: verb
-    };
-}
-
-        function scrambleSentence(sentence) {
-            const parts = [...sentence.parts].sort(() => Math.random() - 0.5);
-            return { text: parts.join(' ') + '.' };
+        function renderTopbar() {
+            const current = activityInfo();
+            const hasDifficulty = current && current.id !== "learn";
+            return `
+                <header class="topbar">
+                    ${state.view !== "home" ? `
+                        <div class="topbar-left">
+                            <button class="home-icon-button" data-action="home" aria-label="Til startsiden" title="Til startsiden">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M3 11.4 12 4l9 7.4"></path>
+                                    <path d="M5.5 10.3V20h13v-9.7"></path>
+                                    <path d="M9.5 20v-5h5v5"></path>
+                                </svg>
+                            </button>
+                            ${hasDifficulty && state.view !== "difficulty" ? `<button class="secondary-button" data-action="difficulty">Nivå: ${difficultyInfo().label}</button>` : ""}
+                        </div>
+                    ` : ""}
+                    <div class="toolbar">
+                        <div class="scoreboard" aria-label="Poeng">
+                            <span class="score-pill">Poeng: ${state.score}</span>
+                            <span class="score-pill">Streak: ${state.streak}</span>
+                            <span class="level-pill">Nivå ${scoreLevel()}</span>
+                        </div>
+                    </div>
+                </header>
+            `;
         }
 
-        function isSentenceValid(sentence) {
-            const words = sentence.text.split(' ');
-            if (words.length < 3) return false;
-            if (words.includes('gir') && !Object.values(sentence.correct).includes('direct-object')) return false;
-            return true;
+        function renderCurrentView() {
+            if (state.view === "difficulty") return renderDifficulty();
+            if (state.view === "analysis") return renderAnalysis();
+            if (state.view === "find") return renderFind();
+            if (state.view === "sort") return renderSort();
+            if (state.view === "inflect") return renderInflect();
+            if (state.view === "learn") return renderLearn();
+            return renderHome();
         }
 
-        let currentSentence = null;
+        function renderHome() {
+            return `
+                <section class="home-stage">
+                    <div class="home-title-block">
+                        <h1 class="play-title">Setningsverksted</h1>
+                    </div>
+                </section>
+                <div class="home-kicker-row">
+                    <p class="home-kicker">Velg et grammatikkspill</p>
+                </div>
+                <section class="home-grid" aria-label="Aktiviteter">
+                    ${ACTIVITIES.map((activity) => `
+                        <button class="home-card tile-button game-card game-card-${activity.id}" data-action="activity" data-activity="${activity.id}" style="--accent-color: ${activity.accent}">
+                            <div class="game-art art-${activity.id}" aria-hidden="true">
+                                ${renderGameArt(activity.id)}
+                            </div>
+                            <div class="game-card-copy">
+                                <h2>${escapeHtml(activity.title)}</h2>
+                                <p>${escapeHtml(activity.short)}</p>
+                            </div>
+                        </button>
+                    `).join("")}
+                </section>
+            `;
+        }
 
-        function createBoxes() {
-    boxesEl.innerHTML = '';
-    functions.forEach(funcData => {
-        const container = document.createElement('div');
-        container.classList.add('box-container');
-
-        const box = document.createElement('div');
-        box.classList.add('box', funcData.color);
-        box.textContent = funcData.name;
-        box.dataset.function = funcData.name;
-        box.setAttribute('draggable', 'true');
-
-        // Desktop: Dra-og-slipp med HTML5
-        box.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text', funcData.name);
-        });
-
-        // iPad: Touch-håndtering med klone
-        box.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const clone = box.cloneNode(true);
-            clone.style.position = 'absolute';
-            clone.style.zIndex = '1000';
-            clone.style.left = `${touch.clientX - box.offsetWidth / 2}px`;
-            clone.style.top = `${touch.clientY - box.offsetHeight / 2}px`;
-            clone.style.opacity = '0.8';
-            document.body.appendChild(clone);
-
-            const moveHandler = (moveEvent) => {
-                const moveTouch = moveEvent.touches[0];
-                clone.style.left = `${moveTouch.clientX - box.offsetWidth / 2}px`;
-                clone.style.top = `${moveTouch.clientY - box.offsetHeight / 2}px`;
+        function renderGameArt(activityId) {
+            const art = {
+                analysis: `
+                    <span class="art-token art-token-red">S</span>
+                    <span class="art-token art-token-green">V</span>
+                    <span class="art-token art-token-blue">O</span>
+                    <span class="art-line"></span>
+                `,
+                find: `
+                    <span class="art-word art-word-main">verb</span>
+                    <span class="art-word art-word-side">substantiv</span>
+                    <span class="art-magnifier"></span>
+                `,
+                sort: `
+                    <span class="art-word art-sort-one">hunden</span>
+                    <span class="art-word art-sort-two">løper</span>
+                    <span class="art-word art-sort-three">raskt</span>
+                    <span class="art-arrow">→</span>
+                `,
+                inflect: `
+                    <span class="art-word art-bend-main">å skrive</span>
+                    <span class="art-word art-bend-one">skriver</span>
+                    <span class="art-word art-bend-two">skrev</span>
+                `,
+                learn: `
+                    <span class="art-book"><span></span></span>
+                    <span class="art-word art-book-label">ord</span>
+                    <span class="art-spark art-spark-one"></span>
+                    <span class="art-spark art-spark-two"></span>
+                `
             };
+            return art[activityId] || art.learn;
+        }
 
-            const endHandler = (endEvent) => {
-                const endTouch = endEvent.changedTouches[0];
-                // Skjul klonen før vi finner drop-målet
-                clone.style.display = 'none';
-                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
-                if (dropTarget && dropTarget.classList.contains('word')) {
-                    const dataTransfer = new DataTransfer();
-                    dataTransfer.setData('text', funcData.name);
-                    const dropEvent = new DragEvent('drop', {
-                        dataTransfer: dataTransfer,
-                        clientX: endTouch.clientX,
-                        clientY: endTouch.clientY,
-                        bubbles: true // Sørger for at eventet bobler opp
-                    });
-                    dropTarget.dispatchEvent(dropEvent);
+        function renderDifficulty() {
+            const activity = activityInfo();
+            return `
+                <section class="work-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>${escapeHtml(activity.title)}</h2>
+                            <p>${escapeHtml(activity.short)}</p>
+                        </div>
+                        <button class="secondary-button" data-action="home">Til start</button>
+                    </div>
+                    <div class="difficulty-grid">
+                        ${DIFFICULTIES.map((difficulty) => `
+                            <button class="difficulty-card tile-button" data-action="select-difficulty" data-difficulty="${difficulty.id}">
+                                <span class="difficulty-badge">${difficulty.points} poeng</span>
+                                <strong>${difficulty.label}</strong>
+                                <p>${difficulty.description}</p>
+                            </button>
+                        `).join("")}
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderAnalysis() {
+            const challenge = ensureChallenge("analysis");
+            const answeredCount = Object.keys(challenge.answers).length;
+            const total = challenge.sentence.analysisWords.length;
+            const progress = `${Math.round((answeredCount / total) * 100)}%`;
+            return `
+                <section class="work-panel analysis-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Analyser setningen</h2>
+                            <p>Velg en farget kloss, og trykk på ordet den passer til.</p>
+                        </div>
+                        <button class="secondary-button" data-action="next">Ny setning</button>
+                    </div>
+                    <div class="progress-row">
+                        <div class="meter" aria-label="Fremdrift"><span style="--progress: ${progress}"></span></div>
+                        <strong>${answeredCount}/${total}</strong>
+                    </div>
+                    <div class="analysis-workspace">
+                        <div class="sentence-board analysis-word-board" aria-label="Setning">
+                            ${challenge.sentence.analysisWords.map((word) => {
+                                const answer = challenge.answers[word.id];
+                                const role = ROLE_BY_ID[answer || word.role];
+                                return `
+                                    <button class="analysis-chunk analysis-word ${answer ? "answered" : ""} ${challenge.wrongId === word.id ? "wrong" : ""}" data-action="chunk" data-chunk="${word.id}" style="--role-color: ${role.color}">
+                                        ${escapeHtml(word.text)}
+                                    </button>
+                                `;
+                            }).join("")}
+                            <span class="sentence-period">.</span>
+                        </div>
+                        <div class="analysis-selected">Valgt kloss: <strong>${ROLE_BY_ID[state.selectedRole].label}</strong></div>
+                        <div class="analysis-tools" aria-label="Setningsledd">
+                            ${challenge.roleOptions.map((roleId) => {
+                                const role = ROLE_BY_ID[roleId];
+                                return `
+                                    <div class="role-tool" style="--role-color: ${role.color}">
+                                        <button class="role-button analysis-role-button ${state.selectedRole === role.id ? "active" : ""}" data-action="role" data-role="${role.id}">
+                                            <span>${role.label}</span>
+                                        </button>
+                                        <button class="hint-button" data-action="role-hint" data-role="${role.id}" aria-label="Hint for ${role.label}">?</button>
+                                    </div>
+                                `;
+                            }).join("")}
+                        </div>
+                    </div>
+                    ${renderFeedback("", "analysis-feedback")}
+                </section>
+            `;
+        }
+
+        function renderFind() {
+            const challenge = ensureChallenge("find");
+            const classInfo = WORD_CLASS_BY_ID[challenge.targetClass];
+            return `
+                <section class="module-layout">
+                    <aside class="side-panel">
+                        <h2>Finn ordklassen</h2>
+                        <div class="target-strip" style="--class-color: ${classInfo.color}">
+                            <span class="color-swatch"></span>
+                            <strong>${classInfo.label}</strong>
+                        </div>
+                        <p class="muted">${classInfo.description}</p>
+                        <button class="secondary-button" data-action="next">Ny oppgave</button>
+                    </aside>
+                    <section class="work-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>${classInfo.label}</h2>
+                                <p>${sentenceFromWords(challenge.sentence.words)}.</p>
+                            </div>
+                        </div>
+                        <div class="sentence-board compact">
+                            ${challenge.sentence.words.map((word) => {
+                                const isCorrectClass = word.cls === challenge.targetClass;
+                                const wasPicked = challenge.pickedId === word.id;
+                                const classes = [
+                                    "token-button",
+                                    challenge.done && isCorrectClass ? "revealed" : "",
+                                    wasPicked && challenge.done ? "correct" : "",
+                                    wasPicked && challenge.wrong ? "wrong" : ""
+                                ].filter(Boolean).join(" ");
+                                return `
+                                    <button class="${classes}" data-action="find-word" data-word="${word.id}" ${classStyle(word.cls)}>
+                                        ${escapeHtml(word.text)}
+                                    </button>
+                                `;
+                            }).join("")}
+                            <span class="sentence-period">.</span>
+                        </div>
+                        ${renderFeedback()}
+                        <div class="theory-card">
+                            <h3>Fargekobling</h3>
+                            <div class="chip-list">
+                                ${WORD_CLASSES.map((item) => `<span class="class-pill" style="--class-color: ${item.color}">${item.label}</span>`).join("")}
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            `;
+        }
+
+        function renderSort() {
+            const challenge = ensureChallenge("sort");
+            return `
+                <section class="module-layout">
+                    <aside class="side-panel">
+                        <h2>Riktig rekkefølge</h2>
+                        <p class="muted">${difficultyInfo().description}</p>
+                        <button class="primary-button" data-action="check-sort">Sjekk</button>
+                        <button class="secondary-button" data-action="next">Ny setning</button>
+                    </aside>
+                    <section class="work-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Bygg setningen</h2>
+                                <p>${sentenceFromWords(challenge.correctWords)}.</p>
+                            </div>
+                        </div>
+                        <div class="sort-board" data-sort-board="true">
+                            ${challenge.words.map((word) => `
+                                <button class="sort-token" data-sort-id="${word.sortId}" ${classStyle(word.cls)}>
+                                    ${escapeHtml(word.text)}
+                                </button>
+                            `).join("")}
+                            <span class="sentence-period">.</span>
+                        </div>
+                        ${renderFeedback()}
+                        <div class="theory-card">
+                            <h3>Ordklassene følger klossene</h3>
+                            <div class="chip-list">
+                                ${challenge.correctWords.map((word) => wordChip(word)).join("")}
+                            </div>
+                        </div>
+                    </section>
+                </section>
+            `;
+        }
+
+        function renderInflect() {
+            if (!INFLECTABLE_CLASSES.includes(state.selectedInflectClass)) {
+                state.selectedInflectClass = "substantiv";
+            }
+            const challenge = ensureChallenge("inflect");
+            const classInfo = WORD_CLASS_BY_ID[state.selectedInflectClass];
+            return `
+                <section class="module-layout">
+                    <aside class="side-panel">
+                        <h2>Ordklasse</h2>
+                        <div class="class-tabs">
+                            ${INFLECTABLE_CLASSES.map((classId) => {
+                                const item = WORD_CLASS_BY_ID[classId];
+                                return `
+                                    <button class="tab-button ${state.selectedInflectClass === classId ? "active" : ""}" data-action="inflect-class" data-class="${classId}" style="--active-color: ${item.color}">
+                                        <span class="color-swatch" style="--class-color: ${item.color}"></span>
+                                        <span>${item.label}</span>
+                                    </button>
+                                `;
+                            }).join("")}
+                        </div>
+                        <p class="muted">${classInfo.description}</p>
+                        <button class="secondary-button" data-action="next">Nytt ord</button>
+                    </aside>
+                    <section class="work-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Bøy ordet</h2>
+                                <p>${difficultyInfo().description}</p>
+                            </div>
+                        </div>
+                        <div class="inflect-card" style="--class-color: ${classInfo.color}">
+                            <span class="class-pill" style="--class-color: ${classInfo.color}">${classInfo.label}</span>
+                            <div class="inflect-word">${escapeHtml(challenge.task.word)}</div>
+                            <div class="target-strip" style="--class-color: ${classInfo.color}">
+                                <span class="color-swatch"></span>
+                                <strong>${escapeHtml(challenge.task.target)}</strong>
+                            </div>
+                        </div>
+                        <div class="option-grid">
+                            ${challenge.task.options.map((option, index, options) => {
+                                const selected = challenge.selected === option;
+                                const classNames = [
+                                    selected ? (challenge.correct ? "correct" : "wrong") : "",
+                                    options.length % 2 === 1 && index === options.length - 1 ? "span-option" : ""
+                                ].filter(Boolean).join(" ");
+                                const className = classNames ? ` ${classNames}` : "";
+                                return `<button class="option-button ${className}" data-action="inflect-answer" data-answer="${escapeHtml(option)}">${escapeHtml(option)}</button>`;
+                            }).join("")}
+                        </div>
+                        ${renderFeedback()}
+                        ${challenge.correct ? `<button class="primary-button" data-action="next">Neste</button>` : ""}
+                    </section>
+                </section>
+            `;
+        }
+
+        function renderLearn() {
+            const item = WORD_CLASS_BY_ID[state.selectedLearnClass] || WORD_CLASSES[0];
+            return `
+                <section class="module-layout">
+                    <aside class="side-panel">
+                        <h2>Ordklasser</h2>
+                        <div class="class-tabs">
+                            ${WORD_CLASSES.map((wordClass) => `
+                                <button class="tab-button ${state.selectedLearnClass === wordClass.id ? "active" : ""}" data-action="learn-class" data-class="${wordClass.id}" style="--active-color: ${wordClass.color}">
+                                    <span class="color-swatch" style="--class-color: ${wordClass.color}"></span>
+                                    <span>${wordClass.label}</span>
+                                </button>
+                            `).join("")}
+                        </div>
+                    </aside>
+                    <section class="work-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>${item.label}</h2>
+                                <p>${item.description}</p>
+                            </div>
+                            <span class="class-pill" style="--class-color: ${item.color}">${item.label}</span>
+                        </div>
+                        <div class="theory-grid">
+                            <article class="theory-card">
+                                <h3>Kjennetegn</h3>
+                                <ul>
+                                    ${item.facts.map((fact) => `<li>${escapeHtml(fact)}</li>`).join("")}
+                                </ul>
+                            </article>
+                            <article class="theory-card">
+                                <h3>Eksempler</h3>
+                                <div class="chip-list">
+                                    ${item.examples.map((example) => `
+                                        <span class="word-chip" style="--class-color: ${item.color}">${escapeHtml(example)}</span>
+                                    `).join("")}
+                                </div>
+                            </article>
+                        </div>
+                        <article class="theory-card">
+                            <h3>I en setning</h3>
+                            <div class="sample-sentence">
+                                ${item.sample.map((word) => wordChip(word)).join("")}
+                                <span class="sentence-period">.</span>
+                            </div>
+                        </article>
+                        ${INFLECTABLE_CLASSES.includes(item.id) ? `
+                            <button class="primary-button" data-action="practice-inflect" data-class="${item.id}">Bøy ${item.label.toLowerCase()}</button>
+                        ` : `
+                            <button class="primary-button" data-action="practice-find" data-class="${item.id}">Finn ${item.label.toLowerCase()}</button>
+                        `}
+                    </section>
+                </section>
+            `;
+        }
+
+        function renderFeedback(emptyText = "Velg en oppgave og bygg streaken videre.", extraClass = "") {
+            if (!state.feedback) {
+                if (!emptyText) return "";
+                return `<div class="feedback info ${extraClass}">${escapeHtml(emptyText)}</div>`;
+            }
+
+            return `
+                <div class="feedback ${state.feedback.type} ${extraClass}">
+                    <strong>${escapeHtml(state.feedback.text)}</strong>
+                    ${state.feedback.detail ? `<span>${escapeHtml(state.feedback.detail)}</span>` : ""}
+                </div>
+            `;
+        }
+
+        function wordChip(word) {
+            const info = WORD_CLASS_BY_ID[word.cls];
+            return `
+                <span class="word-chip" style="--class-color: ${info.color}">
+                    ${escapeHtml(word.text)}
+                    <small>${info.label}</small>
+                </span>
+            `;
+        }
+
+        function sentenceFromWords(words) {
+            return words.map((word) => word.text).join(" ");
+        }
+
+        function ensureChallenge(activity) {
+            const key = challengeKey(activity);
+            if (!state.challenge || state.challenge.key !== key) {
+                state.challenge = createChallenge(activity, key);
+            }
+            return state.challenge;
+        }
+
+        function challengeKey(activity) {
+            if (activity === "inflect") {
+                return `${activity}:${state.difficulty}:${state.selectedInflectClass}`;
+            }
+            return `${activity}:${state.difficulty}`;
+        }
+
+        function createChallenge(activity, key) {
+            if (activity === "analysis") {
+                const sentence = pickFrom(ANALYSIS_SENTENCES[state.difficulty], key);
+                sentence.analysisWords = buildAnalysisWords(sentence);
+                const roleOptions = getAnalysisRoleOptions(sentence.analysisWords);
+                if (!roleOptions.includes(state.selectedRole)) {
+                    state.selectedRole = roleOptions[0];
                 }
-                // Fjern klonen
-                document.body.removeChild(clone);
-                document.removeEventListener('touchmove', moveHandler);
-                document.removeEventListener('touchend', endHandler);
+                return { key, sentence, answers: {}, wrongId: null, roleOptions };
+            }
+
+            if (activity === "find") {
+                const allowedTargets = FIND_TARGETS[state.difficulty];
+                const sentences = WORD_SENTENCES[state.difficulty].filter((sentence) => {
+                    const classes = new Set(sentence.words.map((word) => word.cls));
+                    return allowedTargets.some((classId) => classes.has(classId));
+                });
+                const sentence = pickFrom(sentences, key);
+                const availableTargets = allowedTargets.filter((classId) => sentence.words.some((word) => word.cls === classId));
+                return {
+                    key,
+                    sentence,
+                    targetClass: pickFrom(availableTargets, `${key}:target`),
+                    pickedId: null,
+                    done: false,
+                    wrong: false
+                };
+            }
+
+            if (activity === "sort") {
+                const sentence = pickFrom(SORT_SENTENCES[state.difficulty], key);
+                const correctWords = sentence.words.map((word, index) => ({ ...word, sortId: `${word.id}-${index}` }));
+                let shuffled = shuffle(correctWords);
+                if (sameOrder(shuffled, correctWords) && shuffled.length > 1) {
+                    shuffled = [shuffled[1], shuffled[0], ...shuffled.slice(2)];
+                }
+                return { key, correctWords, words: shuffled, done: false };
+            }
+
+            const tasks = INFLECTION_TASKS[state.selectedInflectClass][state.difficulty];
+            return {
+                key,
+                task: pickFrom(tasks, key),
+                selected: null,
+                correct: false
             };
+        }
 
-            document.addEventListener('touchmove', moveHandler);
-            document.addEventListener('touchend', endHandler);
-        });
+        function buildAnalysisWords(sentence) {
+            const chunkTrackers = sentence.chunks.map((chunk) => {
+                const totals = new Map();
+                chunk.text.split(/\s+/).map(normalizeToken).forEach((token) => {
+                    totals.set(token, (totals.get(token) || 0) + 1);
+                });
+                return { role: chunk.role, totals, used: new Map() };
+            });
 
-        const infoBtn = document.createElement('button');
-        infoBtn.classList.add('info-btn');
-        infoBtn.textContent = '?';
-        infoBtn.addEventListener('click', () => {
-            showPopup(funcData);
-        });
+            return sentence.words.map((word, index) => {
+                const token = normalizeToken(word.text);
+                const tracker = chunkTrackers.find((chunk) => {
+                    const used = chunk.used.get(token) || 0;
+                    const total = chunk.totals.get(token) || 0;
+                    return used < total;
+                });
 
-        container.appendChild(box);
-        container.appendChild(infoBtn);
-        boxesEl.appendChild(container);
-    });
-}
+                if (tracker) {
+                    tracker.used.set(token, (tracker.used.get(token) || 0) + 1);
+                }
 
-        function showPopup(funcData) {
-            if (popupEl.style.display === 'block' && currentPopupFunc === funcData.color) {
-                popupEl.style.display = 'none';
-                currentPopupFunc = null;
-                clearTimeout(popupTimer);
+                return {
+                    ...word,
+                    id: word.id || `${sentence.id}-word-${index}`,
+                    role: tracker ? tracker.role : "adverbial"
+                };
+            });
+        }
+
+        function normalizeToken(text) {
+            return text.toLowerCase().replace(/[.,!?;:]/g, "");
+        }
+
+        function getAnalysisRoleOptions(words) {
+            const present = FUNCTION_ROLES
+                .map((role) => role.id)
+                .filter((roleId) => words.some((word) => word.role === roleId));
+
+            if (state.difficulty === "lett") {
+                return present;
+            }
+
+            if (state.difficulty === "middels") {
+                const extras = FUNCTION_ROLES
+                    .map((role) => role.id)
+                    .filter((roleId) => !present.includes(roleId))
+                    .slice(0, 2);
+                return [...present, ...extras];
+            }
+
+            return FUNCTION_ROLES.map((role) => role.id);
+        }
+
+        function pickFrom(items, bucket) {
+            const lastId = state.lastIds[bucket];
+            const candidates = items.filter((item) => item.id !== lastId && item.word !== lastId && item !== lastId);
+            const pool = candidates.length ? candidates : items;
+            const picked = pool[Math.floor(Math.random() * pool.length)];
+            state.lastIds[bucket] = picked.id || picked.word || picked;
+            return JSON.parse(JSON.stringify(picked));
+        }
+
+        function shuffle(items) {
+            const copy = [...items];
+            for (let index = copy.length - 1; index > 0; index -= 1) {
+                const swapIndex = Math.floor(Math.random() * (index + 1));
+                [copy[index], copy[swapIndex]] = [copy[swapIndex], copy[index]];
+            }
+            return copy;
+        }
+
+        function sameOrder(a, b) {
+            return a.map((item) => item.sortId).join("|") === b.map((item) => item.sortId).join("|");
+        }
+
+        function award(pointsMultiplier = 1) {
+            const points = difficultyInfo().points * pointsMultiplier;
+            state.score += points;
+            state.streak += 1;
+            return points;
+        }
+
+        function miss() {
+            state.streak = 0;
+        }
+
+        function setFeedback(text, type = "info", detail = "", timeout = 1800) {
+            window.clearTimeout(feedbackTimer);
+            state.feedback = { text, type, detail };
+            if (timeout) {
+                feedbackTimer = window.setTimeout(() => {
+                    state.feedback = null;
+                    render();
+                }, timeout);
+            }
+        }
+
+        function resetChallenge() {
+            state.challenge = null;
+            state.feedback = null;
+            window.clearTimeout(feedbackTimer);
+            window.clearTimeout(nextTimer);
+        }
+
+        function scheduleNext(delay = 1300) {
+            window.clearTimeout(nextTimer);
+            nextTimer = window.setTimeout(() => {
+                resetChallenge();
+                render();
+            }, delay);
+        }
+
+        function completeTaskCelebration() {
+            state.completedTasks += 1;
+            launchConfettiBursts(10);
+            if (state.completedTasks % 10 === 0) {
+                window.setTimeout(launchMilestoneFireworks, 900);
+            }
+        }
+
+        function launchConfettiBursts(totalBursts = 10) {
+            window.clearInterval(confettiBurstTimer);
+            let burstCount = 0;
+            const fire = () => {
+                burstCount += 1;
+                const remaining = (totalBursts - burstCount + 1) / totalBursts;
+                const particleCount = Math.max(12, Math.round(54 * remaining));
+                fireConfettiShower(randomInRange(0.10, 0.30), randomInRange(-0.16, 0.08), particleCount);
+                fireConfettiShower(randomInRange(0.70, 0.90), randomInRange(-0.16, 0.08), particleCount);
+                if (burstCount >= totalBursts) {
+                    window.clearInterval(confettiBurstTimer);
+                    confettiBurstTimer = null;
+                }
+            };
+            fire();
+            confettiBurstTimer = window.setInterval(fire, 250);
+        }
+
+        function fireConfettiShower(originXRatio, originYRatio, particleCount) {
+            const originX = window.innerWidth * originXRatio;
+            const originY = window.innerHeight * originYRatio;
+            const colors = ["#ef4444", "#f97316", "#ffd83d", "#22c55e", "#18c9b0", "#38bdf8", "#2563eb", "#a855f7", "#ffffff"];
+            for (let index = 0; index < particleCount; index += 1) {
+                const speed = randomInRange(8, 27);
+                const angle = randomInRange(0, Math.PI * 2);
+                const life = randomInRange(74, 124);
+                const size = randomInRange(6, 13);
+                celebrationParticles.push({
+                    type: "confetti",
+                    x: originX,
+                    y: originY,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed * 0.62 - randomInRange(1.5, 5.5),
+                    gravity: randomInRange(0.34, 0.54),
+                    drag: randomInRange(0.978, 0.988),
+                    life,
+                    maxLife: life,
+                    size,
+                    width: size * randomInRange(0.72, 1.38),
+                    height: size * randomInRange(0.36, 0.72),
+                    shape: Math.random() > 0.18 ? "rect" : "circle",
+                    rotation: randomInRange(0, Math.PI * 2),
+                    spin: randomInRange(-0.34, 0.34),
+                    tilt: randomInRange(0, Math.PI * 2),
+                    tiltSpeed: randomInRange(0.12, 0.30),
+                    wobble: randomInRange(0, Math.PI * 2),
+                    wobbleSpeed: randomInRange(0.08, 0.22),
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+            runCelebrationAnimation();
+        }
+
+        function launchMilestoneFireworks() {
+            const positions = [
+                { x: 0.28, y: 0.34 },
+                { x: 0.50, y: 0.24 },
+                { x: 0.72, y: 0.34 }
+            ];
+            positions.forEach((position, index) => {
+                window.setTimeout(() => {
+                    fireFirework(window.innerWidth * position.x, window.innerHeight * position.y);
+                }, index * 280);
+            });
+        }
+
+        function fireFirework(x, y) {
+            const colors = ["#ff2f6d", "#ffd83d", "#22c55e", "#18c9b0", "#38bdf8", "#a855f7", "#ffffff"];
+            const count = 92;
+            for (let index = 0; index < count; index += 1) {
+                const angle = (Math.PI * 2 * index) / count;
+                const speed = randomInRange(3.8, 9.6);
+                celebrationParticles.push({
+                    type: "spark",
+                    x,
+                    y,
+                    vx: Math.cos(angle) * speed * randomInRange(0.72, 1.16),
+                    vy: Math.sin(angle) * speed * randomInRange(0.72, 1.16),
+                    gravity: 0.055,
+                    drag: 0.975,
+                    life: randomInRange(58, 92),
+                    maxLife: 92,
+                    size: randomInRange(1.8, 3.8),
+                    color: colors[index % colors.length]
+                });
+            }
+
+            for (let index = 0; index < 34; index += 1) {
+                const angle = randomInRange(0, Math.PI * 2);
+                const speed = randomInRange(1.5, 5.3);
+                celebrationParticles.push({
+                    type: "spark",
+                    x,
+                    y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    gravity: 0.035,
+                    drag: 0.988,
+                    life: randomInRange(32, 58),
+                    maxLife: 58,
+                    size: randomInRange(3.2, 6.5),
+                    color: colors[Math.floor(Math.random() * colors.length)]
+                });
+            }
+            runCelebrationAnimation();
+        }
+
+        function runCelebrationAnimation() {
+            resizeCelebrationCanvas();
+            if (celebrationAnimation) return;
+            const frame = () => {
+                celebrationContext.clearRect(0, 0, celebrationCanvas.width, celebrationCanvas.height);
+                celebrationParticles = celebrationParticles.filter((particle) => {
+                    particle.life -= 1;
+                    particle.vx *= particle.drag;
+                    particle.vy = particle.vy * particle.drag + particle.gravity;
+                    particle.x += particle.vx;
+                    particle.y += particle.vy;
+                    if (particle.type === "confetti") {
+                        particle.rotation += particle.spin;
+                        particle.tilt += particle.tiltSpeed;
+                        particle.wobble += particle.wobbleSpeed;
+                        particle.x += Math.sin(particle.wobble) * 0.72;
+                    }
+                    drawCelebrationParticle(particle);
+                    return particle.life > 0 && particle.y < window.innerHeight + 120;
+                });
+
+                if (celebrationParticles.length) {
+                    celebrationAnimation = window.requestAnimationFrame(frame);
+                } else {
+                    celebrationAnimation = null;
+                    celebrationContext.clearRect(0, 0, celebrationCanvas.width, celebrationCanvas.height);
+                }
+            };
+            celebrationAnimation = window.requestAnimationFrame(frame);
+        }
+
+        function drawCelebrationParticle(particle) {
+            const alpha = Math.max(0, particle.life / particle.maxLife);
+            celebrationContext.save();
+            celebrationContext.globalAlpha = alpha;
+            celebrationContext.translate(particle.x, particle.y);
+
+            if (particle.type === "confetti") {
+                celebrationContext.rotate(particle.rotation);
+                celebrationContext.fillStyle = particle.color;
+                if (particle.shape === "circle") {
+                    celebrationContext.beginPath();
+                    celebrationContext.ellipse(0, 0, particle.size * 0.42, particle.size * 0.42, 0, 0, Math.PI * 2);
+                    celebrationContext.fill();
+                } else {
+                    const tiltScale = Math.max(0.22, Math.abs(Math.cos(particle.tilt)));
+                    celebrationContext.scale(tiltScale, 1);
+                    celebrationContext.fillRect(-particle.width / 2, -particle.height / 2, particle.width, particle.height);
+                    if (tiltScale > 0.48) {
+                        celebrationContext.globalAlpha = alpha * 0.34;
+                        celebrationContext.fillStyle = "#ffffff";
+                        celebrationContext.fillRect(-particle.width / 2, -particle.height / 2, particle.width * 0.34, particle.height);
+                    }
+                }
+            } else {
+                celebrationContext.fillStyle = particle.color;
+                celebrationContext.shadowColor = particle.color;
+                celebrationContext.shadowBlur = 12;
+                celebrationContext.beginPath();
+                celebrationContext.arc(0, 0, particle.size, 0, Math.PI * 2);
+                celebrationContext.fill();
+            }
+            celebrationContext.restore();
+        }
+
+        function resizeCelebrationCanvas() {
+            const dpr = window.devicePixelRatio || 1;
+            const width = Math.floor(window.innerWidth * dpr);
+            const height = Math.floor(window.innerHeight * dpr);
+            if (celebrationCanvas.width !== width || celebrationCanvas.height !== height) {
+                celebrationCanvas.width = width;
+                celebrationCanvas.height = height;
+                celebrationCanvas.style.width = `${window.innerWidth}px`;
+                celebrationCanvas.style.height = `${window.innerHeight}px`;
+                celebrationContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+            }
+        }
+
+        function randomInRange(min, max) {
+            return Math.random() * (max - min) + min;
+        }
+
+        function setupSortable() {
+            const board = app.querySelector("[data-sort-board]");
+            if (!board || !state.challenge || state.view !== "sort") return;
+            const tokens = [...board.querySelectorAll(".sort-token")];
+            let dragged = null;
+            let ghost = null;
+
+            tokens.forEach((token) => {
+                token.addEventListener("pointerdown", (event) => {
+                    if (state.challenge.done) return;
+                    dragged = token;
+                    token.setPointerCapture(event.pointerId);
+                    token.classList.add("dragging");
+                    ghost = token.cloneNode(true);
+                    ghost.classList.add("drag-ghost");
+                    ghost.style.width = `${token.offsetWidth}px`;
+                    ghost.style.height = `${token.offsetHeight}px`;
+                    document.body.appendChild(ghost);
+                    moveGhost(event.clientX, event.clientY);
+                });
+
+                token.addEventListener("pointermove", (event) => {
+                    if (!dragged || !ghost) return;
+                    event.preventDefault();
+                    moveGhost(event.clientX, event.clientY);
+                    dragged.style.pointerEvents = "none";
+                    const target = document.elementFromPoint(event.clientX, event.clientY);
+                    dragged.style.pointerEvents = "";
+                    const targetToken = target && target.closest ? target.closest(".sort-token") : null;
+                    if (!targetToken || targetToken === dragged || !board.contains(targetToken)) return;
+                    const rect = targetToken.getBoundingClientRect();
+                    const before = event.clientY < rect.top + rect.height / 2 || event.clientX < rect.left + rect.width / 2;
+                    board.insertBefore(dragged, before ? targetToken : targetToken.nextSibling);
+                });
+
+                token.addEventListener("pointerup", finishDrag);
+                token.addEventListener("pointercancel", finishDrag);
+            });
+
+            function moveGhost(x, y) {
+                if (!ghost) return;
+                ghost.style.left = `${x}px`;
+                ghost.style.top = `${y}px`;
+            }
+
+            function finishDrag() {
+                if (!dragged) return;
+                dragged.classList.remove("dragging");
+                if (ghost) ghost.remove();
+                ghost = null;
+                dragged = null;
+                syncSortOrderFromDom();
+                checkSort(false);
+            }
+        }
+
+        function syncSortOrderFromDom() {
+            if (!state.challenge || state.view !== "sort") return;
+            const ids = [...app.querySelectorAll(".sort-token")].map((token) => token.dataset.sortId);
+            const lookup = new Map(state.challenge.words.concat(state.challenge.correctWords).map((word) => [word.sortId, word]));
+            state.challenge.words = ids.map((id) => lookup.get(id)).filter(Boolean);
+        }
+
+        function checkSort(showMiss = true) {
+            const challenge = state.challenge;
+            if (!challenge || challenge.done) return;
+            const isCorrect = sameOrder(challenge.words, challenge.correctWords);
+            if (isCorrect) {
+                challenge.done = true;
+                const points = award(2);
+                setFeedback("Riktig rekkefølge", "success", `+${points} poeng`, 0);
+                completeTaskCelebration();
+                render();
+                scheduleNext(1500);
+            } else if (showMiss) {
+                miss();
+                setFeedback("Ikke helt riktig ennå", "error", "Se etter hvem som gjør hva.", 1600);
+                render();
+            }
+        }
+
+        app.addEventListener("click", (event) => {
+            const target = event.target.closest("[data-action]");
+            if (!target) return;
+
+            const action = target.dataset.action;
+
+            if (action === "home") {
+                state.view = "home";
+                state.activity = null;
+                resetChallenge();
+                render();
                 return;
             }
-            clearTimeout(popupTimer);
-            const exampleEntry = Object.entries(currentSentence.correct).find(([word, func]) => func === funcData.color);
-            const exampleWord = exampleEntry ? exampleEntry[0] : '';
-            let explanation = '';
-            switch (funcData.color) {
-                case 'subject': explanation = `I "${currentSentence.text}" er "${exampleWord}" subjektet fordi det er den som utfører handlingen.`; break;
-                case 'verb': explanation = `I "${currentSentence.text}" er "${exampleWord}" verbalet fordi det beskriver handlingen.`; break;
-                case 'adverbial': explanation = `I "${currentSentence.text}" er "${exampleWord}" et adverbial fordi det sier noe om ${['raskt', 'sakte'].includes(exampleWord) ? 'måte' : ['hjemme', 'på skolen'].includes(exampleWord) ? 'sted' : 'tid'}.`; break;
-                case 'direct-object': explanation = `I "${currentSentence.text}" er "${exampleWord}" direkte objekt fordi det er det som blir påvirket av handlingen.`; break;
-                case 'indirect-object': explanation = `I "${currentSentence.text}" er "${exampleWord}" indirekte objekt fordi det er mottakeren av det direkte objektet.`; break;
-            }
-            popupEl.innerHTML = `${funcData.desc}<br><br>${explanation}`;
-            popupEl.style.display = 'block';
-            currentPopupFunc = funcData.color;
-            const box = boxesEl.querySelector(`.${funcData.color}`);
-            const rect = box.getBoundingClientRect();
-            popupEl.style.left = `${rect.left}px`;
-            popupEl.style.top = `${rect.top - popupEl.offsetHeight - 10}px`;
-            popupTimer = setTimeout(() => {
-                popupEl.style.display = 'none';
-                currentPopupFunc = null;
-            }, 10000);
-        }
 
-        function loadSentence() {
-    currentSentence = generateSentence();
-    lastSentence = currentSentence;
-    sentenceEl.innerHTML = '';
-    if (difficulty !== "Omorganiser") {
-        currentSentence.parts.forEach(part => {
-            if (currentSentence.interactiveParts.includes(part)) {
-                const span = document.createElement('span');
-                span.classList.add('word');
-                span.textContent = part;
-                span.dataset.word = part;
-                span.addEventListener('dragover', dragOver);
-                span.addEventListener('drop', drop);
-                sentenceEl.appendChild(span);
-            } else {
-                const textNode = document.createTextNode(part + ' ');
-                sentenceEl.appendChild(textNode);
-            }
-        });
-        createBoxes();
-    } else if (difficulty === "Omorganiser") {
-    currentSentence.parts.forEach(part => {
-        const span = document.createElement('span');
-        span.classList.add('word');
-        span.textContent = part;
-        span.dataset.word = part;
-        if (currentSentence.correct[part]) {
-            span.classList.add(currentSentence.correct[part]);
-            span.style.backgroundColor = getColor(currentSentence.correct[part]);
-        }
-        span.setAttribute('draggable', 'true');
-
-        // Desktop: HTML5 dra-og-slipp
-        span.addEventListener('dragstart', dragStartOmorganiser);
-        span.addEventListener('dragend', dragEndOmorganiser);
-        span.addEventListener('dragover', dragOverOmorganiser);
-        span.addEventListener('dragleave', dragLeaveOmorganiser);
-        span.addEventListener('drop', dropOmorganiser);
-
-        // iPad: Touch-håndtering med klone
-        span.addEventListener('touchstart', (e) => {
-            e.preventDefault();
-            const touch = e.touches[0];
-            const clone = span.cloneNode(true);
-            clone.style.position = 'absolute';
-            clone.style.zIndex = '1000';
-            clone.style.width = `${span.offsetWidth}px`;
-            clone.style.height = `${span.offsetHeight}px`;
-            clone.style.fontSize = getComputedStyle(span).fontSize;
-            clone.style.padding = '2px 6px';
-            clone.style.left = `${touch.clientX - span.offsetWidth / 2}px`;
-            clone.style.top = `${touch.clientY - span.offsetHeight / 2}px`;
-            clone.style.opacity = '0.8';
-            clone.style.borderRadius = '5px';
-            document.body.appendChild(clone);
-
-            const moveHandler = (moveEvent) => {
-                moveEvent.preventDefault();
-                const moveTouch = moveEvent.touches[0];
-                clone.style.left = `${moveTouch.clientX - span.offsetWidth / 2}px`;
-                clone.style.top = `${moveTouch.clientY - span.offsetHeight / 2}px`;
-
-                const dropTarget = document.elementFromPoint(moveTouch.clientX, moveTouch.clientY);
-                if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
-                    const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                    const targetIndex = spans.indexOf(dropTarget);
-                    const rect = dropTarget.getBoundingClientRect();
-                    const midPoint = rect.left + rect.width / 2;
-                    if (moveTouch.clientX < midPoint) {
-                        sentenceEl.insertBefore(span, dropTarget);
-                    } else {
-                        sentenceEl.insertBefore(span, dropTarget.nextSibling);
-                    }
-                }
-            };
-
-            const endHandler = (endEvent) => {
-                const endTouch = endEvent.changedTouches[0];
-                clone.style.display = 'none';
-                const dropTarget = document.elementFromPoint(endTouch.clientX, endTouch.clientY);
-                if (dropTarget && dropTarget.classList.contains('word') && dropTarget !== span) {
-                    const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                    const targetIndex = spans.indexOf(dropTarget);
-                    const rect = dropTarget.getBoundingClientRect();
-                    const midPoint = rect.left + rect.width / 2;
-                    if (endTouch.clientX < midPoint) {
-                        sentenceEl.insertBefore(span, dropTarget);
-                    } else {
-                        sentenceEl.insertBefore(span, dropTarget.nextSibling);
-                    }
-                }
-                const updatedSpans = Array.from(sentenceEl.querySelectorAll('span'));
-                const currentOrder = updatedSpans.map(s => s.dataset.word);
-                if (currentOrder.join('') === currentSentence.correctParts.join('')) {
-                    points++;
-                    streak++;
-                    pointsEl.textContent = points;
-                    streakEl.textContent = streak;
-                    playConfettiAnimation();
-                    setTimeout(loadSentence, 2000); // Én kall etter 2 sekunder
-                }
-                document.body.removeChild(clone);
-                document.removeEventListener('touchmove', moveHandler);
-                document.removeEventListener('touchend', endHandler);
-            };
-
-            document.addEventListener('touchmove', moveHandler, { passive: false });
-            document.addEventListener('touchend', endHandler);
-        });
-
-        sentenceEl.appendChild(span);
-    });
-    const spans = Array.from(sentenceEl.querySelectorAll('span'));
-    const currentOrder = spans.map(span => span.dataset.word);
-    if (currentOrder.join('') === currentSentence.correctParts.join('')) {
-        points++;
-        streak++;
-        pointsEl.textContent = points;
-        streakEl.textContent = streak;
-        playConfettiAnimation();
-        setTimeout(loadSentence, 2000); // Én kall etter 2 sekunder
-    }
-}
-        }
-
-        let draggedSpan = null;
-
-        function dragStartOmorganiser(e) {
-            draggedSpan = e.target;
-            e.dataTransfer.setData('text', draggedSpan.dataset.word);
-            setTimeout(() => {
-                draggedSpan.style.display = 'none';
-            }, 0);
-        }
-
-        function dragEndOmorganiser(e) {
-            if (draggedSpan) {
-                draggedSpan.style.display = 'inline-block';
-                draggedSpan = null;
-            }
-        }
-
-        function dragOverOmorganiser(e) {
-            e.preventDefault();
-            const targetSpan = e.target;
-            if (draggedSpan && targetSpan !== draggedSpan) {
-                const spans = Array.from(sentenceEl.querySelectorAll('span'));
-                const targetIndex = spans.indexOf(targetSpan);
-                const rect = targetSpan.getBoundingClientRect();
-                const midPoint = rect.left + rect.width / 2;
-                if (e.clientX < midPoint) {
-                    sentenceEl.insertBefore(draggedSpan, targetSpan);
+            if (action === "activity") {
+                const activity = target.dataset.activity;
+                state.activity = activity;
+                resetChallenge();
+                if (activity === "learn") {
+                    state.view = "learn";
                 } else {
-                    sentenceEl.insertBefore(draggedSpan, targetSpan.nextSibling);
+                    state.view = "difficulty";
                 }
-                draggedSpan.style.display = 'inline-block';
+                render();
+                return;
             }
-        }
 
-        function dragLeaveOmorganiser(e) {
-            // Ingen handling nødvendig her
-        }
-
-        function dropOmorganiser(e) {
-        e.preventDefault();
-        if (draggedSpan) {
-            const spans = Array.from(sentenceEl.querySelectorAll('span'));
-            const currentOrder = spans.map(span => span.dataset.word);
-            if (currentOrder.join('') === currentSentence.correctParts.join('')) {
-                points++;
-                streak++;
-                pointsEl.textContent = points;
-                streakEl.textContent = streak;
-                playConfettiAnimation();
-                setTimeout(loadSentence, 2000);
+            if (action === "difficulty") {
+                state.view = "difficulty";
+                resetChallenge();
+                render();
+                return;
             }
-            draggedSpan = null;
-        }
-    }
-        function checkCompletion() {
-        const correctWords = sentenceEl.querySelectorAll('.correct').length;
-        const total = currentSentence.interactiveParts.length;
-        if (correctWords === total && difficulty !== "Omorganiser") {
-            points++;
-            streak++;
-            pointsEl.textContent = points;
-            streakEl.textContent = streak;
-            playConfettiAnimation();
-            setTimeout(loadSentence, 2500); // Litt ekstra tid etter konfetti
-        }
-    }
 
-        function getColor(colorName) {
-            switch (colorName) {
-                case 'subject': return '#e74c3c';
-                case 'verb': return '#2ecc71';
-                case 'adverbial': return '#f39c12';
-                case 'direct-object': return '#3498db';
-                case 'indirect-object': return '#9b59b6';
-                default: return '#000';
+            if (action === "select-difficulty") {
+                state.difficulty = target.dataset.difficulty;
+                state.view = state.activity;
+                resetChallenge();
+                render();
+                return;
             }
-        }
 
-        function playConfettiAnimation() {
-    const rect = sentenceEl.getBoundingClientRect();
-    const text = sentenceEl.textContent;
-    for (const char of text) {
-        if (char === ' ') continue;
-        for (let i = 0; i < 25; i++) {
-            const confetti = document.createElement('span');
-            confetti.classList.add('confetti');
-            confetti.textContent = char;
-            const x = Math.random() * rect.width;
-            const y = Math.random() * rect.height;
-            confetti.style.left = `${rect.left + x}px`;
-            confetti.style.top = `${rect.top + y}px`;
-            const dx = (Math.random() - 0.5) * 600;
-            const dy = (Math.random() - 0.5) * 600;
-            confetti.style.setProperty('--dx', `${dx}px`);
-            confetti.style.setProperty('--dy', `${dy}px`);
-            const colors = ['#e74c3c', '#2ecc71', '#f39c12', '#3498db', '#9b59b6'];
-            confetti.style.color = colors[Math.floor(Math.random() * colors.length)];
-            document.body.appendChild(confetti);
-            setTimeout(() => confetti.remove(), 1000);
-        }
-    }
-}
+            if (action === "next") {
+                resetChallenge();
+                render();
+                return;
+            }
 
-        modeToggleBtn.addEventListener('click', () => {
-            document.body.classList.toggle('dark-mode');
-            modeToggleBtn.textContent = document.body.classList.contains('dark-mode') ? 'Light Mode' : 'Dark Mode';
+            if (action === "role") {
+                state.selectedRole = target.dataset.role;
+                render();
+                return;
+            }
+
+            if (action === "role-hint") {
+                const role = ROLE_BY_ID[target.dataset.role];
+                setFeedback(role.label, "info", role.description, 5200);
+                render();
+                return;
+            }
+
+            if (action === "chunk") {
+                handleChunk(target.dataset.chunk);
+                return;
+            }
+
+            if (action === "find-word") {
+                handleFindWord(target.dataset.word);
+                return;
+            }
+
+            if (action === "check-sort") {
+                syncSortOrderFromDom();
+                checkSort(true);
+                return;
+            }
+
+            if (action === "inflect-class") {
+                state.selectedInflectClass = target.dataset.class;
+                resetChallenge();
+                render();
+                return;
+            }
+
+            if (action === "inflect-answer") {
+                handleInflectAnswer(target.dataset.answer);
+                return;
+            }
+
+            if (action === "learn-class") {
+                state.selectedLearnClass = target.dataset.class;
+                resetChallenge();
+                render();
+                return;
+            }
+
+            if (action === "practice-inflect") {
+                state.selectedInflectClass = target.dataset.class;
+                state.activity = "inflect";
+                state.view = "difficulty";
+                resetChallenge();
+                render();
+                return;
+            }
+
+            if (action === "practice-find") {
+                state.activity = "find";
+                state.view = "difficulty";
+                resetChallenge();
+                render();
+            }
         });
 
-        loadSentence();
+        function handleChunk(chunkId) {
+            const challenge = ensureChallenge("analysis");
+            if (challenge.answers[chunkId]) return;
+            const word = challenge.sentence.analysisWords.find((item) => item.id === chunkId);
+            if (!word) return;
+
+            if (word.role === state.selectedRole) {
+                challenge.answers[chunkId] = word.role;
+                const points = award();
+                const done = Object.keys(challenge.answers).length === challenge.sentence.analysisWords.length;
+                if (done) {
+                    const bonus = difficultyInfo().points * 2;
+                    state.score += bonus;
+                    setFeedback("Hele setningen er analysert", "success", `+${points + bonus} poeng`, 0);
+                    completeTaskCelebration();
+                    render();
+                    scheduleNext(1500);
+                } else {
+                    setFeedback("Riktig setningsledd", "success", `+${points} poeng`);
+                    render();
+                }
+            } else {
+                challenge.wrongId = chunkId;
+                miss();
+                const correctRole = ROLE_BY_ID[word.role].label;
+                setFeedback("Prøv en annen kloss", "error", `${word.text} passer bedre som ${correctRole}.`);
+                render();
+                window.setTimeout(() => {
+                    if (state.challenge) state.challenge.wrongId = null;
+                    render();
+                }, 650);
+            }
+        }
+
+        function handleFindWord(wordId) {
+            const challenge = ensureChallenge("find");
+            if (challenge.done) return;
+            const word = challenge.sentence.words.find((item) => item.id === wordId);
+            if (!word) return;
+            challenge.pickedId = wordId;
+            if (word.cls === challenge.targetClass) {
+                challenge.done = true;
+                challenge.wrong = false;
+                const points = award();
+                setFeedback("Riktig ordklasse", "success", `+${points} poeng`, 0);
+                completeTaskCelebration();
+                render();
+                scheduleNext(1300);
+            } else {
+                challenge.wrong = true;
+                miss();
+                setFeedback("Se på fargen og ordets jobb", "error", `${word.text} er ${WORD_CLASS_BY_ID[word.cls].label.toLowerCase()}.`);
+                render();
+                window.setTimeout(() => {
+                    if (state.challenge) {
+                        state.challenge.pickedId = null;
+                        state.challenge.wrong = false;
+                    }
+                    render();
+                }, 850);
+            }
+        }
+
+        function handleInflectAnswer(answer) {
+            const challenge = ensureChallenge("inflect");
+            if (challenge.correct) return;
+            challenge.selected = answer;
+            if (answer === challenge.task.answer) {
+                challenge.correct = true;
+                const points = award();
+                setFeedback("Riktig bøying", "success", `${challenge.task.explanation} +${points} poeng`, 0);
+                completeTaskCelebration();
+                render();
+            } else {
+                miss();
+                setFeedback("Ikke riktig form", "error", `Riktig svar er ${challenge.task.answer}.`);
+                render();
+            }
+        }
+
+        render();
     </script>
 </body>
 </html>

@@ -210,7 +210,8 @@
 
         const ACTIVITY_BY_ID = Object.fromEntries(ACTIVITIES.map((item) => [item.id, item]));
 
-        const ANALYSIS_SENTENCES = {
+        const SENTENCE_BANK = mergeDuplicateSentences([
+            ...tagSentenceGroup("analysis", ["analysis", "find", "sort"], {
             lett: [
                 {
                     id: "analyse-lett-1",
@@ -376,83 +377,108 @@
                     ]
                 }
             ]
-        };
+            }),
 
-        const WORD_SENTENCES = {
-            lett: [
-                makeWordSentence("finn-lett-1", [
-                    ["Katten", "substantiv"],
-                    ["sover", "verb"],
-                    ["i", "preposisjon"],
-                    ["stolen", "substantiv"]
-                ]),
-                makeWordSentence("finn-lett-2", [
-                    ["Hun", "pronomen"],
-                    ["leser", "verb"],
-                    ["en", "determinativ"],
-                    ["spennende", "adjektiv"],
-                    ["bok", "substantiv"]
-                ]),
-                makeWordSentence("finn-lett-3", [
-                    ["Barna", "substantiv"],
-                    ["synger", "verb"],
-                    ["høyt", "adverb"]
-                ])
-            ],
-            middels: [
-                makeWordSentence("finn-middels-1", [
-                    ["Den", "determinativ"],
-                    ["røde", "adjektiv"],
-                    ["bussen", "substantiv"],
-                    ["stopper", "verb"],
-                    ["foran", "preposisjon"],
-                    ["skolen", "substantiv"]
-                ]),
-                makeWordSentence("finn-middels-2", [
-                    ["Jeg", "pronomen"],
-                    ["skriver", "verb"],
-                    ["fordi", "subjunksjon"],
-                    ["læreren", "substantiv"],
-                    ["venter", "verb"]
-                ]),
-                makeWordSentence("finn-middels-3", [
-                    ["Nora", "substantiv"],
-                    ["og", "konjunksjon"],
-                    ["Emil", "substantiv"],
-                    ["tegner", "verb"],
-                    ["stille", "adverb"]
-                ])
-            ],
-            vanskelig: [
-                makeWordSentence("finn-vanskelig-1", [
-                    ["Hei", "interjeksjon"],
-                    ["sa", "verb"],
-                    ["Nora", "substantiv"],
-                    ["da", "subjunksjon"],
-                    ["klokka", "substantiv"],
-                    ["ringte", "verb"]
-                ]),
-                makeWordSentence("finn-vanskelig-2", [
-                    ["Hvis", "subjunksjon"],
-                    ["elevene", "substantiv"],
-                    ["samarbeider", "verb"],
-                    ["blir", "verb"],
-                    ["teksten", "substantiv"],
-                    ["bedre", "adjektiv"]
-                ]),
-                makeWordSentence("finn-vanskelig-3", [
-                    ["Denne", "determinativ"],
-                    ["ganske", "adverb"],
-                    ["vanskelige", "adjektiv"],
-                    ["oppgaven", "substantiv"],
-                    ["løste", "verb"],
-                    ["de", "pronomen"],
-                    ["sammen", "adverb"]
-                ])
-            ]
-        };
+            ...tagSentenceGroup("find", ["find", "sort"], {
+            lett: makeWordSentences("finn-lett", [
+                [["Katten", "substantiv"], ["sover", "verb"], ["i", "preposisjon"], ["stolen", "substantiv"]],
+                [["Hun", "pronomen"], ["leser", "verb"], ["en", "determinativ"], ["spennende", "adjektiv"], ["bok", "substantiv"]],
+                [["Barna", "substantiv"], ["synger", "verb"], ["høyt", "adverb"]],
+                [["Sola", "substantiv"], ["skinner", "verb"], ["varmt", "adverb"]],
+                [["Hunden", "substantiv"], ["løper", "verb"], ["raskt", "adverb"]],
+                [["Maja", "substantiv"], ["tegner", "verb"], ["en", "determinativ"], ["blå", "adjektiv"], ["bil", "substantiv"]],
+                [["Gutten", "substantiv"], ["hopper", "verb"], ["høyt", "adverb"]],
+                [["Jenta", "substantiv"], ["tegner", "verb"], ["en", "determinativ"], ["glad", "adjektiv"], ["sol", "substantiv"]],
+                [["Fuglen", "substantiv"], ["flyr", "verb"], ["over", "preposisjon"], ["taket", "substantiv"]],
+                [["Vi", "pronomen"], ["spiser", "verb"], ["gode", "adjektiv"], ["epler", "substantiv"]],
+                [["Boka", "substantiv"], ["ligger", "verb"], ["på", "preposisjon"], ["bordet", "substantiv"]],
+                [["Lampen", "substantiv"], ["lyser", "verb"], ["sterkt", "adverb"]],
+                [["Eleven", "substantiv"], ["skriver", "verb"], ["pent", "adverb"]],
+                [["Bussen", "substantiv"], ["stopper", "verb"], ["rolig", "adverb"]],
+                [["Fisken", "substantiv"], ["svømmer", "verb"], ["raskt", "adverb"]],
+                [["Den", "determinativ"], ["lille", "adjektiv"], ["katten", "substantiv"], ["maler", "verb"]],
+                [["Et", "determinativ"], ["grønt", "adjektiv"], ["blad", "substantiv"], ["faller", "verb"]],
+                [["Bestemor", "substantiv"], ["baker", "verb"], ["søte", "adjektiv"], ["boller", "substantiv"]],
+                [["Laget", "substantiv"], ["øver", "verb"], ["ofte", "adverb"]],
+                [["Regnet", "substantiv"], ["trommer", "verb"], ["hardt", "adverb"]],
+                [["Søsteren", "substantiv"], ["danser", "verb"], ["lett", "adverb"]],
+                [["Broren", "substantiv"], ["bygger", "verb"], ["et", "determinativ"], ["høyt", "adjektiv"], ["tårn", "substantiv"]],
+                [["Klokka", "substantiv"], ["ringer", "verb"], ["tidlig", "adverb"]],
+                [["Hesten", "substantiv"], ["drikker", "verb"], ["kaldt", "adjektiv"], ["vann", "substantiv"]],
+                [["Elias", "substantiv"], ["finner", "verb"], ["en", "determinativ"], ["rød", "adjektiv"], ["vott", "substantiv"]],
+                [["Skogen", "substantiv"], ["lukter", "verb"], ["friskt", "adverb"]],
+                [["Babyen", "substantiv"], ["sover", "verb"], ["trygt", "adverb"]],
+                [["Malin", "substantiv"], ["leser", "verb"], ["stille", "adverb"]],
+                [["Vinden", "substantiv"], ["blåser", "verb"], ["kaldt", "adverb"]],
+                [["Koret", "substantiv"], ["synger", "verb"], ["en", "determinativ"], ["ny", "adjektiv"], ["sang", "substantiv"]]
+            ]),
+            middels: makeWordSentences("finn-middels", [
+                [["Den", "determinativ"], ["røde", "adjektiv"], ["bussen", "substantiv"], ["stopper", "verb"], ["foran", "preposisjon"], ["skolen", "substantiv"]],
+                [["Jeg", "pronomen"], ["skriver", "verb"], ["fordi", "subjunksjon"], ["læreren", "substantiv"], ["venter", "verb"]],
+                [["Nora", "substantiv"], ["og", "konjunksjon"], ["Emil", "substantiv"], ["tegner", "verb"], ["stille", "adverb"]],
+                [["Vi", "pronomen"], ["pakker", "verb"], ["sekken", "substantiv"], ["før", "subjunksjon"], ["turen", "substantiv"], ["starter", "verb"]],
+                [["Denne", "determinativ"], ["oppgaven", "substantiv"], ["er", "verb"], ["lett", "adjektiv"], ["men", "konjunksjon"], ["nyttig", "adjektiv"]],
+                [["De", "pronomen"], ["spiller", "verb"], ["fotball", "substantiv"], ["på", "preposisjon"], ["banen", "substantiv"]],
+                [["Hvis", "subjunksjon"], ["det", "pronomen"], ["regner", "verb"], ["leser", "verb"], ["vi", "pronomen"], ["inne", "adverb"]],
+                [["Min", "determinativ"], ["venn", "substantiv"], ["venter", "verb"], ["ved", "preposisjon"], ["porten", "substantiv"]],
+                [["Lina", "substantiv"], ["eller", "konjunksjon"], ["Sofie", "substantiv"], ["henter", "verb"], ["ballen", "substantiv"]],
+                [["Han", "pronomen"], ["legger", "verb"], ["blyanten", "substantiv"], ["i", "preposisjon"], ["skuffen", "substantiv"]],
+                [["Alle", "determinativ"], ["elevene", "substantiv"], ["lytter", "verb"], ["mens", "subjunksjon"], ["rektor", "substantiv"], ["snakker", "verb"]],
+                [["Dere", "pronomen"], ["kan", "verb"], ["velge", "verb"], ["bok", "substantiv"], ["eller", "konjunksjon"], ["film", "substantiv"]],
+                [["Et", "determinativ"], ["stort", "adjektiv"], ["tre", "substantiv"], ["står", "verb"], ["bak", "preposisjon"], ["huset", "substantiv"]],
+                [["Hun", "pronomen"], ["finner", "verb"], ["nøkkelen", "substantiv"], ["under", "preposisjon"], ["matta", "substantiv"]],
+                [["Noen", "determinativ"], ["barn", "substantiv"], ["ler", "verb"], ["fordi", "subjunksjon"], ["vitsen", "substantiv"], ["er", "verb"], ["morsom", "adjektiv"]],
+                [["Kasper", "substantiv"], ["og", "konjunksjon"], ["Mina", "substantiv"], ["lager", "verb"], ["plakat", "substantiv"], ["til", "preposisjon"], ["klassen", "substantiv"]],
+                [["Det", "pronomen"], ["snør", "verb"], ["utenfor", "preposisjon"], ["vinduet", "substantiv"]],
+                [["Vår", "determinativ"], ["gruppe", "substantiv"], ["samarbeider", "verb"], ["når", "subjunksjon"], ["oppgaven", "substantiv"], ["er", "verb"], ["vanskelig", "adjektiv"]],
+                [["Jeg", "pronomen"], ["tar", "verb"], ["med", "preposisjon"], ["matpakka", "substantiv"], ["og", "konjunksjon"], ["flaska", "substantiv"]],
+                [["Denne", "determinativ"], ["hunden", "substantiv"], ["sover", "verb"], ["mellom", "preposisjon"], ["putene", "substantiv"]],
+                [["De", "pronomen"], ["rydder", "verb"], ["rommet", "substantiv"], ["før", "subjunksjon"], ["gjestene", "substantiv"], ["kommer", "verb"]],
+                [["Eli", "substantiv"], ["men", "konjunksjon"], ["ikke", "adverb"], ["Omar", "substantiv"], ["kan", "verb"], ["svømme", "verb"], ["langt", "adverb"]],
+                [["Hver", "determinativ"], ["elev", "substantiv"], ["skriver", "verb"], ["navnet", "substantiv"], ["på", "preposisjon"], ["arket", "substantiv"]],
+                [["Hun", "pronomen"], ["smiler", "verb"], ["fordi", "subjunksjon"], ["laget", "substantiv"], ["vant", "verb"]],
+                [["Vi", "pronomen"], ["går", "verb"], ["gjennom", "preposisjon"], ["parken", "substantiv"], ["og", "konjunksjon"], ["hjem", "adverb"]],
+                [["Ditt", "determinativ"], ["forslag", "substantiv"], ["passer", "verb"], ["hvis", "subjunksjon"], ["tiden", "substantiv"], ["holder", "verb"]],
+                [["Læreren", "substantiv"], ["valgte", "verb"], ["meg", "pronomen"], ["til", "preposisjon"], ["laget", "substantiv"]],
+                [["Disse", "determinativ"], ["blomstene", "substantiv"], ["vokser", "verb"], ["rundt", "preposisjon"], ["skolen", "substantiv"]],
+                [["Kari", "substantiv"], ["eller", "konjunksjon"], ["Jon", "substantiv"], ["leser", "verb"], ["teksten", "substantiv"], ["høyt", "adverb"]],
+                [["Treneren", "substantiv"], ["hjalp", "verb"], ["oss", "pronomen"], ["da", "subjunksjon"], ["kampen", "substantiv"], ["startet", "verb"]]
+            ]),
+            vanskelig: makeWordSentences("finn-vanskelig", [
+                [["Hei", "interjeksjon"], ["sa", "verb"], ["Nora", "substantiv"], ["da", "subjunksjon"], ["klokka", "substantiv"], ["ringte", "verb"]],
+                [["Hvis", "subjunksjon"], ["elevene", "substantiv"], ["samarbeider", "verb"], ["blir", "verb"], ["teksten", "substantiv"], ["bedre", "adjektiv"]],
+                [["Denne", "determinativ"], ["ganske", "adverb"], ["vanskelige", "adjektiv"], ["oppgaven", "substantiv"], ["løste", "verb"], ["de", "pronomen"], ["sammen", "adverb"]],
+                [["Hurra", "interjeksjon"], ["ropte", "verb"], ["vi", "pronomen"], ["da", "subjunksjon"], ["laget", "substantiv"], ["scoret", "verb"]],
+                [["Den", "determinativ"], ["gamle", "adjektiv"], ["sykkelen", "substantiv"], ["rullet", "verb"], ["sakte", "adverb"], ["ned", "preposisjon"], ["bakken", "substantiv"]],
+                [["Oi", "interjeksjon"], ["hvisket", "verb"], ["Elias", "substantiv"], ["da", "subjunksjon"], ["lyset", "substantiv"], ["blinket", "verb"]],
+                [["Hun", "pronomen"], ["fant", "verb"], ["kortet", "substantiv"], ["som", "subjunksjon"], ["passet", "verb"], ["best", "adverb"]],
+                [["Dette", "determinativ"], ["rare", "adjektiv"], ["kartet", "substantiv"], ["viste", "verb"], ["dem", "pronomen"], ["veien", "substantiv"], ["hjem", "adverb"]],
+                [["Au", "interjeksjon"], ["sa", "verb"], ["han", "pronomen"], ["da", "subjunksjon"], ["kneet", "substantiv"], ["traff", "verb"], ["benken", "substantiv"]],
+                [["Når", "subjunksjon"], ["musikken", "substantiv"], ["starter", "verb"], ["danser", "verb"], ["alle", "determinativ"], ["glade", "adjektiv"], ["barn", "substantiv"]],
+                [["Jippi", "interjeksjon"], ["ropte", "verb"], ["de", "pronomen"], ["fordi", "subjunksjon"], ["prøven", "substantiv"], ["gikk", "verb"], ["bra", "adverb"]],
+                [["Noen", "determinativ"], ["ivrige", "adjektiv"], ["elever", "substantiv"], ["arbeider", "verb"], ["ekstra", "adverb"], ["nøye", "adverb"]],
+                [["Hysj", "interjeksjon"], ["sa", "verb"], ["bibliotekaren", "substantiv"], ["mens", "subjunksjon"], ["vi", "pronomen"], ["leste", "verb"]],
+                [["Den", "pronomen"], ["lå", "verb"], ["helt", "adverb"], ["stille", "adverb"], ["under", "preposisjon"], ["sofaen", "substantiv"]],
+                [["Å", "interjeksjon"], ["sukket", "verb"], ["Mina", "substantiv"], ["fordi", "subjunksjon"], ["sekken", "substantiv"], ["var", "verb"], ["tung", "adjektiv"]],
+                [["Denne", "determinativ"], ["nye", "adjektiv"], ["boka", "substantiv"], ["valgte", "verb"], ["du", "pronomen"], ["i", "preposisjon"], ["dag", "substantiv"]],
+                [["Hvis", "subjunksjon"], ["den", "pronomen"], ["forsvinner", "verb"], ["leter", "verb"], ["vi", "pronomen"], ["grundig", "adverb"]],
+                [["Bravo", "interjeksjon"], ["sa", "verb"], ["treneren", "substantiv"], ["da", "subjunksjon"], ["de", "pronomen"], ["spilte", "verb"], ["smart", "adverb"]],
+                [["Alle", "determinativ"], ["små", "adjektiv"], ["spor", "substantiv"], ["viste", "verb"], ["oss", "pronomen"], ["hvor", "subjunksjon"], ["reven", "substantiv"], ["gikk", "verb"]],
+                [["Det", "pronomen"], ["var", "verb"], ["veldig", "adverb"], ["mørkt", "adjektiv"], ["da", "subjunksjon"], ["båten", "substantiv"], ["kom", "verb"]],
+                [["Hei", "interjeksjon"], ["ropte", "verb"], ["Sander", "substantiv"], ["til", "preposisjon"], ["dem", "pronomen"], ["som", "subjunksjon"], ["ventet", "verb"]],
+                [["Denne", "determinativ"], ["lange", "adjektiv"], ["forklaringen", "substantiv"], ["hjalp", "verb"], ["henne", "pronomen"], ["mye", "adverb"]],
+                [["Hvis", "subjunksjon"], ["noe", "pronomen"], ["virker", "verb"], ["uklart", "adjektiv"], ["spør", "verb"], ["du", "pronomen"], ["rolig", "adverb"]],
+                [["Psst", "interjeksjon"], ["hvisket", "verb"], ["hun", "pronomen"], ["mens", "subjunksjon"], ["den", "determinativ"], ["lille", "adjektiv"], ["katten", "substantiv"], ["sov", "verb"]],
+                [["De", "pronomen"], ["fant", "verb"], ["flere", "determinativ"], ["rare", "adjektiv"], ["skjell", "substantiv"], ["ytterst", "adverb"], ["på", "preposisjon"], ["stranda", "substantiv"]],
+                [["Oj", "interjeksjon"], ["sa", "verb"], ["læreren", "substantiv"], ["da", "subjunksjon"], ["svaret", "substantiv"], ["kom", "verb"], ["så", "adverb"], ["fort", "adverb"]],
+                [["Hver", "determinativ"], ["modige", "adjektiv"], ["spiller", "substantiv"], ["gjorde", "verb"], ["sitt", "determinativ"], ["beste", "adjektiv"], ["da", "subjunksjon"], ["kampen", "substantiv"], ["startet", "verb"]],
+                [["Aha", "interjeksjon"], ["sa", "verb"], ["Omar", "substantiv"], ["da", "subjunksjon"], ["han", "pronomen"], ["endelig", "adverb"], ["forsto", "verb"], ["regelen", "substantiv"]],
+                [["Disse", "determinativ"], ["ferske", "adjektiv"], ["sporene", "substantiv"], ["viser", "verb"], ["oss", "pronomen"], ["at", "subjunksjon"], ["elgen", "substantiv"], ["var", "verb"], ["her", "adverb"]],
+                [["Hurra", "interjeksjon"], ["ropte", "verb"], ["barna", "substantiv"], ["fordi", "subjunksjon"], ["de", "pronomen"], ["snart", "adverb"], ["skulle", "verb"], ["hjem", "adverb"]]
+            ])
+            }),
 
-        const SORT_SENTENCES = {
+            ...tagSentenceGroup("sort", ["find", "sort"], {
             lett: [
                 makeWordSentence("sort-lett-1", [
                     ["Katten", "substantiv"],
@@ -533,7 +559,12 @@
                     ["bedre", "adjektiv"]
                 ])
             ]
-        };
+            })
+        ]);
+
+        const ANALYSIS_SENTENCES = getSentencesByTag("analysis");
+        const WORD_SENTENCES = getSentencesByTag("find");
+        const SORT_SENTENCES = getSentencesByTag("sort");
 
         const FIND_TARGETS = {
             lett: ["substantiv", "verb", "adjektiv", "adverb"],
@@ -641,7 +672,8 @@
             completedTasks: 0,
             challenge: null,
             feedback: null,
-            lastIds: {}
+            lastIds: {},
+            selectionBags: {}
         };
 
         const app = document.getElementById("app");
@@ -662,6 +694,73 @@
                     cls
                 }))
             };
+        }
+
+        function makeWordSentences(prefix, rows) {
+            return rows.map((pairs, index) => makeWordSentence(`${prefix}-${index + 1}`, pairs));
+        }
+
+        function tagSentenceGroup(source, tags, groups) {
+            return Object.entries(groups).flatMap(([difficulty, sentences]) =>
+                sentences.map((sentence) => tagSentence(sentence, difficulty, tags, source))
+            );
+        }
+
+        function tagSentence(sentence, difficulty, tags, source) {
+            return {
+                ...sentence,
+                source,
+                difficulty,
+                tags: unique([...(sentence.tags || []), ...tags]),
+                words: sentence.words.map((word, index) => ({
+                    ...word,
+                    id: word.id || `${sentence.id}-w${index}`
+                }))
+            };
+        }
+
+        function mergeDuplicateSentences(sentences) {
+            const merged = new Map();
+            sentences.forEach((sentence) => {
+                const signature = sentenceSignature(sentence);
+                const existing = merged.get(signature);
+                if (!existing) {
+                    merged.set(signature, {
+                        ...sentence,
+                        sources: [sentence.source]
+                    });
+                    return;
+                }
+
+                if (!sameSentenceWords(existing.words, sentence.words)) {
+                    throw new Error(`Setningen ${sentence.id} har samme tekst som ${existing.id}, men ulik ordklassemerking.`);
+                }
+                existing.tags = unique([...existing.tags, ...sentence.tags]);
+                existing.sources = unique([...existing.sources, sentence.source]);
+                if (!existing.chunks && sentence.chunks) {
+                    existing.chunks = sentence.chunks;
+                }
+            });
+            return [...merged.values()];
+        }
+
+        function sentenceSignature(sentence) {
+            return `${sentence.difficulty}:${sentence.words.map((word) => normalizeToken(word.text)).join(" ")}`;
+        }
+
+        function sameSentenceWords(a, b) {
+            return a.length === b.length && a.every((word, index) => (
+                normalizeToken(word.text) === normalizeToken(b[index].text) && word.cls === b[index].cls
+            ));
+        }
+
+        function getSentencesByTag(tag) {
+            return Object.fromEntries(DIFFICULTIES.map((difficulty) => [
+                difficulty.id,
+                SENTENCE_BANK.filter((sentence) => (
+                    sentence.difficulty === difficulty.id && sentence.tags.includes(tag)
+                ))
+            ]));
         }
 
         function task(word, target, answer, options, explanation) {
@@ -917,12 +1016,14 @@
                                 const wasPicked = challenge.pickedId === word.id;
                                 const classes = [
                                     "token-button",
+                                    !challenge.done && !wasPicked ? "neutral" : "",
                                     challenge.done && isCorrectClass ? "revealed" : "",
                                     wasPicked && challenge.done ? "correct" : "",
                                     wasPicked && challenge.wrong ? "wrong" : ""
                                 ].filter(Boolean).join(" ");
+                                const colorStyle = challenge.done || wasPicked ? classStyle(word.cls) : "";
                                 return `
-                                    <button class="${classes}" data-action="find-word" data-word="${word.id}" ${classStyle(word.cls)}>
+                                    <button class="${classes}" data-action="find-word" data-word="${word.id}" ${colorStyle}>
                                         ${escapeHtml(word.text)}
                                     </button>
                                 `;
@@ -930,12 +1031,6 @@
                             <span class="sentence-period">.</span>
                         </div>
                         ${renderFeedback()}
-                        <div class="theory-card">
-                            <h3>Fargekobling</h3>
-                            <div class="chip-list">
-                                ${WORD_CLASSES.map((item) => `<span class="class-pill" style="--class-color: ${item.color}">${item.label}</span>`).join("")}
-                            </div>
-                        </div>
                     </section>
                 </section>
             `;
@@ -1156,7 +1251,7 @@
                 return {
                     key,
                     sentence,
-                    targetClass: pickFrom(availableTargets, `${key}:target`),
+                    targetClass: pickFrom(availableTargets, `${key}:target:${sentence.id}`),
                     pickedId: null,
                     done: false,
                     wrong: false
@@ -1236,12 +1331,32 @@
         }
 
         function pickFrom(items, bucket) {
-            const lastId = state.lastIds[bucket];
-            const candidates = items.filter((item) => item.id !== lastId && item.word !== lastId && item !== lastId);
-            const pool = candidates.length ? candidates : items;
-            const picked = pool[Math.floor(Math.random() * pool.length)];
-            state.lastIds[bucket] = picked.id || picked.word || picked;
+            const itemIds = items.map(itemKey);
+            const availableIds = new Set(itemIds);
+            let bag = state.selectionBags[bucket] || [];
+            bag = bag.filter((id) => availableIds.has(id));
+
+            if (!bag.length) {
+                bag = shuffle(itemIds);
+                const lastId = state.lastIds[bucket];
+                if (bag.length > 1 && bag[0] === lastId) {
+                    const swapIndex = bag.findIndex((id) => id !== lastId);
+                    [bag[0], bag[swapIndex]] = [bag[swapIndex], bag[0]];
+                }
+            }
+
+            const pickedId = bag.shift();
+            state.selectionBags[bucket] = bag;
+            const picked = items.find((item) => itemKey(item) === pickedId) || items[0];
+            state.lastIds[bucket] = pickedId;
             return JSON.parse(JSON.stringify(picked));
+        }
+
+        function itemKey(item) {
+            if (item && typeof item === "object") {
+                return item.id || item.word || JSON.stringify(item);
+            }
+            return item;
         }
 
         function shuffle(items) {

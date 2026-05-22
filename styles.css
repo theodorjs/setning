@@ -941,6 +941,26 @@
             touch-action: manipulation;
         }
 
+        .inflect-help-area {
+            display: grid;
+            justify-items: center;
+            gap: 10px;
+            margin-top: 2px;
+        }
+
+        .inflect-help-button {
+            width: 36px;
+            height: 36px;
+            color: var(--class-color);
+            border-color: rgba(255, 255, 255, 0.95);
+            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.18), 0 0 0 3px color-mix(in srgb, var(--class-color) 22%, transparent);
+        }
+
+        .inflect-help-button[aria-expanded="true"] {
+            color: #fff;
+            background: var(--class-color);
+        }
+
         .sentence-board,
         .sort-board {
             border: 1px dashed #b7c4d7;
@@ -1147,6 +1167,77 @@
             font-size: 2.35rem;
             line-height: 1.08;
             font-weight: 900;
+        }
+
+        .inflect-help-card {
+            width: min(680px, 100%);
+            display: grid;
+            gap: 10px;
+            padding: 14px;
+            border-radius: var(--radius);
+            border: 2px solid var(--class-color);
+            background: #fff;
+            background: color-mix(in srgb, var(--class-color) 9%, #fff);
+            box-shadow: 0 8px 0 rgba(0, 0, 0, 0.13);
+        }
+
+        .inflect-help-card h3 {
+            margin: 0;
+            font-size: 1.1rem;
+        }
+
+        .inflect-help-card p {
+            margin: 0;
+            color: #334155;
+            line-height: 1.45;
+        }
+
+        .inflect-example-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .inflect-example-list span {
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            border: 1px solid color-mix(in srgb, var(--class-color) 52%, #fff);
+            background: rgba(255, 255, 255, 0.76);
+            color: #0f172a;
+            font-weight: 850;
+        }
+
+        .inflect-form-table {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 8px;
+            margin-top: 2px;
+        }
+
+        .inflect-form-cell {
+            display: grid;
+            gap: 4px;
+            padding: 9px 10px;
+            border-radius: var(--radius);
+            border: 1px solid color-mix(in srgb, var(--class-color) 46%, #fff);
+            background: rgba(255, 255, 255, 0.82);
+            text-align: center;
+        }
+
+        .inflect-form-cell span {
+            color: #475569;
+            font-size: 0.78rem;
+            font-weight: 800;
+        }
+
+        .inflect-form-cell strong {
+            color: #0f172a;
+            font-size: 0.98rem;
+            line-height: 1.12;
+        }
+
+        .inflect-help-note {
+            font-size: 0.94rem;
         }
 
         .target-strip {
@@ -1383,6 +1474,10 @@
             .sentence-board,
             .sort-board {
                 justify-content: flex-start;
+            }
+
+            .inflect-form-table {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
             }
         }
 

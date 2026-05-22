@@ -660,6 +660,214 @@
             }
         };
 
+        const INFLECTION_HELP = {
+            substantiv: {
+                "bestemt entall": {
+                    title: "Bestemt entall",
+                    explanation: "Bestemt entall betyr at vi snakker om én bestemt ting, person eller et bestemt sted. Du kan ofte tenke: den ene jeg allerede vet om.",
+                    examples: [
+                        "hund -> hunden",
+                        "bok -> boka"
+                    ],
+                    note: "Noen substantiv får vokalendring i andre former: bok, boka, bøker, bøkene."
+                },
+                "flertall ubestemt": {
+                    title: "Ubestemt flertall",
+                    explanation: "Ubestemt flertall betyr flere, men ikke noen bestemte. Ofte kan du sette flere foran ordet.",
+                    examples: [
+                        "hund -> hunder",
+                        "bok -> bøker"
+                    ],
+                    note: "Bok får vokalendring fra o til ø: bok -> bøker."
+                },
+                "ubestemt flertall": {
+                    title: "Ubestemt flertall",
+                    explanation: "Ubestemt flertall betyr flere, men ikke noen bestemte. Ofte kan du sette flere foran ordet.",
+                    examples: [
+                        "hund -> hunder",
+                        "bok -> bøker"
+                    ],
+                    note: "Bok får vokalendring fra o til ø: bok -> bøker."
+                },
+                "flertall bestemt": {
+                    title: "Bestemt flertall",
+                    explanation: "Bestemt flertall betyr at vi snakker om flere bestemte ting, personer eller steder. Du kan ofte tenke: alle de jeg allerede vet om.",
+                    examples: [
+                        "hund -> hundene",
+                        "bok -> bøkene"
+                    ],
+                    note: "Her ser du både vanlig bøying og bøying med vokalendring."
+                },
+                "bestemt flertall": {
+                    title: "Bestemt flertall",
+                    explanation: "Bestemt flertall betyr at vi snakker om flere bestemte ting, personer eller steder. Du kan ofte tenke: alle de jeg allerede vet om.",
+                    examples: [
+                        "hund -> hundene",
+                        "bok -> bøkene"
+                    ],
+                    note: "Her ser du både vanlig bøying og bøying med vokalendring."
+                }
+            },
+            verb: {
+                presens: {
+                    title: "Presens",
+                    explanation: "Presens betyr nåtid. Et godt triks er å sette akkurat nå foran verbet.",
+                    examples: [
+                        "å lese -> leser",
+                        "Akkurat nå leser jeg."
+                    ],
+                    forms: [
+                        { label: "Infinitiv", value: "å lese" },
+                        { label: "Presens", value: "leser" },
+                        { label: "Preteritum", value: "leste" },
+                        { label: "Perfektum", value: "har lest" }
+                    ]
+                },
+                preteritum: {
+                    title: "Preteritum",
+                    explanation: "Preteritum betyr fortid. Formen forteller at noe allerede har skjedd.",
+                    examples: [
+                        "å lese -> leste",
+                        "I går leste jeg."
+                    ],
+                    forms: [
+                        { label: "Infinitiv", value: "å lese" },
+                        { label: "Presens", value: "leser" },
+                        { label: "Preteritum", value: "leste" },
+                        { label: "Perfektum", value: "har lest" }
+                    ]
+                },
+                perfektum: {
+                    title: "Perfektum",
+                    explanation: "Perfektum forteller at noe har skjedd. På norsk bruker vi ofte har foran verbformen.",
+                    examples: [
+                        "å lese -> har lest",
+                        "Jeg har lest boka."
+                    ],
+                    forms: [
+                        { label: "Infinitiv", value: "å lese" },
+                        { label: "Presens", value: "leser" },
+                        { label: "Preteritum", value: "leste" },
+                        { label: "Perfektum", value: "har lest" }
+                    ]
+                }
+            },
+            adjektiv: {
+                intetkjønn: {
+                    title: "Intetkjønn",
+                    explanation: "Når adjektivet beskriver et intetkjønnsord, får mange adjektiv -t.",
+                    examples: [
+                        "fin -> fint hus",
+                        "god -> godt svar"
+                    ],
+                    note: "Bruk et foran substantivet for å teste: et fint hus."
+                },
+                flertall: {
+                    title: "Flertall",
+                    explanation: "Når adjektivet beskriver flere, får mange adjektiv -e.",
+                    examples: [
+                        "fin -> fine hus",
+                        "god -> gode svar"
+                    ],
+                    note: "Det samme adjektivet kan altså endre form etter substantivet."
+                },
+                "bestemt form": {
+                    title: "Bestemt form",
+                    explanation: "Bestemt form brukes ofte når substantivet er bestemt, eller når vi sier den, det eller de foran.",
+                    examples: [
+                        "fin -> den fine boka",
+                        "god -> det gode svaret"
+                    ],
+                    note: "Bestemt form får ofte -e."
+                },
+                komparativ: {
+                    title: "Komparativ",
+                    explanation: "Komparativ brukes når vi sammenligner to ting. Mange adjektiv får -ere.",
+                    examples: [
+                        "fin -> finere",
+                        "god -> bedre"
+                    ],
+                    note: "Noen adjektiv bøyes uregelrett: god, bedre, best."
+                },
+                superlativ: {
+                    title: "Superlativ",
+                    explanation: "Superlativ brukes når noe er mest av alle. Mange adjektiv får -est eller -st.",
+                    examples: [
+                        "fin -> finest",
+                        "god -> best"
+                    ],
+                    note: "Noen adjektiv bøyes uregelrett: god, bedre, best."
+                }
+            },
+            pronomen: {
+                objektform: {
+                    title: "Objektform",
+                    explanation: "Objektform brukes når pronomenet ikke gjør handlingen, men handlingen går ut over pronomenet.",
+                    examples: [
+                        "jeg -> meg",
+                        "Læreren hjelper meg."
+                    ],
+                    note: "Eksempel: Læreren spør meg om svaret."
+                },
+                "eieform til en-ord": {
+                    title: "Eieform til en-ord",
+                    explanation: "Eieform viser hvem noe hører til. Til en-ord bruker vi ofte min.",
+                    examples: [
+                        "jeg -> min",
+                        "min sykkel"
+                    ],
+                    note: "Eksempel: Min sykkel står utenfor skolen."
+                },
+                "eieform til et-ord": {
+                    title: "Eieform til et-ord",
+                    explanation: "Eieform viser hvem noe hører til. Til et-ord bruker vi ofte mitt.",
+                    examples: [
+                        "jeg -> mitt",
+                        "mitt hus"
+                    ],
+                    note: "Eksempel: Mitt hus har rødt tak."
+                },
+                "eieform flertall": {
+                    title: "Eieform flertall",
+                    explanation: "Eieform i flertall brukes når det eide ordet står i flertall.",
+                    examples: [
+                        "jeg -> mine",
+                        "mine bøker"
+                    ],
+                    note: "Eksempel: Mine bøker ligger i sekken."
+                }
+            },
+            determinativ: {
+                intetkjønn: {
+                    title: "Intetkjønn",
+                    explanation: "Determinativet må passe til substantivet. Intetkjønnsord har ofte et foran seg.",
+                    examples: [
+                        "en stol -> et bord",
+                        "min stol -> mitt bord"
+                    ],
+                    note: "Se etter om substantivet kan ha et foran seg."
+                },
+                flertall: {
+                    title: "Flertall",
+                    explanation: "I flertall må determinativet vise at det handler om flere.",
+                    examples: [
+                        "den boka -> de bøkene",
+                        "min bok -> mine bøker"
+                    ],
+                    note: "Her ser du både vanlig flertall og flertall med vokalendring."
+                },
+                "entall ubestemt": {
+                    title: "Entall ubestemt",
+                    explanation: "Entall ubestemt betyr én, men ikke en bestemt én. Formen må passe til ordet den står til.",
+                    examples: [
+                        "noen venner",
+                        "noe rart"
+                    ],
+                    note: "Noe brukes ofte alene eller foran et-ord."
+                }
+            }
+        };
+
         const state = {
             view: "home",
             activity: null,
@@ -1079,6 +1287,7 @@
             }
             const challenge = ensureChallenge("inflect");
             const classInfo = WORD_CLASS_BY_ID[state.selectedInflectClass];
+            const help = getInflectionHelp(state.selectedInflectClass, challenge.task.target);
             return `
                 <section class="module-layout">
                     <aside class="side-panel">
@@ -1124,10 +1333,47 @@
                             }).join("")}
                         </div>
                         ${renderFeedback()}
+                        <div class="inflect-help-area" style="--class-color: ${classInfo.color}">
+                            <button class="hint-button inflect-help-button" data-action="inflect-help" aria-label="Hjelp med ${escapeHtml(challenge.task.target)}" aria-expanded="${challenge.helpOpen ? "true" : "false"}">?</button>
+                            ${challenge.helpOpen ? renderInflectionHelp(help) : ""}
+                        </div>
                         ${challenge.correct ? `<button class="primary-button" data-action="next">Neste</button>` : ""}
                     </section>
                 </section>
             `;
+        }
+
+        function renderInflectionHelp(help) {
+            return `
+                <div class="inflect-help-card">
+                    <h3>${escapeHtml(help.title)}</h3>
+                    <p>${escapeHtml(help.explanation)}</p>
+                    <div class="inflect-example-list">
+                        ${help.examples.map((example) => `<span>${escapeHtml(example)}</span>`).join("")}
+                    </div>
+                    ${help.forms ? `
+                        <div class="inflect-form-table" aria-label="Bøyingsrekke">
+                            ${help.forms.map((form) => `
+                                <div class="inflect-form-cell">
+                                    <span>${escapeHtml(form.label)}</span>
+                                    <strong>${escapeHtml(form.value)}</strong>
+                                </div>
+                            `).join("")}
+                        </div>
+                    ` : ""}
+                    ${help.note ? `<p class="inflect-help-note">${escapeHtml(help.note)}</p>` : ""}
+                </div>
+            `;
+        }
+
+        function getInflectionHelp(classId, target) {
+            const classHelp = INFLECTION_HELP[classId] || {};
+            return classHelp[target] || {
+                title: target,
+                explanation: "Se på hvilken form oppgaven ber om, og sammenlign med eksempelrekken for ordklassen.",
+                examples: ["grunnform -> bøyd form"],
+                note: ""
+            };
         }
 
         function renderLearn() {
@@ -1273,7 +1519,8 @@
                 key,
                 task: pickFrom(tasks, key),
                 selected: null,
-                correct: false
+                correct: false,
+                helpOpen: false
             };
         }
 
@@ -1767,6 +2014,13 @@
             if (action === "inflect-class") {
                 state.selectedInflectClass = target.dataset.class;
                 resetChallenge();
+                render();
+                return;
+            }
+
+            if (action === "inflect-help") {
+                const challenge = ensureChallenge("inflect");
+                challenge.helpOpen = !challenge.helpOpen;
                 render();
                 return;
             }

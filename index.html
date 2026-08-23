@@ -161,7 +161,7 @@
         const FUNCTION_ROLES = [
             { id: "subject", label: "Subjekt", color: "#ef4444", description: "Den som gjør det som skjer i setningen." },
             { id: "verbal", label: "Verbal", color: "#16a34a", description: "Det som skjer, eller det noen gjør, i setningen." },
-            { id: "directObject", label: "Direkte objekt", color: "#2563eb", description: "Det handlingen går ut over." },
+            { id: "directObject", label: "Direkte objekt", color: "#2563eb", description: "Det handlingen går ut over. I «Han tegner et hus» er «et hus» det direkte objektet." },
             { id: "indirectObject", label: "Indirekte objekt", color: "#7c3aed", description: "Den som får eller mottar noe." },
             { id: "adverbial", label: "Adverbial", color: "#d97706", description: "Sier noe om tid, sted, måte eller grunn." },
             { id: "predicative", label: "Predikativ", color: "#0891b2", description: "Forteller hvordan subjektet eller objektet er." }
@@ -199,6 +199,24 @@
                 title: "Bøy ordene",
                 short: "Øv deg på ordbøying",
                 accent: "#d97706"
+            },
+            {
+                id: "quiz",
+                title: "Velg riktig",
+                short: "Hvilken ordklasse er ordet? Velg riktig alternativ!",
+                accent: "#0ea5e9"
+            },
+            {
+                id: "build",
+                title: "Bygg ordet",
+                short: "Bokstavene har rotet seg til. Klarer du å bygge ordet?",
+                accent: "#db2777"
+            },
+            {
+                id: "memory",
+                title: "Memory",
+                short: "Finn to og to kort som hører sammen.",
+                accent: "#8b5cf6"
             },
             {
                 id: "learn",
@@ -254,6 +272,47 @@
                         { id: "c1", text: "Han", role: "subject" },
                         { id: "c2", text: "tegner", role: "verbal" },
                         { id: "c3", text: "et hus", role: "directObject" }
+                    ]
+                },
+                {
+                    id: "analyse-lett-4",
+                    words: [
+                        { text: "Gutten", cls: "substantiv" },
+                        { text: "spiser", cls: "verb" },
+                        { text: "et", cls: "determinativ" },
+                        { text: "eple", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Gutten", role: "subject" },
+                        { id: "c2", text: "spiser", role: "verbal" },
+                        { id: "c3", text: "et eple", role: "directObject" }
+                    ]
+                },
+                {
+                    id: "analyse-lett-5",
+                    words: [
+                        { text: "Hunden", cls: "substantiv" },
+                        { text: "løper", cls: "verb" },
+                        { text: "i", cls: "preposisjon" },
+                        { text: "hagen", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Hunden", role: "subject" },
+                        { id: "c2", text: "løper", role: "verbal" },
+                        { id: "c3", text: "i hagen", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-lett-6",
+                    words: [
+                        { text: "Bestemor", cls: "substantiv" },
+                        { text: "baker", cls: "verb" },
+                        { text: "boller", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Bestemor", role: "subject" },
+                        { id: "c2", text: "baker", role: "verbal" },
+                        { id: "c3", text: "boller", role: "directObject" }
                     ]
                 }
             ],
@@ -312,6 +371,55 @@
                         { id: "c3", text: "Nora", role: "indirectObject" },
                         { id: "c4", text: "et kort", role: "directObject" },
                         { id: "c5", text: "fra hytta", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-middels-4",
+                    words: [
+                        { text: "Mamma", cls: "substantiv" },
+                        { text: "kjøpte", cls: "verb" },
+                        { text: "meg", cls: "pronomen" },
+                        { text: "en", cls: "determinativ" },
+                        { text: "ny", cls: "adjektiv" },
+                        { text: "sykkel", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Mamma", role: "subject" },
+                        { id: "c2", text: "kjøpte", role: "verbal" },
+                        { id: "c3", text: "meg", role: "indirectObject" },
+                        { id: "c4", text: "en ny sykkel", role: "directObject" }
+                    ]
+                },
+                {
+                    id: "analyse-middels-5",
+                    words: [
+                        { text: "Elevene", cls: "substantiv" },
+                        { text: "arbeider", cls: "verb" },
+                        { text: "stille", cls: "adverb" },
+                        { text: "på", cls: "preposisjon" },
+                        { text: "biblioteket", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Elevene", role: "subject" },
+                        { id: "c2", text: "arbeider", role: "verbal" },
+                        { id: "c3", text: "stille", role: "adverbial" },
+                        { id: "c4", text: "på biblioteket", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-middels-6",
+                    words: [
+                        { text: "Vennene", cls: "substantiv" },
+                        { text: "spiller", cls: "verb" },
+                        { text: "sjakk", cls: "substantiv" },
+                        { text: "etter", cls: "preposisjon" },
+                        { text: "skolen", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Vennene", role: "subject" },
+                        { id: "c2", text: "spiller", role: "verbal" },
+                        { id: "c3", text: "sjakk", role: "directObject" },
+                        { id: "c4", text: "etter skolen", role: "adverbial" }
                     ]
                 }
             ],
@@ -374,6 +482,60 @@
                         { id: "c3", text: "laget", role: "subject" },
                         { id: "c4", text: "kamp", role: "directObject" },
                         { id: "c5", text: "på stadion", role: "adverbial" }
+                    ]
+                },
+                {
+                    id: "analyse-vanskelig-4",
+                    words: [
+                        { text: "Hvis", cls: "subjunksjon" },
+                        { text: "du", cls: "pronomen" },
+                        { text: "øver", cls: "verb" },
+                        { text: "mye", cls: "adverb" },
+                        { text: "blir", cls: "verb" },
+                        { text: "du", cls: "pronomen" },
+                        { text: "bedre", cls: "adjektiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Hvis du øver mye", role: "adverbial" },
+                        { id: "c2", text: "blir", role: "verbal" },
+                        { id: "c3", text: "du", role: "subject" },
+                        { id: "c4", text: "bedre", role: "predicative" }
+                    ]
+                },
+                {
+                    id: "analyse-vanskelig-5",
+                    words: [
+                        { text: "Etter", cls: "preposisjon" },
+                        { text: "kampen", cls: "substantiv" },
+                        { text: "ga", cls: "verb" },
+                        { text: "treneren", cls: "substantiv" },
+                        { text: "spillerne", cls: "substantiv" },
+                        { text: "ros", cls: "substantiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Etter kampen", role: "adverbial" },
+                        { id: "c2", text: "ga", role: "verbal" },
+                        { id: "c3", text: "treneren", role: "subject" },
+                        { id: "c4", text: "spillerne", role: "indirectObject" },
+                        { id: "c5", text: "ros", role: "directObject" }
+                    ]
+                },
+                {
+                    id: "analyse-vanskelig-6",
+                    words: [
+                        { text: "Den", cls: "determinativ" },
+                        { text: "gamle", cls: "adjektiv" },
+                        { text: "mannen", cls: "substantiv" },
+                        { text: "ble", cls: "verb" },
+                        { text: "plutselig", cls: "adverb" },
+                        { text: "veldig", cls: "adverb" },
+                        { text: "trett", cls: "adjektiv" }
+                    ],
+                    chunks: [
+                        { id: "c1", text: "Den gamle mannen", role: "subject" },
+                        { id: "c2", text: "ble", role: "verbal" },
+                        { id: "c3", text: "plutselig", role: "adverbial" },
+                        { id: "c4", text: "veldig trett", role: "predicative" }
                     ]
                 }
             ]
@@ -498,6 +660,36 @@
                     ["varmt", "adverb"],
                     ["i", "preposisjon"],
                     ["hagen", "substantiv"]
+                ]),
+                makeWordSentence("sort-lett-4", [
+                    ["Gutten", "substantiv"],
+                    ["drikker", "verb"],
+                    ["kald", "adjektiv"],
+                    ["melk", "substantiv"]
+                ]),
+                makeWordSentence("sort-lett-5", [
+                    ["Fuglen", "substantiv"],
+                    ["synger", "verb"],
+                    ["i", "preposisjon"],
+                    ["treet", "substantiv"]
+                ]),
+                makeWordSentence("sort-lett-6", [
+                    ["Jenta", "substantiv"],
+                    ["hopper", "verb"],
+                    ["veldig", "adverb"],
+                    ["høyt", "adverb"]
+                ]),
+                makeWordSentence("sort-lett-7", [
+                    ["Pappa", "substantiv"],
+                    ["lager", "verb"],
+                    ["god", "adjektiv"],
+                    ["mat", "substantiv"]
+                ]),
+                makeWordSentence("sort-lett-8", [
+                    ["Boka", "substantiv"],
+                    ["ligger", "verb"],
+                    ["på", "preposisjon"],
+                    ["pulten", "substantiv"]
                 ])
             ],
             middels: [
@@ -524,6 +716,42 @@
                     ["skriver", "verb"],
                     ["klare", "adjektiv"],
                     ["setninger", "substantiv"]
+                ]),
+                makeWordSentence("sort-middels-4", [
+                    ["Elevene", "substantiv"],
+                    ["leser", "verb"],
+                    ["stille", "adverb"],
+                    ["på", "preposisjon"],
+                    ["biblioteket", "substantiv"]
+                ]),
+                makeWordSentence("sort-middels-5", [
+                    ["Min", "determinativ"],
+                    ["beste", "adjektiv"],
+                    ["venn", "substantiv"],
+                    ["spiller", "verb"],
+                    ["fotball", "substantiv"]
+                ]),
+                makeWordSentence("sort-middels-6", [
+                    ["Katten", "substantiv"],
+                    ["jager", "verb"],
+                    ["en", "determinativ"],
+                    ["liten", "adjektiv"],
+                    ["mus", "substantiv"]
+                ]),
+                makeWordSentence("sort-middels-7", [
+                    ["Vi", "pronomen"],
+                    ["bader", "verb"],
+                    ["i", "preposisjon"],
+                    ["det", "determinativ"],
+                    ["varme", "adjektiv"],
+                    ["vannet", "substantiv"]
+                ]),
+                makeWordSentence("sort-middels-8", [
+                    ["Treneren", "substantiv"],
+                    ["roper", "verb"],
+                    ["høyt", "adverb"],
+                    ["til", "preposisjon"],
+                    ["laget", "substantiv"]
                 ])
             ],
             vanskelig: [
@@ -557,6 +785,50 @@
                     ["de", "pronomen"],
                     ["kampen", "substantiv"],
                     ["bedre", "adjektiv"]
+                ]),
+                makeWordSentence("sort-vanskelig-4", [
+                    ["Når", "subjunksjon"],
+                    ["klokka", "substantiv"],
+                    ["ringer", "verb"],
+                    ["løper", "verb"],
+                    ["barna", "substantiv"],
+                    ["ut", "adverb"]
+                ]),
+                makeWordSentence("sort-vanskelig-5", [
+                    ["Etter", "preposisjon"],
+                    ["middagen", "substantiv"],
+                    ["spilte", "verb"],
+                    ["familien", "substantiv"],
+                    ["et", "determinativ"],
+                    ["morsomt", "adjektiv"],
+                    ["spill", "substantiv"]
+                ]),
+                makeWordSentence("sort-vanskelig-6", [
+                    ["Hvis", "subjunksjon"],
+                    ["sola", "substantiv"],
+                    ["skinner", "verb"],
+                    ["sykler", "verb"],
+                    ["vi", "pronomen"],
+                    ["til", "preposisjon"],
+                    ["stranda", "substantiv"]
+                ]),
+                makeWordSentence("sort-vanskelig-7", [
+                    ["Fordi", "subjunksjon"],
+                    ["bussen", "substantiv"],
+                    ["var", "verb"],
+                    ["forsinket", "adjektiv"],
+                    ["kom", "verb"],
+                    ["elevene", "substantiv"],
+                    ["sent", "adverb"]
+                ]),
+                makeWordSentence("sort-vanskelig-8", [
+                    ["Den", "determinativ"],
+                    ["modige", "adjektiv"],
+                    ["jenta", "substantiv"],
+                    ["klatret", "verb"],
+                    ["raskt", "adverb"],
+                    ["opp", "preposisjon"],
+                    ["fjellet", "substantiv"]
                 ])
             ]
             })
@@ -565,6 +837,52 @@
         const ANALYSIS_SENTENCES = getSentencesByTag("analysis");
         const WORD_SENTENCES = getSentencesByTag("find");
         const SORT_SENTENCES = getSentencesByTag("sort");
+        const BUILD_WORDS = buildWordPool();
+
+        function buildWordPool() {
+            const seen = new Map();
+            SENTENCE_BANK.forEach((sentence) => {
+                sentence.words.forEach((word) => {
+                    const text = word.text.toLowerCase();
+                    if (!/^[a-zæøå]{3,}$/.test(text)) return;
+                    if (!seen.has(text)) seen.set(text, word.cls);
+                });
+            });
+            const all = [...seen.entries()].map(([text, cls]) => ({ id: text, text, cls }));
+            return {
+                lett: all.filter((word) => word.text.length <= 4),
+                middels: all.filter((word) => word.text.length >= 5 && word.text.length <= 6),
+                vanskelig: all.filter((word) => word.text.length >= 7)
+            };
+        }
+
+        const MEMORY_PAIR_COUNT = { lett: 4, middels: 6, vanskelig: 8 };
+
+        function buildMemoryCards(difficulty) {
+            const pairs = [];
+            INFLECTABLE_CLASSES.forEach((classId) => {
+                (INFLECTION_TASKS[classId][difficulty] || []).forEach((item) => {
+                    if (item.word !== item.answer) {
+                        pairs.push({ a: item.word, b: item.answer, cls: classId });
+                    }
+                });
+            });
+
+            const chosen = [];
+            const usedTexts = new Set();
+            for (const pair of shuffle(pairs)) {
+                if (usedTexts.has(pair.a) || usedTexts.has(pair.b)) continue;
+                chosen.push(pair);
+                usedTexts.add(pair.a);
+                usedTexts.add(pair.b);
+                if (chosen.length === MEMORY_PAIR_COUNT[difficulty]) break;
+            }
+
+            return shuffle(chosen.flatMap((pair, index) => [
+                { id: `p${index}a`, pairId: index, text: pair.a, cls: pair.cls },
+                { id: `p${index}b`, pairId: index, text: pair.b, cls: pair.cls }
+            ]));
+        }
 
         const FIND_TARGETS = {
             lett: ["substantiv", "verb", "adjektiv", "adverb"],
@@ -577,85 +895,125 @@
                 lett: [
                     task("bok", "bestemt entall", "boka", ["bok", "boka", "bøker", "bøkene"], "I bestemt entall får bok endingen -a her: boka."),
                     task("hund", "flertall ubestemt", "hunder", ["hund", "hunden", "hunder", "hundene"], "Flertall ubestemt får ofte endingen -er: hunder."),
-                    task("elev", "bestemt entall", "eleven", ["elev", "eleven", "elever", "elevene"], "Maskuline substantiv får ofte -en i bestemt entall.")
+                    task("elev", "bestemt entall", "eleven", ["elev", "eleven", "elever", "elevene"], "Maskuline substantiv får ofte -en i bestemt entall."),
+                    task("jente", "bestemt entall", "jenta", ["jente", "jenta", "jenter", "jentene"], "Jente blir jenta i bestemt entall."),
+                    task("stol", "flertall ubestemt", "stoler", ["stol", "stolen", "stoler", "stolene"], "Flertall ubestemt får ofte endingen -er: stoler."),
+                    task("skole", "bestemt entall", "skolen", ["skole", "skolen", "skoler", "skolene"], "Skole blir skolen i bestemt entall.")
                 ],
                 middels: [
                     task("jente", "flertall bestemt", "jentene", ["jente", "jenta", "jenter", "jentene"], "Jente blir jenter i flertall og jentene i bestemt flertall."),
                     task("hus", "bestemt flertall", "husene", ["hus", "huset", "huser", "husene"], "Et hus, huset, flere hus, alle husene."),
-                    task("lærer", "flertall bestemt", "lærerne", ["lærer", "læreren", "lærerer", "lærerne"], "Mange ord på -er får formen -erne i bestemt flertall.")
+                    task("lærer", "flertall bestemt", "lærerne", ["lærer", "læreren", "lærerer", "lærerne"], "Mange ord på -er får formen -erne i bestemt flertall."),
+                    task("barn", "bestemt flertall", "barna", ["barn", "barnet", "barner", "barna"], "Et barn, barnet, flere barn, alle barna."),
+                    task("gutt", "flertall bestemt", "guttene", ["gutt", "gutten", "gutter", "guttene"], "Gutt blir gutter i flertall og guttene i bestemt flertall."),
+                    task("eple", "bestemt flertall", "eplene", ["eple", "eplet", "epler", "eplene"], "Et eple, eplet, epler, eplene.")
                 ],
                 vanskelig: [
                     task("museum", "bestemt flertall", "museene", ["museum", "museet", "museumer", "museene"], "Museum bøyes et museum, museet, museer, museene."),
                     task("tre", "ubestemt flertall", "trær", ["tre", "treet", "trær", "treene"], "Tre har vokalskifte i flertall: trær."),
-                    task("bok", "ubestemt flertall", "bøker", ["bok", "boka", "bøker", "bøkene"], "Bok får vokalskifte fra o til ø i flertall.")
+                    task("bok", "ubestemt flertall", "bøker", ["bok", "boka", "bøker", "bøkene"], "Bok får vokalskifte fra o til ø i flertall."),
+                    task("mann", "ubestemt flertall", "menn", ["mann", "mannen", "menn", "mennene"], "Mann har vokalskifte i flertall: menn."),
+                    task("hånd", "ubestemt flertall", "hender", ["hånd", "hånden", "hender", "hendene"], "Hånd får vokalskifte i flertall: hender."),
+                    task("fot", "bestemt flertall", "føttene", ["fot", "foten", "føtter", "føttene"], "Fot bøyes fot, foten, føtter, føttene.")
                 ]
             },
             verb: {
                 lett: [
                     task("å lese", "presens", "leser", ["å lese", "leser", "leste", "har lest"], "Presens forteller hva som skjer nå: leser."),
                     task("å hoppe", "preteritum", "hoppet", ["å hoppe", "hopper", "hoppet", "har hoppet"], "Preteritum forteller hva som skjedde før: hoppet."),
-                    task("å tegne", "presens", "tegner", ["å tegne", "tegner", "tegnet", "har tegnet"], "Mange verb får -r i presens.")
+                    task("å tegne", "presens", "tegner", ["å tegne", "tegner", "tegnet", "har tegnet"], "Mange verb får -r i presens."),
+                    task("å synge", "presens", "synger", ["å synge", "synger", "sang", "har sunget"], "Presens forteller hva som skjer nå: synger."),
+                    task("å spille", "preteritum", "spilte", ["å spille", "spiller", "spilte", "har spilt"], "Preteritum forteller hva som skjedde før: spilte."),
+                    task("å bo", "presens", "bor", ["å bo", "bor", "bodde", "har bodd"], "Mange verb får -r i presens: bor.")
                 ],
                 middels: [
                     task("å skrive", "preteritum", "skrev", ["å skrive", "skriver", "skrev", "har skrevet"], "Skrive har sterk bøying: skrive, skriver, skrev, har skrevet."),
                     task("å finne", "perfektum", "har funnet", ["å finne", "finner", "fant", "har funnet"], "Perfektum bruker har og partisipp: har funnet."),
-                    task("å løpe", "perfektum", "har løpt", ["å løpe", "løper", "løp", "har løpt"], "Perfektum består av har og partisipp: har løpt.")
+                    task("å løpe", "perfektum", "har løpt", ["å løpe", "løper", "løp", "har løpt"], "Perfektum består av har og partisipp: har løpt."),
+                    task("å synge", "preteritum", "sang", ["å synge", "synger", "sang", "har sunget"], "Synge har sterk bøying: synge, synger, sang, har sunget."),
+                    task("å drikke", "perfektum", "har drukket", ["å drikke", "drikker", "drakk", "har drukket"], "Perfektum bruker har og partisipp: har drukket."),
+                    task("å se", "preteritum", "så", ["å se", "ser", "så", "har sett"], "Se bøyes ser, så, har sett.")
                 ],
                 vanskelig: [
                     task("å være", "preteritum", "var", ["å være", "er", "var", "har vært"], "Være har uregelrett bøying: er, var, har vært."),
                     task("å gå", "perfektum", "har gått", ["å gå", "går", "gikk", "har gått"], "Gå bøyes går, gikk, har gått."),
-                    task("å skrive", "perfektum", "har skrevet", ["å skrive", "skriver", "skrev", "har skrevet"], "Perfektum bruker har og partisipp: har skrevet.")
+                    task("å skrive", "perfektum", "har skrevet", ["å skrive", "skriver", "skrev", "har skrevet"], "Perfektum bruker har og partisipp: har skrevet."),
+                    task("å gjøre", "preteritum", "gjorde", ["å gjøre", "gjør", "gjorde", "har gjort"], "Gjøre har uregelrett bøying: gjør, gjorde, har gjort."),
+                    task("å vite", "perfektum", "har visst", ["å vite", "vet", "visste", "har visst"], "Vite bøyes vet, visste, har visst."),
+                    task("å ta", "preteritum", "tok", ["å ta", "tar", "tok", "har tatt"], "Ta bøyes tar, tok, har tatt.")
                 ]
             },
             adjektiv: {
                 lett: [
                     task("fin", "intetkjønn", "fint", ["fin", "fint", "fine", "finere", "finest"], "Når adjektivet står til et intetkjønnsord, får det ofte -t."),
                     task("gul", "flertall", "gule", ["gul", "gult", "gule", "gulere", "gulest"], "I flertall får mange adjektiv -e."),
-                    task("glad", "bestemt form", "glade", ["glad", "gladt", "glade", "gladere", "gladest"], "Bestemt form får ofte -e: den glade eleven.")
+                    task("glad", "bestemt form", "glade", ["glad", "gladt", "glade", "gladere", "gladest"], "Bestemt form får ofte -e: den glade eleven."),
+                    task("rød", "intetkjønn", "rødt", ["rød", "rødt", "røde", "rødere", "rødest"], "Til et intetkjønnsord får adjektivet ofte -t: et rødt hus."),
+                    task("kald", "flertall", "kalde", ["kald", "kaldt", "kalde", "kaldere", "kaldest"], "I flertall får mange adjektiv -e: kalde dager."),
+                    task("snill", "intetkjønn", "snilt", ["snill", "snilt", "snille", "snillere", "snillest"], "Snill blir snilt i intetkjønn: et snilt barn.")
                 ],
                 middels: [
                     task("stor", "komparativ", "større", ["stor", "stort", "store", "større", "størst"], "Stor har uregelrett gradbøying: stor, større, størst."),
                     task("vanskelig", "superlativ", "vanskeligst", ["vanskelig", "vanskeligt", "vanskelige", "vanskeligere", "vanskeligst"], "Superlativ kan få -st: vanskeligst."),
-                    task("rask", "komparativ", "raskere", ["rask", "raskt", "raske", "raskere", "raskest"], "Komparativ sammenligner to: raskere.")
+                    task("rask", "komparativ", "raskere", ["rask", "raskt", "raske", "raskere", "raskest"], "Komparativ sammenligner to: raskere."),
+                    task("ung", "komparativ", "yngre", ["ung", "ungt", "unge", "yngre", "yngst"], "Ung gradbøyes uregelrett: ung, yngre, yngst."),
+                    task("lang", "superlativ", "lengst", ["lang", "langt", "lange", "lengre", "lengst"], "Lang gradbøyes lang, lengre, lengst."),
+                    task("tung", "komparativ", "tyngre", ["tung", "tungt", "tunge", "tyngre", "tyngst"], "Tung gradbøyes tung, tyngre, tyngst.")
                 ],
                 vanskelig: [
                     task("god", "superlativ", "best", ["god", "godt", "gode", "bedre", "best"], "God bøyes uregelrett: god, bedre, best."),
                     task("liten", "flertall", "små", ["liten", "lite", "små", "mindre", "minst"], "Liten har formen små i flertall."),
-                    task("gammel", "komparativ", "eldre", ["gammel", "gammelt", "gamle", "eldre", "eldst"], "Gammel kan gradbøyes uregelrett: eldre, eldst.")
+                    task("gammel", "komparativ", "eldre", ["gammel", "gammelt", "gamle", "eldre", "eldst"], "Gammel kan gradbøyes uregelrett: eldre, eldst."),
+                    task("mange", "komparativ", "flere", ["mange", "mye", "flere", "flest"], "Mange gradbøyes uregelrett: mange, flere, flest."),
+                    task("få", "superlativ", "færrest", ["få", "færre", "færrest", "fåest"], "Få gradbøyes få, færre, færrest."),
+                    task("vond", "superlativ", "verst", ["vond", "vondt", "vonde", "verre", "verst"], "Vond kan gradbøyes uregelrett: vond, verre, verst.")
                 ]
             },
             pronomen: {
                 lett: [
                     task("jeg", "objektform", "meg", ["jeg", "meg", "min", "mitt", "mine"], "Jeg blir meg når pronomenet er objekt."),
                     task("du", "objektform", "deg", ["du", "deg", "din", "ditt", "dine"], "Du blir deg som objektform."),
-                    task("han", "objektform", "ham", ["han", "ham", "hans", "hun"], "Han kan bli ham i objektform.")
+                    task("han", "objektform", "ham", ["han", "ham", "hans", "hun"], "Han kan bli ham i objektform."),
+                    task("hun", "objektform", "henne", ["hun", "henne", "hennes", "han"], "Hun blir henne som objektform."),
+                    task("de", "objektform", "dem", ["de", "dem", "deres", "dere"], "De blir dem i objektform.")
                 ],
                 middels: [
                     task("vi", "objektform", "oss", ["vi", "oss", "vår", "vårt", "våre"], "Vi blir oss når gruppen er objekt."),
-                    task("de", "objektform", "dem", ["de", "dem", "deres", "dere"], "De blir dem i objektform."),
-                    task("hun", "objektform", "henne", ["hun", "henne", "hennes", "han"], "Hun blir henne som objektform.")
+                    task("jeg", "eieform til en-ord", "min", ["jeg", "meg", "min", "mitt", "mine"], "Til en-ord bruker vi min: min sykkel."),
+                    task("du", "eieform til et-ord", "ditt", ["du", "deg", "din", "ditt", "dine"], "Til et-ord bruker vi ditt: ditt hus."),
+                    task("hun", "eieform til en-ord", "hennes", ["hun", "henne", "hennes", "hunnes"], "Hennes viser at noe hører til henne: hennes bok."),
+                    task("de", "eieform til en-ord", "deres", ["de", "dem", "deres", "dems"], "Deres viser at noe hører til dem: deres klasse.")
                 ],
                 vanskelig: [
                     task("jeg", "eieform til et-ord", "mitt", ["jeg", "meg", "min", "mitt", "mine"], "Til et-ord bruker vi mitt: mitt hus."),
                     task("du", "eieform flertall", "dine", ["du", "deg", "din", "ditt", "dine"], "Til flertall bruker vi dine: dine bøker."),
-                    task("vi", "eieform til en-ord", "vår", ["vi", "oss", "vår", "vårt", "våre"], "Til en-ord bruker vi vår: vår klasse.")
+                    task("vi", "eieform til en-ord", "vår", ["vi", "oss", "vår", "vårt", "våre"], "Til en-ord bruker vi vår: vår klasse."),
+                    task("dere", "eieform flertall", "deres", ["dere", "dokker", "deres", "deras"], "Deres viser at noe hører til dere: deres bøker."),
+                    task("han", "eieform til en-ord", "hans", ["han", "ham", "hans", "hannes"], "Hans viser at noe hører til han: hans sekk.")
                 ]
             },
             determinativ: {
                 lett: [
                     task("en", "intetkjønn", "et", ["en", "ei", "et", "den", "det"], "For intetkjønnsord bruker vi et: et hus."),
                     task("den", "flertall", "de", ["den", "det", "de", "denne", "disse"], "Den blir de foran substantiv i flertall."),
-                    task("min", "intetkjønn", "mitt", ["min", "mi", "mitt", "mine"], "Min blir mitt foran et-ord.")
+                    task("min", "intetkjønn", "mitt", ["min", "mi", "mitt", "mine"], "Min blir mitt foran et-ord."),
+                    task("din", "intetkjønn", "ditt", ["din", "di", "ditt", "dine"], "Din blir ditt foran et-ord."),
+                    task("det", "flertall", "de", ["den", "det", "de", "disse"], "Det blir de foran substantiv i flertall.")
                 ],
                 middels: [
                     task("denne", "flertall", "disse", ["denne", "dette", "disse", "den", "de"], "Denne og dette blir disse i flertall."),
                     task("noen", "entall ubestemt", "noe", ["noen", "noe", "noens", "no"], "Noe brukes ofte foran et-ord eller alene."),
-                    task("vår", "flertall", "våre", ["vår", "vårt", "våre", "oss"], "Vår og vårt blir våre i flertall.")
+                    task("vår", "flertall", "våre", ["vår", "vårt", "våre", "oss"], "Vår og vårt blir våre i flertall."),
+                    task("sin", "intetkjønn", "sitt", ["sin", "si", "sitt", "sine"], "Sin blir sitt foran et-ord."),
+                    task("dette", "flertall", "disse", ["denne", "dette", "disse", "de"], "Dette blir disse i flertall."),
+                    task("din", "flertall", "dine", ["din", "di", "ditt", "dine"], "Din blir dine i flertall.")
                 ],
                 vanskelig: [
                     task("all", "intetkjønn", "alt", ["all", "alt", "alle", "allt"], "All blir alt foran intetkjønnsord."),
                     task("annen", "intetkjønn", "annet", ["annen", "anna", "annet", "andre"], "Annen blir annet foran et-ord."),
-                    task("hver", "intetkjønn", "hvert", ["hver", "hvert", "hvere", "alle"], "Hver blir hvert foran et-ord.")
+                    task("hver", "intetkjønn", "hvert", ["hver", "hvert", "hvere", "alle"], "Hver blir hvert foran et-ord."),
+                    task("sin", "flertall", "sine", ["sin", "si", "sitt", "sine"], "Sin blir sine i flertall."),
+                    task("denne", "intetkjønn", "dette", ["denne", "dette", "disse", "denna"], "Denne blir dette foran et-ord.")
                 ]
             }
         };
@@ -892,6 +1250,38 @@
         let celebrationParticles = [];
         let celebrationAnimation = null;
         let confettiBurstTimer = null;
+        let wrongFlashTimer = null;
+        let memoryFlipTimer = null;
+        let buildResetTimer = null;
+        let sortDragActive = false;
+        let nextCooldownUntil = 0;
+
+        const STORAGE_KEY = "setningsverksted-progress-v1";
+
+        function loadProgress() {
+            try {
+                const saved = JSON.parse(window.localStorage.getItem(STORAGE_KEY));
+                if (saved && typeof saved === "object") {
+                    state.score = Number(saved.score) || 0;
+                    state.streak = Number(saved.streak) || 0;
+                    state.completedTasks = Number(saved.completedTasks) || 0;
+                }
+            } catch (error) {
+                // Lagret fremdrift kunne ikke leses – start på null.
+            }
+        }
+
+        function saveProgress() {
+            try {
+                window.localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    score: state.score,
+                    streak: state.streak,
+                    completedTasks: state.completedTasks
+                }));
+            } catch (error) {
+                // Lagring utilgjengelig (f.eks. privat modus) – spill videre uten.
+            }
+        }
 
         function makeWordSentence(id, pairs) {
             return {
@@ -1009,7 +1399,8 @@
         }
 
         function render() {
-            window.clearTimeout(nextTimer);
+            document.querySelectorAll(".drag-ghost").forEach((ghost) => ghost.remove());
+            sortDragActive = false;
             app.innerHTML = `
                 <div class="app-shell">
                     ${renderTopbar()}
@@ -1058,6 +1449,9 @@
             if (state.view === "find") return renderFind();
             if (state.view === "sort") return renderSort();
             if (state.view === "inflect") return renderInflect();
+            if (state.view === "quiz") return renderQuiz();
+            if (state.view === "build") return renderBuild();
+            if (state.view === "memory") return renderMemory();
             if (state.view === "learn") return renderLearn();
             return renderHome();
         }
@@ -1111,6 +1505,20 @@
                     <span class="art-word art-bend-main">å skrive</span>
                     <span class="art-word art-bend-one">skriver</span>
                     <span class="art-word art-bend-two">skrev</span>
+                `,
+                quiz: `
+                    <span class="art-word art-quiz-one">verb?</span>
+                    <span class="art-word art-quiz-two">substantiv?</span>
+                    <span class="art-check">✓</span>
+                `,
+                build: `
+                    <span class="art-token art-letter-one">O</span>
+                    <span class="art-token art-letter-two">R</span>
+                    <span class="art-token art-letter-three">D</span>
+                `,
+                memory: `
+                    <span class="art-card art-card-one">bok</span>
+                    <span class="art-card art-card-two">?</span>
                 `,
                 learn: `
                     <span class="art-book"><span></span></span>
@@ -1376,6 +1784,113 @@
             };
         }
 
+        function renderQuiz() {
+            const challenge = ensureChallenge("quiz");
+            return `
+                <section class="work-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Velg riktig alternativ</h2>
+                            <p>Hvilken ordklasse er det uthevede ordet?</p>
+                        </div>
+                        <button class="secondary-button" data-action="next">Ny oppgave</button>
+                    </div>
+                    <div class="sentence-board compact quiz-board">
+                        ${challenge.sentence.words.map((word) => {
+                            const isTarget = word.id === challenge.word.id;
+                            const revealed = isTarget && challenge.correct;
+                            return `
+                                <span class="quiz-token ${isTarget ? "target" : ""} ${revealed ? "revealed" : ""}" ${revealed ? classStyle(word.cls) : ""}>
+                                    ${escapeHtml(word.text)}
+                                </span>
+                            `;
+                        }).join("")}
+                        <span class="sentence-period">.</span>
+                    </div>
+                    <div class="option-grid">
+                        ${challenge.options.map((classId) => {
+                            const info = WORD_CLASS_BY_ID[classId];
+                            const selected = challenge.selected === classId;
+                            const resultClass = selected ? (challenge.correct ? "correct" : "wrong") : "";
+                            return `<button class="option-button ${resultClass}" data-action="quiz-answer" data-class="${classId}">${info.label}</button>`;
+                        }).join("")}
+                    </div>
+                    ${renderFeedback()}
+                    ${challenge.correct ? `<button class="primary-button" data-action="next">Neste</button>` : ""}
+                </section>
+            `;
+        }
+
+        function renderBuild() {
+            const challenge = ensureChallenge("build");
+            const classInfo = WORD_CLASS_BY_ID[challenge.cls];
+            return `
+                <section class="module-layout">
+                    <aside class="side-panel">
+                        <h2>Bygg ordet</h2>
+                        <p class="muted">Trykk på bokstavene i riktig rekkefølge. Trykk på en bokstav i svaret for å legge den tilbake.</p>
+                        <div class="target-strip" style="--class-color: ${classInfo.color}">
+                            <span class="color-swatch"></span>
+                            <strong>Hint: ordet er ${classInfo.label.toLowerCase()}</strong>
+                        </div>
+                        <button class="secondary-button" data-action="next">Nytt ord</button>
+                    </aside>
+                    <section class="work-panel">
+                        <div class="panel-heading">
+                            <div>
+                                <h2>Sett bokstavene i riktig rekkefølge</h2>
+                                <p>${difficultyInfo().description}</p>
+                            </div>
+                        </div>
+                        <div class="build-slots ${challenge.wrongFlash ? "wrong" : ""} ${challenge.done ? "correct" : ""}">
+                            ${challenge.letters.map((_, position) => {
+                                const letterIndex = challenge.picked[position];
+                                const letter = letterIndex === undefined ? "" : challenge.letters[letterIndex].ch;
+                                return `<button class="build-slot ${letter ? "filled" : ""}" data-action="build-remove" data-pos="${position}" ${challenge.done ? "disabled" : ""}>${escapeHtml(letter)}</button>`;
+                            }).join("")}
+                        </div>
+                        <div class="build-letters">
+                            ${challenge.letters.map((letter, index) => `
+                                <button class="letter-tile" data-action="build-letter" data-index="${index}" ${challenge.picked.includes(index) || challenge.done ? "disabled" : ""}>${escapeHtml(letter.ch)}</button>
+                            `).join("")}
+                        </div>
+                        <div class="build-actions">
+                            <button class="secondary-button" data-action="build-clear" ${challenge.done ? "disabled" : ""}>Tøm</button>
+                        </div>
+                        ${renderFeedback()}
+                    </section>
+                </section>
+            `;
+        }
+
+        function renderMemory() {
+            const challenge = ensureChallenge("memory");
+            return `
+                <section class="work-panel">
+                    <div class="panel-heading">
+                        <div>
+                            <h2>Memory</h2>
+                            <p>Finn ordparene som hører sammen: grunnform og bøyd form.</p>
+                        </div>
+                        <button class="secondary-button" data-action="next">Nytt brett</button>
+                    </div>
+                    <div class="memory-grid">
+                        ${challenge.cards.map((card) => {
+                            const matched = challenge.matched.includes(card.pairId);
+                            const flipped = matched || challenge.flipped.includes(card.id);
+                            const info = WORD_CLASS_BY_ID[card.cls];
+                            return `
+                                <button class="memory-card ${flipped ? "flipped" : ""} ${matched ? "matched" : ""}" data-action="memory-card" data-card="${card.id}" style="--class-color: ${info.color}">
+                                    ${flipped ? escapeHtml(card.text) : "?"}
+                                </button>
+                            `;
+                        }).join("")}
+                    </div>
+                    ${renderFeedback("Snu to kort om gangen, og husk hvor ordene ligger.")}
+                </section>
+            `;
+        }
+
         function renderLearn() {
             const item = WORD_CLASS_BY_ID[state.selectedLearnClass] || WORD_CLASSES[0];
             return `
@@ -1483,7 +1998,7 @@
                 if (!roleOptions.includes(state.selectedRole)) {
                     state.selectedRole = roleOptions[0];
                 }
-                return { key, sentence, answers: {}, wrongId: null, roleOptions };
+                return { key, sentence, answers: {}, mistakes: {}, wrongId: null, done: false, roleOptions };
             }
 
             if (activity === "find") {
@@ -1500,7 +2015,8 @@
                     targetClass: pickFrom(availableTargets, `${key}:target:${sentence.id}`),
                     pickedId: null,
                     done: false,
-                    wrong: false
+                    wrong: false,
+                    hadMistake: false
                 };
             }
 
@@ -1514,13 +2030,60 @@
                 return { key, correctWords, words: shuffled, done: false };
             }
 
+            if (activity === "quiz") {
+                const sentence = pickFrom(WORD_SENTENCES[state.difficulty], key);
+                const candidates = sentence.words.filter((word) => FIND_TARGETS[state.difficulty].includes(word.cls));
+                const pool = candidates.length ? candidates : sentence.words;
+                const word = pool[Math.floor(Math.random() * pool.length)];
+                const distractors = shuffle(WORD_CLASSES.map((item) => item.id).filter((id) => id !== word.cls)).slice(0, 3);
+                return {
+                    key,
+                    sentence,
+                    word,
+                    options: shuffle([word.cls, ...distractors]),
+                    selected: null,
+                    correct: false,
+                    done: false,
+                    hadMistake: false
+                };
+            }
+
+            if (activity === "build") {
+                const entry = pickFrom(BUILD_WORDS[state.difficulty], key);
+                let letters = shuffle([...entry.text]);
+                if (letters.join("") === entry.text && letters.length > 1) {
+                    letters.reverse();
+                }
+                return {
+                    key,
+                    word: entry.text,
+                    cls: entry.cls,
+                    letters: letters.map((ch) => ({ ch })),
+                    picked: [],
+                    done: false,
+                    hadMistake: false,
+                    wrongFlash: false
+                };
+            }
+
+            if (activity === "memory") {
+                return {
+                    key,
+                    cards: buildMemoryCards(state.difficulty),
+                    flipped: [],
+                    matched: [],
+                    done: false
+                };
+            }
+
             const tasks = INFLECTION_TASKS[state.selectedInflectClass][state.difficulty];
             return {
                 key,
                 task: pickFrom(tasks, key),
                 selected: null,
                 correct: false,
-                helpOpen: false
+                helpOpen: false,
+                hadMistake: false
             };
         }
 
@@ -1616,18 +2179,20 @@
         }
 
         function sameOrder(a, b) {
-            return a.map((item) => item.sortId).join("|") === b.map((item) => item.sortId).join("|");
+            return a.map((item) => item.text).join("|") === b.map((item) => item.text).join("|");
         }
 
         function award(pointsMultiplier = 1) {
             const points = difficultyInfo().points * pointsMultiplier;
             state.score += points;
             state.streak += 1;
+            saveProgress();
             return points;
         }
 
         function miss() {
             state.streak = 0;
+            saveProgress();
         }
 
         function setFeedback(text, type = "info", detail = "", timeout = 1800) {
@@ -1636,7 +2201,7 @@
             if (timeout) {
                 feedbackTimer = window.setTimeout(() => {
                     state.feedback = null;
-                    render();
+                    if (!sortDragActive) render();
                 }, timeout);
             }
         }
@@ -1646,6 +2211,9 @@
             state.feedback = null;
             window.clearTimeout(feedbackTimer);
             window.clearTimeout(nextTimer);
+            window.clearTimeout(wrongFlashTimer);
+            window.clearTimeout(memoryFlipTimer);
+            window.clearTimeout(buildResetTimer);
         }
 
         function scheduleNext(delay = 1300) {
@@ -1658,6 +2226,7 @@
 
         function completeTaskCelebration() {
             state.completedTasks += 1;
+            saveProgress();
             launchConfettiBursts(10);
             if (state.completedTasks % 10 === 0) {
                 window.setTimeout(launchMilestoneFireworks, 900);
@@ -1862,8 +2431,9 @@
 
             tokens.forEach((token) => {
                 token.addEventListener("pointerdown", (event) => {
-                    if (state.challenge.done) return;
+                    if (state.challenge.done || dragged) return;
                     dragged = token;
+                    sortDragActive = true;
                     token.setPointerCapture(event.pointerId);
                     token.classList.add("dragging");
                     ghost = token.cloneNode(true);
@@ -1875,7 +2445,7 @@
                 });
 
                 token.addEventListener("pointermove", (event) => {
-                    if (!dragged || !ghost) return;
+                    if (dragged !== token || !ghost) return;
                     event.preventDefault();
                     moveGhost(event.clientX, event.clientY);
                     dragged.style.pointerEvents = "none";
@@ -1890,6 +2460,7 @@
 
                 token.addEventListener("pointerup", finishDrag);
                 token.addEventListener("pointercancel", finishDrag);
+                token.addEventListener("lostpointercapture", finishDrag);
             });
 
             function moveGhost(x, y) {
@@ -1898,12 +2469,20 @@
                 ghost.style.top = `${y}px`;
             }
 
-            function finishDrag() {
-                if (!dragged) return;
+            function finishDrag(event) {
+                if (!dragged || (event && event.target !== dragged)) return;
+                if (event && event.pointerId !== undefined) {
+                    try {
+                        dragged.releasePointerCapture(event.pointerId);
+                    } catch (error) {
+                        // Pekeren var allerede sluppet.
+                    }
+                }
                 dragged.classList.remove("dragging");
                 if (ghost) ghost.remove();
                 ghost = null;
                 dragged = null;
+                sortDragActive = false;
                 syncSortOrderFromDom();
                 checkSort(false);
             }
@@ -1977,6 +2556,14 @@
             }
 
             if (action === "next") {
+                const now = Date.now();
+                const challengeDone = state.challenge && (state.challenge.done || state.challenge.correct);
+                if (!challengeDone && now < nextCooldownUntil) {
+                    setFeedback("Vent litt", "info", "Prøv oppgaven før du henter en ny.", 1400);
+                    render();
+                    return;
+                }
+                nextCooldownUntil = now + 2000;
                 resetChallenge();
                 render();
                 return;
@@ -2030,6 +2617,31 @@
                 return;
             }
 
+            if (action === "quiz-answer") {
+                handleQuizAnswer(target.dataset.class);
+                return;
+            }
+
+            if (action === "build-letter") {
+                handleBuildLetter(Number(target.dataset.index));
+                return;
+            }
+
+            if (action === "build-remove") {
+                handleBuildRemove(Number(target.dataset.pos));
+                return;
+            }
+
+            if (action === "build-clear") {
+                handleBuildClear();
+                return;
+            }
+
+            if (action === "memory-card") {
+                handleMemoryCard(target.dataset.card);
+                return;
+            }
+
             if (action === "learn-class") {
                 state.selectedLearnClass = target.dataset.class;
                 resetChallenge();
@@ -2062,28 +2674,45 @@
 
             if (word.role === state.selectedRole) {
                 challenge.answers[chunkId] = word.role;
-                const points = award();
+                if (challenge.wrongId === chunkId) challenge.wrongId = null;
+                const points = challenge.mistakes[chunkId] ? 0 : award();
                 const done = Object.keys(challenge.answers).length === challenge.sentence.analysisWords.length;
                 if (done) {
-                    const bonus = difficultyInfo().points * 2;
+                    challenge.done = true;
+                    const clean = Object.keys(challenge.mistakes).length === 0;
+                    const bonus = clean ? difficultyInfo().points * 2 : 0;
                     state.score += bonus;
-                    setFeedback("Hele setningen er analysert", "success", `+${points + bonus} poeng`, 0);
+                    saveProgress();
+                    const total = points + bonus;
+                    setFeedback(
+                        "Hele setningen er analysert",
+                        "success",
+                        total > 0 ? `+${total} poeng` : "Ingen poeng denne gangen – prøv uten feilklikk.",
+                        0
+                    );
                     completeTaskCelebration();
                     render();
                     scheduleNext(1500);
-                } else {
+                } else if (points > 0) {
                     setFeedback("Riktig setningsledd", "success", `+${points} poeng`);
+                    render();
+                } else {
+                    setFeedback("Riktig setningsledd", "success", "Ingen poeng – du prøvde feil på ordet først.");
                     render();
                 }
             } else {
                 challenge.wrongId = chunkId;
+                challenge.mistakes[chunkId] = true;
                 miss();
                 const correctRole = ROLE_BY_ID[word.role].label;
                 setFeedback("Prøv en annen kloss", "error", `${word.text} passer bedre som ${correctRole}.`);
                 render();
-                window.setTimeout(() => {
-                    if (state.challenge) state.challenge.wrongId = null;
-                    render();
+                window.clearTimeout(wrongFlashTimer);
+                wrongFlashTimer = window.setTimeout(() => {
+                    if (state.challenge && state.challenge.wrongId === chunkId) {
+                        state.challenge.wrongId = null;
+                        render();
+                    }
                 }, 650);
             }
         }
@@ -2097,22 +2726,29 @@
             if (word.cls === challenge.targetClass) {
                 challenge.done = true;
                 challenge.wrong = false;
-                const points = award();
-                setFeedback("Riktig ordklasse", "success", `+${points} poeng`, 0);
+                const points = challenge.hadMistake ? 0 : award();
+                setFeedback(
+                    "Riktig ordklasse",
+                    "success",
+                    points > 0 ? `+${points} poeng` : "Riktig – men ingen poeng etter feilforsøk.",
+                    0
+                );
                 completeTaskCelebration();
                 render();
                 scheduleNext(1300);
             } else {
                 challenge.wrong = true;
+                challenge.hadMistake = true;
                 miss();
                 setFeedback("Se på fargen og ordets jobb", "error", `${word.text} er ${WORD_CLASS_BY_ID[word.cls].label.toLowerCase()}.`);
                 render();
-                window.setTimeout(() => {
-                    if (state.challenge) {
+                window.clearTimeout(wrongFlashTimer);
+                wrongFlashTimer = window.setTimeout(() => {
+                    if (state.challenge && state.challenge.pickedId === wordId && !state.challenge.done) {
                         state.challenge.pickedId = null;
                         state.challenge.wrong = false;
+                        render();
                     }
-                    render();
                 }, 850);
             }
         }
@@ -2123,17 +2759,149 @@
             challenge.selected = answer;
             if (answer === challenge.task.answer) {
                 challenge.correct = true;
-                const points = award();
-                setFeedback("Riktig bøying", "success", `${challenge.task.explanation} +${points} poeng`, 0);
+                const points = challenge.hadMistake ? 0 : award();
+                setFeedback(
+                    "Riktig bøying",
+                    "success",
+                    points > 0 ? `${challenge.task.explanation} +${points} poeng` : `${challenge.task.explanation} Ingen poeng etter feilforsøk.`,
+                    0
+                );
                 completeTaskCelebration();
                 render();
             } else {
+                challenge.hadMistake = true;
                 miss();
                 setFeedback("Ikke riktig form", "error", `Riktig svar er ${challenge.task.answer}.`);
                 render();
             }
         }
 
+        function handleQuizAnswer(classId) {
+            const challenge = ensureChallenge("quiz");
+            if (challenge.correct || !WORD_CLASS_BY_ID[classId]) return;
+            challenge.selected = classId;
+            if (classId === challenge.word.cls) {
+                challenge.correct = true;
+                challenge.done = true;
+                const points = challenge.hadMistake ? 0 : award();
+                const classLabel = WORD_CLASS_BY_ID[classId].label.toLowerCase();
+                setFeedback(
+                    "Riktig",
+                    "success",
+                    points > 0 ? `${challenge.word.text} er ${classLabel}. +${points} poeng` : `${challenge.word.text} er ${classLabel}. Ingen poeng etter feilforsøk.`,
+                    0
+                );
+                completeTaskCelebration();
+                render();
+                scheduleNext(1600);
+            } else {
+                challenge.hadMistake = true;
+                miss();
+                setFeedback("Ikke riktig", "error", `${WORD_CLASS_BY_ID[classId].label} passer ikke her. Prøv igjen.`);
+                render();
+            }
+        }
+
+        function handleBuildLetter(index) {
+            const challenge = ensureChallenge("build");
+            if (challenge.done || challenge.picked.includes(index) || !challenge.letters[index]) return;
+            window.clearTimeout(buildResetTimer);
+            challenge.wrongFlash = false;
+            challenge.picked.push(index);
+
+            if (challenge.picked.length < challenge.letters.length) {
+                render();
+                return;
+            }
+
+            const attempt = challenge.picked.map((letterIndex) => challenge.letters[letterIndex].ch).join("");
+            if (attempt === challenge.word) {
+                challenge.done = true;
+                const points = challenge.hadMistake ? 0 : award(2);
+                setFeedback(
+                    "Riktig ord",
+                    "success",
+                    points > 0 ? `Du bygde ${challenge.word}. +${points} poeng` : `Du bygde ${challenge.word}. Ingen poeng etter feilforsøk.`,
+                    0
+                );
+                completeTaskCelebration();
+                render();
+                scheduleNext(1500);
+                return;
+            }
+
+            challenge.hadMistake = true;
+            challenge.wrongFlash = true;
+            miss();
+            setFeedback("Ikke riktig ennå", "error", "Prøv en annen rekkefølge.");
+            render();
+            buildResetTimer = window.setTimeout(() => {
+                if (state.challenge && state.challenge.key === challenge.key && !state.challenge.done) {
+                    state.challenge.picked = [];
+                    state.challenge.wrongFlash = false;
+                    render();
+                }
+            }, 950);
+        }
+
+        function handleBuildRemove(position) {
+            const challenge = ensureChallenge("build");
+            if (challenge.done || position >= challenge.picked.length) return;
+            window.clearTimeout(buildResetTimer);
+            challenge.wrongFlash = false;
+            challenge.picked.splice(position, 1);
+            render();
+        }
+
+        function handleBuildClear() {
+            const challenge = ensureChallenge("build");
+            if (challenge.done || !challenge.picked.length) return;
+            window.clearTimeout(buildResetTimer);
+            challenge.wrongFlash = false;
+            challenge.picked = [];
+            render();
+        }
+
+        function handleMemoryCard(cardId) {
+            const challenge = ensureChallenge("memory");
+            if (challenge.done || challenge.flipped.length >= 2) return;
+            const card = challenge.cards.find((item) => item.id === cardId);
+            if (!card || challenge.matched.includes(card.pairId) || challenge.flipped.includes(cardId)) return;
+
+            challenge.flipped.push(cardId);
+            if (challenge.flipped.length < 2) {
+                render();
+                return;
+            }
+
+            const first = challenge.cards.find((item) => item.id === challenge.flipped[0]);
+            if (first.pairId === card.pairId) {
+                challenge.matched.push(card.pairId);
+                challenge.flipped = [];
+                if (challenge.matched.length * 2 === challenge.cards.length) {
+                    challenge.done = true;
+                    const points = award(3);
+                    setFeedback("Alle par funnet", "success", `+${points} poeng`, 0);
+                    completeTaskCelebration();
+                    render();
+                    scheduleNext(1800);
+                    return;
+                }
+                setFeedback("Et par!", "success", `${first.text} og ${card.text} hører sammen.`);
+                render();
+            } else {
+                render();
+                window.clearTimeout(memoryFlipTimer);
+                memoryFlipTimer = window.setTimeout(() => {
+                    if (state.challenge && state.challenge.key === challenge.key) {
+                        state.challenge.flipped = [];
+                        render();
+                    }
+                }, 900);
+            }
+        }
+
+        loadProgress();
         render();
     </script>
 </body>

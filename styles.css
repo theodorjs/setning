@@ -548,7 +548,7 @@
 
         .home-grid {
             display: grid;
-            grid-template-columns: repeat(5, minmax(0, 1fr));
+            grid-template-columns: repeat(4, minmax(0, 1fr));
             gap: 18px;
         }
 
@@ -765,6 +765,39 @@
 
         .art-spark-one { right: 35px; top: 28px; }
         .art-spark-two { left: 22px; bottom: 26px; transform: scale(0.75) rotate(22deg); }
+
+        .art-quiz-one { left: 20px; top: 30px; background: #fff; transform: rotate(-4deg); }
+        .art-quiz-two { right: 16px; bottom: 28px; background: var(--abcya-yellow); transform: rotate(3deg); }
+
+        .art-check {
+            position: absolute;
+            z-index: 1;
+            right: 32px;
+            top: 22px;
+            color: #fff;
+            font-size: 2.6rem;
+            font-weight: 950;
+            text-shadow: 0 4px 0 rgba(0, 0, 0, 0.25);
+        }
+
+        .art-letter-one { left: 26px; top: 34px; background: #db2777; transform: rotate(-7deg); }
+        .art-letter-two { left: 86px; top: 60px; background: #2563eb; transform: rotate(4deg); }
+        .art-letter-three { right: 30px; top: 40px; background: #16a34a; transform: rotate(-3deg); }
+
+        .art-card {
+            position: absolute;
+            z-index: 1;
+            width: 64px;
+            height: 82px;
+            border-radius: 8px;
+            display: grid;
+            place-items: center;
+            font-weight: 950;
+            box-shadow: 0 7px 0 rgba(0, 0, 0, 0.2);
+        }
+
+        .art-card-one { left: 30px; top: 36px; background: #fff; color: #083344; transform: rotate(-6deg); }
+        .art-card-two { right: 34px; top: 44px; background: var(--abcya-yellow); color: #083344; font-size: 1.8rem; transform: rotate(5deg); }
 
         .difficulty-grid {
             display: grid;
@@ -1315,6 +1348,135 @@
             color: #1e3a8a;
         }
 
+        .quiz-token {
+            padding: 8px 10px;
+            border-radius: var(--radius);
+            font-weight: 850;
+            font-size: 1.1rem;
+            color: #0f172a;
+        }
+
+        .quiz-token.target {
+            background: var(--abcya-yellow);
+            border: 2px solid rgba(0, 0, 0, 0.18);
+            box-shadow: 0 4px 0 rgba(0, 0, 0, 0.14);
+        }
+
+        .quiz-token.target.revealed {
+            background: var(--class-color);
+            border-color: var(--class-color);
+            color: #fff;
+        }
+
+        .build-slots {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+            padding: 16px;
+            border: 3px dashed rgba(15, 118, 110, 0.38);
+            border-radius: var(--radius);
+            background: rgba(112, 171, 198, 0.30);
+        }
+
+        .build-slot {
+            width: 54px;
+            min-height: 58px;
+            border-radius: var(--radius);
+            border: 2px solid rgba(15, 23, 42, 0.18);
+            background: #fff;
+            font-size: 1.5rem;
+            font-weight: 900;
+            display: grid;
+            place-items: center;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .build-slot.filled {
+            border-color: var(--abcya-teal-dark);
+            background: #e6fffb;
+        }
+
+        .build-slots.wrong .build-slot.filled {
+            border-color: var(--danger);
+            background: #fee2e2;
+            animation: shake 240ms linear;
+        }
+
+        .build-slots.correct .build-slot.filled {
+            border-color: var(--success);
+            background: #dcfce7;
+        }
+
+        .build-letters {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .letter-tile {
+            min-width: 56px;
+            min-height: 58px;
+            border-radius: var(--radius);
+            border: 2px solid rgba(0, 0, 0, 0.14);
+            background: var(--abcya-yellow);
+            font-size: 1.4rem;
+            font-weight: 900;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.18);
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .letter-tile:disabled {
+            opacity: 0.28;
+            cursor: default;
+            box-shadow: none;
+            transform: translateY(4px);
+        }
+
+        .build-actions {
+            display: flex;
+            justify-content: center;
+        }
+
+        .memory-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .memory-card {
+            min-height: 74px;
+            padding: 8px;
+            border-radius: var(--radius);
+            border: 2px solid rgba(0, 0, 0, 0.14);
+            background: var(--abcya-teal);
+            color: #fff;
+            font-weight: 900;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 6px 0 rgba(0, 0, 0, 0.16);
+            transition: transform 160ms ease, background 160ms ease, box-shadow 160ms ease;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .memory-card.flipped {
+            color: #0f172a;
+            border-color: var(--class-color);
+            background: color-mix(in srgb, var(--class-color) 12%, #fff);
+        }
+
+        .memory-card.matched {
+            cursor: default;
+            border-color: var(--class-color);
+            box-shadow: 0 0 0 3px color-mix(in srgb, var(--class-color) 35%, transparent);
+        }
+
         .progress-row {
             display: flex;
             justify-content: space-between;
@@ -1478,6 +1640,18 @@
 
             .inflect-form-table {
                 grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+
+            .memory-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+
+        /* På smale, stående skjermer skyves poengtelleren nedover slik at den
+           ikke havner bak flytende knapper (f.eks. tema-velger) i hjørnet. */
+        @media (max-width: 620px) and (orientation: portrait) {
+            .topbar {
+                margin-top: 48px;
             }
         }
 

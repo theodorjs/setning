@@ -2114,7 +2114,7 @@
             height: 100%;
             justify-content: flex-end;
             /* Plass til den kveilede halen til venstre, og til snakkeboblen øverst */
-            padding-left: calc(var(--seg-font) * 5.2);
+            padding-left: calc(var(--seg-font) * 7);
             padding-top: min(150px, 22%);
             font-size: var(--seg-font);
         }

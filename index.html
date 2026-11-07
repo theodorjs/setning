@@ -3835,20 +3835,42 @@
             return samples;
         }
 
-        function tailCoil(start, width) {
-            // En spiral fra halespissen og inn til første ord. Midtpunktet ligger rett over starten,
-            // slik at halen glir vannrett over i kroppen. Radiusen er stor nok til at halen ikke overlapper seg selv.
-            const radius = width * 1.15;
-            const center = { x: start.x, y: start.y - radius };
+        // Halen smalner jevnt av til en spiss og bøyer seg litt opp, som på en tegnet slange.
+        // direction: retningen kroppen har der halen begynner, så halen fortsetter kurven uten knekk.
+        function tailCurve(start, width, direction = { x: 1, y: 0 }) {
+            const length = 2.8 * width;
+            const normal = { x: -direction.y, y: direction.x };
             const points = [];
-            const steps = 48;
+            const steps = 36;
             for (let step = steps; step >= 1; step -= 1) {
                 const t = step / steps;
-                const angle = Math.PI / 2 + t * Math.PI * 1.85;
-                const r = radius * (1 - t * 0.68);
-                points.push({ x: center.x + Math.cos(angle) * r, y: center.y + Math.sin(angle) * r, w: width * (1 - t * 0.85) });
+                const lift = width * 1.2 * Math.pow(t, 2.5);
+                points.push({
+                    x: start.x - direction.x * length * t - normal.x * lift,
+                    y: start.y - direction.y * length * t - normal.y * lift,
+                    // Smalner av uten knekk der halen møter kroppen, og ender i en spiss.
+                    w: width * (1 - Math.pow(t, 1.5))
+                });
             }
             return points;
+        }
+
+        // Et bånd langs den ene siden av kroppen (magen), som smalner av sammen med kroppen.
+        function sideBand(centerline, inner, outer) {
+            const near = [];
+            const far = [];
+            centerline.forEach((point, index) => {
+                const before = centerline[Math.max(0, index - 1)];
+                const after = centerline[Math.min(centerline.length - 1, index + 1)];
+                const dx = after.x - before.x;
+                const dy = after.y - before.y;
+                const length = Math.hypot(dx, dy) || 1;
+                const nx = -dy / length;
+                const ny = dx / length;
+                near.push(`${(point.x + nx * point.w * inner).toFixed(1)},${(point.y + ny * point.w * inner).toFixed(1)}`);
+                far.push(`${(point.x + nx * point.w * outer).toFixed(1)},${(point.y + ny * point.w * outer).toFixed(1)}`);
+            });
+            return `M ${near.join(" L ")} L ${far.reverse().join(" L ")} Z`;
         }
 
         function outline(centerline) {
@@ -3881,12 +3903,20 @@
             return `M ${[...left, ...cap, ...right.reverse()].join(" L ")} Z`;
         }
 
-        // Bredden på hodet langs kroppen (d = avstand fra midten av hodet, negativ bakover).
+        // Bredden på slangen nær hodet (d = avstand fra midten av hodet, negativ bakover).
+        // Kroppen blir gradvis litt bredere fram mot hodet, og hodet runder av til en snute
+        // uten noen innsnevring – hodet går i ett med kroppen.
+        const SNAKE_HEAD_LENGTH = 1.1;
+
         function headWidth(d, width) {
-            if (d <= -1.5 * width) return width;
-            if (d <= -0.7 * width) return width * (1 - 0.12 * ((d + 1.5 * width) / (0.8 * width)));
-            const t = Math.min(1, (d + 0.7 * width) / (1.25 * width));
-            return width * (0.88 + 0.24 * Math.sin(Math.PI * t * 0.85));
+            const neck = 1.8 * width;
+            if (d <= -neck) return width;
+            if (d <= 0) {
+                const t = (d + neck) / neck;
+                return width * (1 + 0.14 * t * t * (3 - 2 * t));
+            }
+            const u = Math.min(1, d / (SNAKE_HEAD_LENGTH * width));
+            return width * 1.14 * Math.sqrt(Math.max(0, 1 - Math.pow(u, 2.6)));
         }
 
         function offsetLine(points, distance) {
@@ -3956,73 +3986,101 @@
             const width = Math.max(...points.map((element) => element.offsetHeight)) * 1.38;
 
             // Kroppen begynner ved venstre kant av første ord, der halen tar over.
-            const first = rects[0];
-            const start = { x: first.left - trackRect.left + points[0].offsetHeight * 0.4, y: centers[0].y };
+            // Halen begynner ved venstre kant av første ord, på linja kroppen har der (så kurven ikke slår ut).
+            const next = centers[1] || head;
+            const along = Math.hypot(next.x - centers[0].x, next.y - centers[0].y) || 1;
+            const tailDirection = { x: (next.x - centers[0].x) / along, y: (next.y - centers[0].y) / along };
+            const back = (centers[0].x - (rects[0].left - trackRect.left + points[0].offsetHeight * 0.4)) / Math.max(0.3, tailDirection.x);
+            const start = { x: centers[0].x - tailDirection.x * back, y: centers[0].y - tailDirection.y * back };
             const body = sampleCurve([start, ...centers, head], 12);
 
-            // Avstand bakover fra midten av hodet, for å forme nakke og hode.
+            // Avstand bakover fra midten av hodet, for å forme hodet.
             const distances = new Array(body.length).fill(0);
             for (let index = body.length - 2; index >= 0; index -= 1) {
                 distances[index] = distances[index + 1] - Math.hypot(body[index + 1].x - body[index].x, body[index + 1].y - body[index].y);
             }
             const shaped = body.map((point, index) => ({ ...point, w: headWidth(distances[index], width) }));
 
-            // Snuten: forleng kurven litt forbi midten av hodet.
+            // Snuten: kurven fortsetter forbi midten av hodet og rundes av.
             const previous = body[body.length - 2] || start;
             const length = Math.hypot(head.x - previous.x, head.y - previous.y) || 1;
             const dir = { x: (head.x - previous.x) / length, y: (head.y - previous.y) / length };
             const normal = { x: -dir.y, y: dir.x };
-            const snout = 0.55 * width;
-            for (let step = 1; step <= 10; step += 1) {
-                const d = (step / 10) * snout;
+            const front = SNAKE_HEAD_LENGTH * width;
+            for (let step = 1; step <= 24; step += 1) {
+                const d = front * 0.998 * Math.sin((step / 24) * Math.PI / 2);
                 shaped.push({ x: head.x + dir.x * d, y: head.y + dir.y * d, w: headWidth(d, width) });
             }
 
-            const tail = tailCoil(start, width);
-            const shape = outline([...tail, ...shaped.slice(1)]);
-            const scales = body.filter((point, index) => distances[index] < -1.6 * width);
+            const centerline = [...tailCurve(start, width, tailDirection), ...shaped.slice(1)];
+            const shape = outline(centerline);
+            // Magen: et lyst bånd langs undersiden, fra halespissen til haken.
+            const belly = sideBand(centerline, 0.12, 0.5);
+            const bellyEdge = sideBand(centerline, 0.02, 0.14);
+
+            // «Over» er motsatt side av magen.
             const at = (d, side) => ({
                 x: head.x + dir.x * d + normal.x * side,
                 y: head.y + dir.y * d + normal.y * side
             });
-            const eyeSide = headWidth(0.05 * width, width) / 2 - 0.17 * width;
-            const eyes = [-1, 1].map((sign) => {
-                const eye = at(0.05 * width, sign * eyeSide);
-                const pupil = at(0.1 * width, sign * eyeSide);
+            const angle = Math.atan2(dir.y, dir.x) * 180 / Math.PI;
+            const eye = (d, side, radius) => {
+                const c = at(d, side);
+                const glint = at(d + radius * 0.25, side - radius * 0.35);
                 return `
-                    <circle cx="${eye.x.toFixed(1)}" cy="${eye.y.toFixed(1)}" r="${(width * 0.13).toFixed(1)}" fill="#fff" stroke="#2f4a0b" stroke-width="${(width * 0.025).toFixed(1)}"/>
-                    <circle cx="${pupil.x.toFixed(1)}" cy="${pupil.y.toFixed(1)}" r="${(width * 0.07).toFixed(1)}" fill="#111827"/>
-                    <circle cx="${(pupil.x + width * 0.025).toFixed(1)}" cy="${(pupil.y - width * 0.025).toFixed(1)}" r="${(width * 0.022).toFixed(1)}" fill="#fff"/>
+                    <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${radius.toFixed(1)}" fill="#d9480f" stroke="#1c2a0e" stroke-width="${(width * 0.035).toFixed(1)}"/>
+                    <ellipse cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" rx="${(radius * 0.28).toFixed(1)}" ry="${(radius * 0.78).toFixed(1)}" fill="#111827" transform="rotate(${angle.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)})"/>
+                    <circle cx="${glint.x.toFixed(1)}" cy="${glint.y.toFixed(1)}" r="${(radius * 0.28).toFixed(1)}" fill="#fff"/>
                 `;
+            };
+            const eyes = eye(0.08 * width, -0.3 * width, width * 0.15) + eye(0.7 * width, -0.36 * width, width * 0.12);
+            const nostrils = [-0.02, 0.1].map((side) => {
+                const nostril = at(front * 0.86, side * width);
+                return `<circle cx="${nostril.x.toFixed(1)}" cy="${nostril.y.toFixed(1)}" r="${(width * 0.032).toFixed(1)}" fill="#1c2a0e"/>`;
             }).join("");
-            const front = snout + headWidth(snout, width) / 2;
-            const nostrils = [-1, 1].map((sign) => {
-                const nostril = at(front - 0.16 * width, sign * 0.12 * width);
-                return `<circle cx="${nostril.x.toFixed(1)}" cy="${nostril.y.toFixed(1)}" r="${(width * 0.03).toFixed(1)}" fill="#1a2e05"/>`;
-            }).join("");
+            const p = (point) => `${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+            const mouthStart = at(front * 0.93, 0.16 * width);
+            const mouthControl = at(front * 0.5, 0.42 * width);
+            const mouthEnd = at(0.05 * width, 0.36 * width);
+            const mouthCurl = at(-0.02 * width, 0.27 * width);
+            const mouth = `M ${p(mouthStart)} Q ${p(mouthControl)} ${p(mouthEnd)} L ${p(mouthCurl)}`;
+
             const tip = at(front, 0);
             const fork = at(front + 0.3 * width, 0);
             const prongA = at(front + 0.42 * width, 0.1 * width);
             const prongB = at(front + 0.42 * width, -0.1 * width);
             lastSnakeMouth = { tip: at(front + 0.36 * width, 0), dir };
-            const p = (point) => `${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
 
             const trackWidth = track.scrollWidth;
             const trackHeight = track.scrollHeight;
+            const stroke = Math.max(2.5, width * 0.055);
             svg.setAttribute("width", trackWidth);
             svg.setAttribute("height", trackHeight);
             svg.setAttribute("viewBox", `0 0 ${trackWidth} ${trackHeight}`);
             svg.innerHTML = `
-                <path d="${shape}" fill="rgba(20, 50, 10, 0.28)" transform="translate(${(width * 0.06).toFixed(1)} ${(width * 0.16).toFixed(1)})"/>
+                <defs>
+                    <clipPath id="snake-clip"><path d="${shape}"/></clipPath>
+                    <pattern id="snake-speckle" width="26" height="22" patternUnits="userSpaceOnUse">
+                        <circle cx="3" cy="4" r="1.1" fill="#fff" fill-opacity="0.35"/>
+                        <circle cx="15" cy="9" r="0.8" fill="#fff" fill-opacity="0.3"/>
+                        <circle cx="22" cy="17" r="1.2" fill="#fff" fill-opacity="0.28"/>
+                        <circle cx="8" cy="16" r="0.7" fill="#fff" fill-opacity="0.32"/>
+                        <circle cx="19" cy="2" r="0.6" fill="#fff" fill-opacity="0.3"/>
+                    </pattern>
+                </defs>
+                <path d="${shape}" fill="rgba(20, 50, 10, 0.26)" transform="translate(${(width * 0.06).toFixed(1)} ${(width * 0.16).toFixed(1)})"/>
                 <path class="snake-tongue-path" d="M ${p(tip)} L ${p(fork)} L ${p(prongA)} M ${p(fork)} L ${p(prongB)}" fill="none" stroke="#e11d48" stroke-width="${(width * 0.07).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="${shape}" fill="#4d7c0f" stroke="#2f4a0b" stroke-width="${Math.max(2, width * 0.06).toFixed(1)}" stroke-linejoin="round"/>
-                ${scales.length > 1 ? `
-                    <path d="M ${offsetLine(scales, -0.3 * width)}" fill="none" stroke="#84cc16" stroke-opacity="0.6" stroke-width="${(width * 0.13).toFixed(1)}" stroke-linecap="round" stroke-dasharray="${(width * 0.1).toFixed(1)} ${(width * 0.36).toFixed(1)}"/>
-                    <path d="M ${offsetLine(scales, 0.3 * width)}" fill="none" stroke="#365314" stroke-opacity="0.35" stroke-width="${(width * 0.12).toFixed(1)}" stroke-linecap="round" stroke-dasharray="${(width * 0.1).toFixed(1)} ${(width * 0.36).toFixed(1)}" stroke-dashoffset="${(width * 0.23).toFixed(1)}"/>
-                ` : ""}
+                <path d="${shape}" fill="#5fae2c"/>
+                <g clip-path="url(#snake-clip)">
+                    <path d="${bellyEdge}" fill="#a6d662" fill-opacity="0.8"/>
+                    <path d="${belly}" fill="#d3ee9c"/>
+                    <path d="${shape}" fill="url(#snake-speckle)"/>
+                </g>
+                <path d="${shape}" fill="none" stroke="#1c2a0e" stroke-width="${stroke.toFixed(1)}" stroke-linejoin="round"/>
                 <g class="snake-face ${gulp ? "gulp" : ""}">
-                    ${eyes}
+                    <path d="${mouth}" fill="none" stroke="#1c2a0e" stroke-width="${(width * 0.045).toFixed(1)}" stroke-linecap="round"/>
                     ${nostrils}
+                    ${eyes}
                 </g>
             `;
         }

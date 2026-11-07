@@ -368,6 +368,12 @@
         return final;
     }
 
+    // Er ordet et oppslagsord (grunnform) i ordboka, og ikke bare en bøyd form?
+    async function isBaseForm(form) {
+        const entry = await lookup(form);
+        return entry.lemmas.some((lemma) => lemma.lemma === form);
+    }
+
     // Sjekker at førsteleddet i ordet virkelig er ordet vi trenger, ikke bare de samme bokstavene
     // (sump|gass begynner med bokstavene «sum», men førsteleddet er «sump»).
     async function leddAligned(lemma, forms) {
@@ -388,6 +394,8 @@
         }
         return false;
     }
+
+    const INFLECTION_ENDINGS = new Set(["a", "e", "en", "et", "er", "ene", "ne", "na"]);
 
     async function lookupContentWord(word) {
         const entry = await lookup(word);
@@ -452,7 +460,9 @@
                 candidate.head,
                 ...junctionVariants(candidate.head),
                 "se".includes(candidate.head[candidate.head.length - 1]) ? candidate.head.slice(0, -1) : null
-            ]).filter((head) => head.length >= 2);
+            ]).filter((head) => head.length >= 3 && !INFLECTION_ENDINGS.has(head));
+            // En bøyningsendelse rett etter førsteleddet (valp|en|kull) er ikke et eget ledd.
+            if (INFLECTION_ENDINGS.has(candidate.head) || INFLECTION_ENDINGS.has(candidate.head.slice(0, 2))) continue;
             for (const head of heads) {
                 const found = await lookupContentWord(head);
                 if (found) {
@@ -562,18 +572,32 @@
             };
         }
 
-        let split;
+        // Står ikke ordet i ordboka, må det være satt sammen av ekte ord – og da med grunnformen
+        // av førsteleddet. «beina» + «brudd» blir ikke et ord (det heter beinbrudd).
+        const starts = needForms.filter((form) => word.startsWith(form)).sort((a, b) => b.length - a.length);
+        let split = null;
+        let inflectedStart = null;
         try {
-            split = await splitRest(prefix, rest);
+            for (const form of starts) {
+                if (!(await isBaseForm(form))) {
+                    inflectedStart = inflectedStart || form;
+                    continue;
+                }
+                split = await splitRest(form, word.slice(form.length));
+                if (split) break;
+            }
         } catch (error) {
             if (error instanceof OfflineError) return offlineCompound(word, prefix, rest);
             throw error;
         }
         if (!split) {
+            const base = needForms.find((form) => form !== inflectedStart);
             return {
                 ok: false,
                 error: `Fant ikke «${word}» i ordboka.`,
-                detail: "Det ser heller ikke ut til å være satt sammen av ord som står i ordboka. Sjekk skrivemåten."
+                detail: inflectedStart && base
+                    ? `«${inflectedStart}» er en bøyd form. Bruk den bare hvis ordet finnes i ordboka – ellers grunnformen «${base}».`
+                    : "Det ser heller ikke ut til å være satt sammen av ord som står i ordboka. Sjekk skrivemåten."
             };
         }
         const finalBase = baseOf(split.lemma, split.tail);

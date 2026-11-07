@@ -228,7 +228,7 @@
                 pointsLabel: "poeng per ord",
                 levels: {
                     lett: { tag: "Sammensatte ord", description: "Slangen starter med vanlige sammensatte ord. Neste ord begynner med siste ledd: vannflaske → flaskehals." },
-                    middels: { tag: "Sammensatte ord", description: "Startordene kan være bøyd: stolbeina → beinbrudd eller beinabrudd. Slangen bruker vanskeligere ord." },
+                    middels: { tag: "Sammensatte ord", description: "Startordene kan være bøyd: stolbeina → beinbrudd. Slangen bruker vanskeligere ord." },
                     vanskelig: { tag: "Stavelser", description: "Ord som ikke er sammensatt. Neste ord begynner med siste stavelse: tep-pe → pep-per." }
                 }
             },
@@ -3513,16 +3513,18 @@
                         <li>${challenge.strict
                             ? "Første stavelse må være helt lik siste stavelse i ordet før: pe-dal etter tep-<b>pe</b>."
                             : "Neste ord begynner med bokstavene i siste stavelse: <b>pe</b>pper etter tep-<b>pe</b>."}</li>
-                        <li>Ordet må stå i ordboka. Egennavn er ikke lov, og hvert ord kan bare brukes én gang.</li>
+                        <li>Ordet må stå i ordboka. Egennavn er ikke lov.</li>
+                        <li>Hvert ord kan bare brukes én gang: er <b>pepper</b> brukt, må dere finne et annet ord på <b>pe</b>-.</li>
                     </ul>
                 `;
             }
             return `
                 <ul class="snake-rules">
                     <li>Neste ord begynner med siste ledd: vann<b>flaske</b> → <b>flaske</b>hals.</li>
-                    <li>Er siste ledd bøyd, kan du bruke formen som den står, eller grunnformen: stol<b>beina</b> → <b>bein</b>brudd.</li>
+                    <li>Er siste ledd bøyd, kan du bruke grunnformen: stol<b>beina</b> → <b>bein</b>brudd. Den bøyde formen kan bare brukes hvis ordet finnes i ordboka.</li>
                     <li>Ordet må finnes i ordboka eller være satt sammen av ekte ord. Egennavn er ikke lov.</li>
-                    <li>Hele ord kan bare brukes én gang, men deler av ord kan brukes om igjen.</li>
+                    <li>Hele ord kan bare brukes én gang: er <b>lyspære</b> brukt, kan det ikke brukes igjen.</li>
+                    <li>Deler av ord kan brukes om igjen: <b>lys</b>pære, <b>lys</b>bryter og <b>lys</b>terapi kan alle være med.</li>
                 </ul>
             `;
         }

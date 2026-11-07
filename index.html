@@ -15,6 +15,8 @@
     <div id="app"></div>
     <canvas id="celebration-canvas" aria-hidden="true"></canvas>
 
+    <script src="ordslangen-ordliste.js" defer></script>
+    <script src="ordslangen.js"></script>
     <script>
         const WORD_CLASSES = [
             {
@@ -217,6 +219,18 @@
                 title: "Memory",
                 short: "Finn to og to kort som hører sammen.",
                 accent: "#8b5cf6"
+            },
+            {
+                id: "ordslangen",
+                title: "Ordslangen",
+                short: "Bit deg fast i slutten av ordet! Hvor lang kan slangen bli?",
+                accent: "#65a30d",
+                pointsLabel: "poeng per ord",
+                levels: {
+                    lett: { tag: "Sammensatte ord", description: "Slangen starter med vanlige sammensatte ord. Neste ord begynner med siste ledd: vannflaske → flaskehals." },
+                    middels: { tag: "Sammensatte ord", description: "Startordene kan være bøyd: stolbeina → beinbrudd eller beinabrudd. Slangen bruker vanskeligere ord." },
+                    vanskelig: { tag: "Stavelser", description: "Ord som ikke er sammensatt. Neste ord begynner med siste stavelse: tep-pe → pep-per." }
+                }
             },
             {
                 id: "learn",
@@ -1401,8 +1415,13 @@
         function render() {
             document.querySelectorAll(".drag-ghost").forEach((ghost) => ghost.remove());
             sortDragActive = false;
+            const active = document.activeElement;
+            const focusedId = active && active.id && app.contains(active) ? active.id : null;
+            const selection = focusedId && typeof active.selectionStart === "number"
+                ? [active.selectionStart, active.selectionEnd]
+                : null;
             app.innerHTML = `
-                <div class="app-shell">
+                <div class="app-shell ${state.view === "ordslangen" ? "app-shell-wide" : ""}">
                     ${renderTopbar()}
                     <main class="screen">
                         ${renderCurrentView()}
@@ -1410,8 +1429,26 @@
                 </div>
             `;
 
+            if (focusedId) {
+                const element = document.getElementById(focusedId);
+                if (element && !element.disabled) {
+                    element.focus({ preventScroll: true });
+                    if (selection && typeof element.setSelectionRange === "function") {
+                        try {
+                            element.setSelectionRange(selection[0], selection[1]);
+                        } catch (error) {
+                            // Feltet støtter ikke markering.
+                        }
+                    }
+                }
+            }
+
             if (state.view === "sort") {
                 window.requestAnimationFrame(setupSortable);
+            }
+
+            if (state.view === "ordslangen") {
+                window.requestAnimationFrame(afterSnakeRender);
             }
         }
 
@@ -1453,6 +1490,7 @@
             if (state.view === "build") return renderBuild();
             if (state.view === "memory") return renderMemory();
             if (state.view === "learn") return renderLearn();
+            if (state.view === "ordslangen") return renderSnake();
             return renderHome();
         }
 
@@ -1520,6 +1558,11 @@
                     <span class="art-card art-card-one">bok</span>
                     <span class="art-card art-card-two">?</span>
                 `,
+                ordslangen: `
+                    <span class="art-snake art-snake-one">vann<b>flaske</b></span>
+                    <span class="art-snake art-snake-two"><b>flaske</b>hals</span>
+                    <span class="art-snake-head"><i></i><i></i></span>
+                `,
                 learn: `
                     <span class="art-book"><span></span></span>
                     <span class="art-word art-book-label">ord</span>
@@ -1542,13 +1585,17 @@
                         <button class="secondary-button" data-action="home">Til start</button>
                     </div>
                     <div class="difficulty-grid">
-                        ${DIFFICULTIES.map((difficulty) => `
+                        ${DIFFICULTIES.map((difficulty) => {
+                            const level = activity.levels ? activity.levels[difficulty.id] : null;
+                            return `
                             <button class="difficulty-card tile-button" data-action="select-difficulty" data-difficulty="${difficulty.id}">
-                                <span class="difficulty-badge">${difficulty.points} poeng</span>
+                                <span class="difficulty-badge">${difficulty.points} ${escapeHtml(activity.pointsLabel || "poeng")}</span>
                                 <strong>${difficulty.label}</strong>
-                                <p>${difficulty.description}</p>
+                                ${level ? `<span class="difficulty-tag">${escapeHtml(level.tag)}</span>` : ""}
+                                <p>${escapeHtml(level ? level.description : difficulty.description)}</p>
                             </button>
-                        `).join("")}
+                        `;
+                        }).join("")}
                     </div>
                 </section>
             `;
@@ -1991,6 +2038,10 @@
         }
 
         function createChallenge(activity, key) {
+            if (activity === "ordslangen") {
+                return createSnakeChallenge(key);
+            }
+
             if (activity === "analysis") {
                 const sentence = pickFrom(ANALYSIS_SENTENCES[state.difficulty], key);
                 sentence.analysisWords = buildAnalysisWords(sentence);
@@ -2519,6 +2570,11 @@
 
             const action = target.dataset.action;
 
+            if (action.startsWith("snake-")) {
+                handleSnakeAction(action, target);
+                return;
+            }
+
             if (action === "home") {
                 state.view = "home";
                 state.activity = null;
@@ -2900,6 +2956,801 @@
                 }, 900);
             }
         }
+
+        /* ================================================================== */
+        /* Ordslangen                                                          */
+        /* ================================================================== */
+
+        const SNAKE_STORAGE_KEY = "setningsverksted-ordslangen-v1";
+        const SNAKE_VISIBLE_ENTRIES = 60;
+
+        // Startord. «a|b» viser leddene, «>grunnform» gir grunnformen av et bøyd sisteledd.
+        // Alle er kontrollert mot Bokmålsordboka slik at det finnes mange ord å fortsette med.
+        const SNAKE_START_WORDS = {
+            lett: [
+                "vann|flaske", "fot|ball", "skole|sekk", "snø|mann", "is|bjørn", "eple|tre", "leke|plass",
+                "sjokolade|kake", "bok|hylle", "hunde|hus", "kjøkken|bord", "jule|tre", "post|kasse",
+                "skole|buss", "gull|fisk", "brann|bil", "sol|krem", "snø|ball", "panne|kake",
+                "blomster|potte", "fotball|sko", "bade|bukse", "tegne|bok"
+            ],
+            middels: [
+                "stol|beina>bein", "hunde|valpen>valp", "fotball|banen>bane", "skole|bøkene>bok",
+                "vann|flaskene>flaske", "kjøkken|stolen>stol", "snø|ballene>ball", "bok|hyllene>hylle",
+                "post|kassa>kasse", "eple|trærne>tre", "jule|trærne>tre", "sykkel|hjulet>hjul",
+                "skole|veien>vei", "sommer|ferien>ferie", "fotball|kampen>kamp"
+            ],
+            vanskelig: [
+                "teppe", "sommer", "vinter", "lampe", "pute", "tomat", "sofa", "kaffe", "pepper",
+                "eple", "radio", "pinne", "hylle", "tavle"
+            ]
+        };
+
+        function snakeVariant() {
+            return state.difficulty === "vanskelig" ? "syllable" : "compound";
+        }
+
+        function snakeVariantKey(challenge) {
+            if (snakeVariant() === "syllable") {
+                return `vanskelig-${challenge && challenge.strict ? "streng" : "vanlig"}`;
+            }
+            return state.difficulty;
+        }
+
+        function loadSnakeStore() {
+            try {
+                const saved = JSON.parse(window.localStorage.getItem(SNAKE_STORAGE_KEY));
+                if (saved && typeof saved === "object") {
+                    return {
+                        chains: saved.chains && typeof saved.chains === "object" ? saved.chains : {},
+                        records: saved.records && typeof saved.records === "object" ? saved.records : {},
+                        strict: Boolean(saved.strict)
+                    };
+                }
+            } catch (error) {
+                // Lagret slange kunne ikke leses – start på nytt.
+            }
+            return { chains: {}, records: {}, strict: false };
+        }
+
+        function saveSnakeStore(store) {
+            try {
+                window.localStorage.setItem(SNAKE_STORAGE_KEY, JSON.stringify(store));
+            } catch (error) {
+                // Lagring utilgjengelig (f.eks. privat modus) – spill videre uten.
+            }
+        }
+
+        function savedClassChain(challenge) {
+            const chain = loadSnakeStore().chains[snakeVariantKey(challenge)];
+            return chain && Array.isArray(chain.entries) && chain.entries.length ? chain : null;
+        }
+
+        function saveClassChain(challenge) {
+            const store = loadSnakeStore();
+            store.chains[snakeVariantKey(challenge)] = { entries: challenge.entries, updatedAt: Date.now() };
+            saveSnakeStore(store);
+        }
+
+        function clearClassChain(challenge) {
+            const store = loadSnakeStore();
+            delete store.chains[snakeVariantKey(challenge)];
+            saveSnakeStore(store);
+        }
+
+        function snakeRecord(challenge) {
+            return Number(loadSnakeStore().records[snakeVariantKey(challenge)]) || 0;
+        }
+
+        function updateSnakeRecord(challenge) {
+            const store = loadSnakeStore();
+            const key = snakeVariantKey(challenge);
+            const length = challenge.entries.length;
+            const previous = Number(store.records[key]) || 0;
+            if (length > previous) {
+                store.records[key] = length;
+                saveSnakeStore(store);
+                return previous > 0;
+            }
+            return false;
+        }
+
+        function createSnakeChallenge(key) {
+            return {
+                key,
+                phase: "setup",
+                mode: null,
+                strict: loadSnakeStore().strict,
+                entries: [],
+                input: "",
+                checking: false,
+                appThinking: false,
+                messages: [],
+                hint: { step: 0, result: null, loading: false, promise: null },
+                showAll: false,
+                newRecord: false,
+                confirmNew: false
+            };
+        }
+
+        function makeStartEntry(challenge) {
+            const spec = pickFrom(SNAKE_START_WORDS[state.difficulty], `ordslangen-start:${state.difficulty}`);
+            if (snakeVariant() === "syllable") {
+                return {
+                    word: spec,
+                    lemma: spec,
+                    parts: Ordslangen.syllabify(spec),
+                    next: Ordslangen.syllableNext(spec, challenge.strict),
+                    by: "start",
+                    linkIn: 0
+                };
+            }
+            const [partText, base] = spec.split(">");
+            const parts = partText.split("|");
+            const last = parts[parts.length - 1];
+            return {
+                word: parts.join(""),
+                lemma: parts.join(""),
+                parts,
+                next: Ordslangen.compoundNext(last, base || last),
+                by: "start",
+                linkIn: 0
+            };
+        }
+
+        function snakeNeed(challenge) {
+            const last = challenge.entries[challenge.entries.length - 1];
+            return last ? last.next : { forms: [], label: "" };
+        }
+
+        function snakeUsed(challenge) {
+            const used = new Set();
+            challenge.entries.forEach((entry) => {
+                used.add(entry.word);
+                if (entry.lemma) used.add(entry.lemma);
+            });
+            return used;
+        }
+
+        function matchedLength(word, forms) {
+            const match = [...forms].sort((a, b) => b.length - a.length).find((form) => word.startsWith(form));
+            return match ? match.length : 0;
+        }
+
+        // Hvor mye av starten som henger sammen med forrige ord. I sammensatte ord markeres ikke mer enn førsteleddet.
+        function linkInLength(word, forms, parts) {
+            const firstPart = (parts && parts[0]) || word;
+            const fitting = forms.filter((form) => word.startsWith(form) && form.length <= firstPart.length);
+            return fitting.length ? matchedLength(word, fitting) : matchedLength(word, forms);
+        }
+
+        function addSnakeEntry(challenge, result, by) {
+            const need = snakeNeed(challenge);
+            challenge.entries.push({
+                word: result.word,
+                lemma: result.lemma || result.word,
+                parts: result.parts,
+                next: result.next,
+                by,
+                linkIn: snakeVariant() === "compound"
+                    ? linkInLength(result.word, need.forms, result.parts)
+                    : matchedLength(result.word, need.forms),
+                unchecked: Boolean(result.unchecked),
+                combined: result.inDictionary === false && !result.unchecked,
+                definition: result.definition || ""
+            });
+            challenge.justAdded = challenge.entries.length - 1;
+        }
+
+        function setSnakeMessages(challenge, ...messages) {
+            challenge.messages = messages.filter(Boolean);
+        }
+
+        function startSnake(challenge, mode, continueSaved) {
+            challenge.round = (challenge.round || 0) + 1;
+            challenge.checking = false;
+            challenge.appThinking = false;
+            challenge.mode = mode;
+            challenge.recordAtStart = snakeRecord(challenge);
+            challenge.phase = "play";
+            challenge.input = "";
+            challenge.newRecord = false;
+            challenge.confirmNew = false;
+            challenge.showAll = false;
+            resetSnakeHint(challenge);
+            const saved = mode === "class" && continueSaved ? savedClassChain(challenge) : null;
+            challenge.entries = saved ? saved.entries : [makeStartEntry(challenge)];
+            if (mode === "class") {
+                saveClassChain(challenge);
+                setSnakeMessages(challenge, saved
+                    ? { type: "info", text: `Velkommen tilbake! Fortsett med ${snakeNeed(challenge).label}` }
+                    : { type: "info", text: `Startordet er «${challenge.entries[0].word}».`, detail: `Neste ord må begynne med ${snakeNeed(challenge).label}` });
+            } else {
+                setSnakeMessages(challenge, {
+                    type: "info",
+                    text: `Slangen starter med «${challenge.entries[0].word}». Din tur!`,
+                    detail: "Du og slangen bytter på å legge ord."
+                });
+                prefetchSnakeHint(challenge);
+            }
+            render();
+        }
+
+        function resetSnakeHint(challenge) {
+            challenge.hint = { step: 0, result: null, loading: false, promise: null };
+        }
+
+        function snakeFindOptions(challenge, extra = {}) {
+            return {
+                variant: snakeVariant(),
+                needForms: snakeNeed(challenge).forms,
+                used: snakeUsed(challenge),
+                strict: challenge.strict,
+                easy: state.difficulty === "lett",
+                ...extra
+            };
+        }
+
+        function prefetchSnakeHint(challenge) {
+            resetSnakeHint(challenge);
+            const hint = challenge.hint;
+            hint.promise = Ordslangen.findWord(snakeFindOptions(challenge, { requireFertile: false }))
+                .then((result) => {
+                    hint.result = result;
+                    return result;
+                })
+                .catch(() => {
+                    hint.offline = true;
+                    return null;
+                });
+        }
+
+        async function submitSnakeWord() {
+            const challenge = state.challenge;
+            if (!challenge || challenge.phase !== "play" || challenge.checking || challenge.appThinking) return;
+            const input = document.getElementById("snake-input");
+            if (input) challenge.input = input.value;
+            const raw = challenge.input;
+            const need = snakeNeed(challenge);
+            const used = snakeUsed(challenge);
+            const round = challenge.round;
+
+            challenge.checking = true;
+            render();
+
+            let result;
+            try {
+                result = snakeVariant() === "syllable"
+                    ? await Ordslangen.checkSyllableWord(raw, need.forms, used, challenge.strict)
+                    : await Ordslangen.checkCompoundWord(raw, need.forms, used);
+            } catch (error) {
+                result = { ok: false, error: "Noe gikk galt under sjekken.", detail: "Prøv igjen." };
+            }
+            if (state.challenge !== challenge || challenge.round !== round) return;
+            challenge.checking = false;
+
+            if (!result.ok) {
+                if (challenge.mode === "solo") miss();
+                setSnakeMessages(challenge, { type: "error", text: result.error, detail: result.detail || "" });
+                render();
+                return;
+            }
+
+            const fullHint = challenge.mode === "solo" && challenge.hint.step >= 3;
+            addSnakeEntry(challenge, result, "elev");
+            challenge.input = "";
+            const points = fullHint ? 0 : award();
+            if (points > 0) completeTaskCelebration();
+
+            const details = [];
+            if (result.unchecked) details.push("Ordboka svarte ikke, så ordet ble ikke sjekket.");
+            if (result.note) details.push(result.note);
+            (result.warnings || []).forEach((warning) => details.push(`Tips: ${warning}`));
+            details.push(points > 0 ? `+${points} poeng` : "Ingen poeng når du har fått hele ordet som hint.");
+            const studentMessage = {
+                type: result.unchecked ? "info" : "success",
+                text: `«${result.word}» passer!`,
+                detail: details.join(" ")
+            };
+
+            if (challenge.mode === "class") {
+                saveClassChain(challenge);
+                setSnakeMessages(challenge, studentMessage);
+                render();
+                return;
+            }
+
+            updateSnakeRecord(challenge);
+            setSnakeMessages(challenge, studentMessage);
+            await snakeMove(challenge);
+        }
+
+        async function snakeMove(challenge) {
+            const round = challenge.round;
+            challenge.appThinking = true;
+            resetSnakeHint(challenge);
+            render();
+            const started = Date.now();
+            let result = null;
+            let offline = false;
+            try {
+                result = await Ordslangen.findWord(snakeFindOptions(challenge));
+            } catch (error) {
+                offline = true;
+            }
+            const elapsed = Date.now() - started;
+            if (elapsed < 900) await new Promise((resolve) => window.setTimeout(resolve, 900 - elapsed));
+            if (state.challenge !== challenge || challenge.round !== round || challenge.phase !== "play") return;
+            challenge.appThinking = false;
+
+            if (offline) {
+                setSnakeMessages(challenge, challenge.messages[0], {
+                    type: "info",
+                    text: "Slangen får ikke kontakt med ordboka.",
+                    detail: "Du får en ekstra tur – fortsett fra ditt eget ord."
+                });
+                render();
+                return;
+            }
+
+            if (!result) {
+                challenge.phase = "won";
+                updateSnakeRecord(challenge);
+                challenge.newRecord = challenge.recordAtStart > 0 && challenge.entries.length > challenge.recordAtStart;
+                setSnakeMessages(challenge);
+                launchMilestoneFireworks();
+                render();
+                return;
+            }
+
+            addSnakeEntry(challenge, result, "slange");
+            updateSnakeRecord(challenge);
+            setSnakeMessages(challenge, challenge.messages[0], {
+                type: "info",
+                text: `Slangen svarte «${result.word}».`,
+                detail: result.definition ? `Betyr: ${result.definition}` : ""
+            });
+            prefetchSnakeHint(challenge);
+            render();
+        }
+
+        async function showSnakeHint(challenge) {
+            const hint = challenge.hint;
+            if (hint.step >= 3 || hint.loading) return;
+            if (!hint.promise) prefetchSnakeHint(challenge);
+            const currentHint = challenge.hint;
+            currentHint.loading = true;
+            render();
+            const result = await currentHint.promise;
+            if (state.challenge !== challenge || challenge.hint !== currentHint) return;
+            currentHint.loading = false;
+
+            if (!result) {
+                setSnakeMessages(challenge, currentHint.offline
+                    ? { type: "info", text: "Slangen får ikke kontakt med ordboka.", detail: "Prøv igjen litt senere." }
+                    : { type: "info", text: "Dette er skikkelig vanskelig!", detail: "Slangen finner heller ikke noe ord. Trykk «Ny slange» for å starte på nytt." });
+                render();
+                return;
+            }
+
+            currentHint.step += 1;
+            const need = snakeNeed(challenge);
+            const start = matchedLength(result.word, need.forms);
+            const syllableMode = snakeVariant() === "syllable";
+            let message;
+            if (currentHint.step === 1) {
+                const first = need.forms[need.forms.length - 1];
+                message = syllableMode
+                    ? { type: "info", text: `Hint 1: Si «${need.forms[0]}» høyt, og prøv forskjellige fortsettelser.`, detail: `Det finnes et ord på ${result.word.length} bokstaver som passer.` }
+                    : { type: "info", text: `Hint 1: Si «${first}» og prøv å sette et annet ord etter.`, detail: `Det finnes et ord på ${result.word.length} bokstaver som passer.` };
+            } else if (currentHint.step === 2) {
+                const shown = result.word.slice(0, Math.min(result.word.length - 1, start + 2));
+                message = { type: "info", text: `Hint 2: Ordet begynner på «${shown}…».`, detail: `Det har ${result.word.length} bokstaver.` };
+            } else {
+                message = {
+                    type: "info",
+                    text: `Hint 3: Prøv «${result.word}».`,
+                    detail: `${result.definition ? `Det betyr: ${result.definition}. ` : ""}Du får ikke poeng for dette ordet.`
+                };
+            }
+            setSnakeMessages(challenge, message);
+            render();
+        }
+
+        function handleSnakeAction(action, target) {
+            const challenge = state.challenge;
+            if (!challenge || state.view !== "ordslangen") return;
+
+            if (action === "snake-rule") {
+                challenge.strict = target.dataset.rule === "streng";
+                const store = loadSnakeStore();
+                store.strict = challenge.strict;
+                saveSnakeStore(store);
+                render();
+                return;
+            }
+
+            if (action === "snake-start") {
+                startSnake(challenge, target.dataset.mode, target.dataset.continue === "1");
+                return;
+            }
+
+            if (action !== "snake-new") challenge.confirmNew = false;
+
+            if (action === "snake-setup") {
+                challenge.round = (challenge.round || 0) + 1;
+                challenge.phase = "setup";
+                challenge.checking = false;
+                challenge.appThinking = false;
+                challenge.confirmNew = false;
+                render();
+                return;
+            }
+
+            if (action === "snake-new") {
+                if (challenge.mode === "class" && challenge.entries.length > 1 && !challenge.confirmNew) {
+                    challenge.confirmNew = true;
+                    render();
+                    return;
+                }
+                if (challenge.mode === "class") clearClassChain(challenge);
+                startSnake(challenge, challenge.mode, false);
+                return;
+            }
+
+            if (action === "snake-pause") {
+                saveClassChain(challenge);
+                challenge.phase = "pause";
+                render();
+                return;
+            }
+
+            if (action === "snake-resume") {
+                challenge.phase = "play";
+                setSnakeMessages(challenge, { type: "info", text: `Fortsett med ${snakeNeed(challenge).label}` });
+                render();
+                return;
+            }
+
+            if (action === "snake-undo") {
+                if (challenge.checking || challenge.entries.length <= 1) return;
+                const removed = challenge.entries.pop();
+                saveClassChain(challenge);
+                setSnakeMessages(challenge, { type: "info", text: `«${removed.word}» er fjernet.`, detail: `Neste ord må begynne med ${snakeNeed(challenge).label}` });
+                render();
+                return;
+            }
+
+            if (action === "snake-help") {
+                if (challenge.mode === "solo" && challenge.phase === "play" && !challenge.appThinking && !challenge.checking) {
+                    showSnakeHint(challenge);
+                }
+                return;
+            }
+
+            if (action === "snake-show-all") {
+                challenge.showAll = !challenge.showAll;
+                render();
+                return;
+            }
+
+            if (action === "snake-seg") {
+                const entry = challenge.entries[Number(target.dataset.index)];
+                if (!entry) return;
+                const joiner = snakeVariant() === "syllable" ? "-" : " + ";
+                let detail = "";
+                if (entry.definition) detail = `Betyr: ${entry.definition}`;
+                else if (entry.unchecked) detail = "Ordet ble ikke sjekket i ordboka.";
+                else if (entry.combined) detail = "Står ikke i ordboka, men er satt sammen av ekte ord.";
+                setSnakeMessages(challenge, { type: "info", text: `${entry.word}: ${entry.parts.join(joiner)}`, detail });
+                render();
+            }
+        }
+
+        app.addEventListener("submit", (event) => {
+            if (!event.target.matches("[data-snake-form]")) return;
+            event.preventDefault();
+            submitSnakeWord();
+        });
+
+        app.addEventListener("input", (event) => {
+            if (event.target.id === "snake-input" && state.challenge) {
+                state.challenge.input = event.target.value;
+            }
+        });
+
+        function snakeVariantLabel(challenge) {
+            if (snakeVariant() === "syllable") {
+                return `Stavelser · ${challenge.strict ? "streng" : "vanlig"} regel`;
+            }
+            return "Sammensatte ord";
+        }
+
+        function renderSnake() {
+            const challenge = ensureChallenge("ordslangen");
+            if (challenge.phase === "setup") return renderSnakeSetup(challenge);
+            if (challenge.phase === "pause") return renderSnakePause(challenge);
+            return renderSnakePlay(challenge);
+        }
+
+        function renderSnakeRules(challenge) {
+            if (snakeVariant() === "syllable") {
+                return `
+                    <ul class="snake-rules">
+                        <li>Ordet må ha minst to stavelser og <strong>ikke</strong> være sammensatt.</li>
+                        <li>${challenge.strict
+                            ? "Første stavelse må være helt lik siste stavelse i ordet før: pe-dal etter tep-<b>pe</b>."
+                            : "Neste ord begynner med bokstavene i siste stavelse: <b>pe</b>pper etter tep-<b>pe</b>."}</li>
+                        <li>Ordet må stå i ordboka. Egennavn er ikke lov, og hvert ord kan bare brukes én gang.</li>
+                    </ul>
+                `;
+            }
+            return `
+                <ul class="snake-rules">
+                    <li>Neste ord begynner med siste ledd: vann<b>flaske</b> → <b>flaske</b>hals.</li>
+                    <li>Er siste ledd bøyd, kan du bruke formen som den står, eller grunnformen: stol<b>beina</b> → <b>bein</b>brudd.</li>
+                    <li>Ordet må finnes i ordboka eller være satt sammen av ekte ord. Egennavn er ikke lov.</li>
+                    <li>Hele ord kan bare brukes én gang, men deler av ord kan brukes om igjen.</li>
+                </ul>
+            `;
+        }
+
+        function renderSnakeSetup(challenge) {
+            const saved = savedClassChain(challenge);
+            const savedNext = saved ? saved.entries[saved.entries.length - 1].next.label : "";
+            const record = snakeRecord(challenge);
+            return `
+                <section class="snake-setup" data-snake-fill>
+                    <div class="snake-setup-intro work-panel">
+                        <div class="snake-setup-title">
+                            <h2>Ordslangen</h2>
+                            <span class="snake-chip">${difficultyInfo().label} · ${escapeHtml(snakeVariantLabel(challenge))}</span>
+                        </div>
+                        ${snakeVariant() === "syllable" ? `
+                            <div class="snake-rule-toggle" role="group" aria-label="Regel">
+                                <button class="tab-button ${challenge.strict ? "" : "active"}" data-action="snake-rule" data-rule="vanlig" style="--active-color: #65a30d">
+                                    <strong>Vanlig regel</strong>
+                                    <span>Begynn med bokstavene i siste stavelse</span>
+                                </button>
+                                <button class="tab-button ${challenge.strict ? "active" : ""}" data-action="snake-rule" data-rule="streng" style="--active-color: #65a30d">
+                                    <strong>Streng regel</strong>
+                                    <span>Første stavelse må være helt lik</span>
+                                </button>
+                            </div>
+                        ` : ""}
+                        ${renderSnakeRules(challenge)}
+                    </div>
+                    <div class="snake-mode-grid">
+                        <article class="snake-mode-card">
+                            <div class="snake-mode-art" aria-hidden="true">
+                                <span class="snake-mode-board">flaske<b>hals</b> → <b>hals</b>…</span>
+                            </div>
+                            <h3>Klassemodus</h3>
+                            <p>For tavla. Send iPaden rundt, eller skriv ordet eleven sier. Slangen lagres, så dere kan fortsette der dere slapp neste gang.</p>
+                            <div class="snake-mode-actions">
+                                ${saved ? `
+                                    <button class="primary-button" data-action="snake-start" data-mode="class" data-continue="1">Fortsett slangen: ${saved.entries.length} ord, neste ${escapeHtml(savedNext)}</button>
+                                    <button class="secondary-button" data-action="snake-start" data-mode="class" data-continue="0">Start en ny slange</button>
+                                ` : `
+                                    <button class="primary-button" data-action="snake-start" data-mode="class" data-continue="0">Start klassemodus</button>
+                                `}
+                            </div>
+                        </article>
+                        <article class="snake-mode-card">
+                            <div class="snake-mode-art" aria-hidden="true">
+                                <span class="snake-mode-duel"><span>Du</span><span>Slangen</span></span>
+                            </div>
+                            <h3>Alene mot slangen</h3>
+                            <p>Du og slangen bytter på å legge ord. Står du fast, kan du be om hjelp – men tenk selv først!</p>
+                            <div class="snake-mode-actions">
+                                <button class="primary-button" data-action="snake-start" data-mode="solo">Spill mot slangen</button>
+                                ${record ? `<span class="snake-record">Rekord: ${record} ord</span>` : ""}
+                            </div>
+                        </article>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderSnakePause(challenge) {
+            const need = snakeNeed(challenge);
+            return `
+                <section class="snake-pause" data-snake-fill>
+                    <p class="snake-pause-kicker">Neste gang fortsetter vi med</p>
+                    <p class="snake-pause-word">${need.forms.map((form) => `<span>${escapeHtml(form)}-</span>`).join("<small>eller</small>")}</p>
+                    <p class="snake-pause-meta">Slangen er ${challenge.entries.length} ord lang. Den er lagret på denne enheten.</p>
+                    <div class="snake-pause-actions">
+                        <button class="primary-button" data-action="snake-resume">Fortsett nå</button>
+                        <button class="secondary-button" data-action="snake-setup">Tilbake</button>
+                    </div>
+                </section>
+            `;
+        }
+
+        function renderSnakeSegment(entry, index, isLast, syllableMode, animate) {
+            const word = entry.word;
+            const lastPart = entry.parts[entry.parts.length - 1] || "";
+            const outStart = word.length - lastPart.length;
+            const boundaries = new Set();
+            let position = 0;
+            entry.parts.slice(0, -1).forEach((part) => {
+                position += part.length;
+                boundaries.add(position);
+            });
+
+            const groups = [];
+            [...word].forEach((ch, charIndex) => {
+                const kind = charIndex < entry.linkIn ? "link-in" : (charIndex >= outStart ? "link-out" : "plain");
+                if (boundaries.has(charIndex)) groups.push({ divider: true });
+                const target = groups[groups.length - 1];
+                if (target && !target.divider && target.kind === kind) {
+                    target.text += ch;
+                } else {
+                    groups.push({ kind, text: ch });
+                }
+            });
+
+            const inner = groups.map((group) => (group.divider
+                ? `<span class="seg-divider ${syllableMode ? "dot" : ""}" aria-hidden="true">${syllableMode ? "·" : ""}</span>`
+                : `<span class="seg-${group.kind}">${escapeHtml(group.text)}</span>`
+            )).join("");
+
+            const classes = [
+                "snake-seg",
+                `by-${entry.by}`,
+                entry.unchecked ? "unchecked" : "",
+                index % 2 ? "alt" : "",
+                isLast ? "newest" : "",
+                animate ? "pop" : ""
+            ].filter(Boolean).join(" ");
+            const label = entry.by === "slange" ? "Slangens ord" : (entry.by === "start" ? "Startord" : "Elevens ord");
+            return `<button type="button" class="${classes}" data-action="snake-seg" data-index="${index}" aria-label="${escapeHtml(`${label}: ${word}`)}">${inner}${entry.unchecked ? `<span class="seg-badge" title="Ikke sjekket i ordboka">?</span>` : ""}</button>`;
+        }
+
+        function renderSnakeBoard(challenge) {
+            const syllableMode = snakeVariant() === "syllable";
+            const total = challenge.entries.length;
+            const hiddenCount = challenge.showAll ? 0 : Math.max(0, total - SNAKE_VISIBLE_ENTRIES);
+            const visible = challenge.entries.slice(hiddenCount);
+            const need = snakeNeed(challenge);
+            const ghost = challenge.phase === "won"
+                ? `<span class="snake-ghost stuck">${escapeHtml(need.label)}?</span>`
+                : `<span class="snake-ghost ${challenge.appThinking ? "thinking" : ""}">${challenge.appThinking ? "<i></i><i></i><i></i>" : `${escapeHtml(need.forms[0] || "")}…`}</span>`;
+            return `
+                <div class="snake-board" data-snake-board>
+                    <div class="snake-track" data-snake-track>
+                        ${hiddenCount ? `<button type="button" class="snake-more" data-action="snake-show-all">+ ${hiddenCount} ord til</button>` : ""}
+                        ${challenge.showAll && total > SNAKE_VISIBLE_ENTRIES ? `<button type="button" class="snake-more" data-action="snake-show-all">Vis bare de siste</button>` : ""}
+                        ${visible.map((entry, offset) => renderSnakeSegment(entry, hiddenCount + offset, offset === visible.length - 1, syllableMode, challenge.justAdded === hiddenCount + offset)).join("")}
+                        <span class="snake-head" aria-hidden="true"><i></i><i></i><span class="snake-tongue"></span></span>
+                        ${ghost}
+                    </div>
+                </div>
+            `;
+        }
+
+        function renderSnakeMessages(challenge) {
+            if (challenge.checking) {
+                return `<div class="snake-message info"><strong>Sjekker i ordboka …</strong></div>`;
+            }
+            if (challenge.appThinking) {
+                const first = challenge.messages[0];
+                return `
+                    ${first ? `<div class="snake-message ${first.type}"><strong>${escapeHtml(first.text)}</strong>${first.detail ? `<span>${escapeHtml(first.detail)}</span>` : ""}</div>` : ""}
+                    <div class="snake-message info"><strong>Slangen tenker …</strong></div>
+                `;
+            }
+            if (challenge.hint.loading) {
+                return `<div class="snake-message info"><strong>Slangen leter etter et hint …</strong></div>`;
+            }
+            return challenge.messages.slice(0, 2).map((message) => `
+                <div class="snake-message ${message.type}">
+                    <strong>${escapeHtml(message.text)}</strong>
+                    ${message.detail ? `<span>${escapeHtml(message.detail)}</span>` : ""}
+                </div>
+            `).join("");
+        }
+
+        function renderSnakeDock(challenge) {
+            const need = snakeNeed(challenge);
+            if (challenge.phase === "won") {
+                return `
+                    <div class="snake-dock won">
+                        <div class="snake-result">
+                            <strong>Du vant! 🎉</strong>
+                            <span>Slangen kom ikke på noe ord som begynner på ${escapeHtml(need.forms.map((form) => `«${form}»`).join(" eller "))}. Slangen ble ${challenge.entries.length} ord lang${challenge.newRecord ? " – ny rekord!" : "."}</span>
+                        </div>
+                        <button class="primary-button" data-action="snake-new">Ny slange</button>
+                    </div>
+                `;
+            }
+            const busy = challenge.checking || challenge.appThinking;
+            const syllableMode = snakeVariant() === "syllable";
+            const needText = syllableMode && challenge.strict
+                ? "Første stavelse må være"
+                : "Neste ord må begynne med";
+            return `
+                <div class="snake-dock">
+                    <div class="snake-need">
+                        <span>${challenge.appThinking ? "Slangen leter etter et ord på" : needText}</span>
+                        <strong class="need-chip">${need.forms.map((form) => escapeHtml(`${form}-`)).join(" <small>eller</small> ")}</strong>
+                    </div>
+                    <form class="snake-form" data-snake-form autocomplete="off">
+                        <label class="visually-hidden" for="snake-input">Skriv ordet</label>
+                        <input id="snake-input" class="snake-input" type="text" inputmode="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send"
+                            placeholder="${escapeHtml(need.forms[need.forms.length - 1] || "")}…" value="${escapeHtml(challenge.input)}" ${busy ? "disabled" : ""}>
+                        <button class="primary-button snake-submit" type="submit" ${busy ? "disabled" : ""}>${challenge.checking ? "Sjekker …" : "Legg til"}</button>
+                        ${challenge.mode === "solo" ? `<button class="secondary-button snake-help" type="button" data-action="snake-help" ${busy || challenge.hint.step >= 3 ? "disabled" : ""}>Jeg trenger hjelp${challenge.hint.step ? ` (${challenge.hint.step}/3)` : ""}</button>` : ""}
+                    </form>
+                    <div class="snake-messages" aria-live="polite">${renderSnakeMessages(challenge)}</div>
+                </div>
+            `;
+        }
+
+        function renderSnakePlay(challenge) {
+            const record = challenge.mode === "solo" ? snakeRecord(challenge) : 0;
+            const classMode = challenge.mode === "class";
+            return `
+                <section class="snake-screen ${classMode ? "class-mode" : "solo-mode"}" data-snake-fill>
+                    <div class="snake-bar">
+                        <div class="snake-bar-title">
+                            <h2>Ordslangen</h2>
+                            <span class="snake-chip">${classMode ? "Klassemodus" : "Alene mot slangen"} · ${escapeHtml(snakeVariantLabel(challenge))}</span>
+                        </div>
+                        <div class="snake-stats">
+                            <span class="snake-stat"><strong>${challenge.entries.length}</strong> ord</span>
+                            ${record ? `<span class="snake-stat">Rekord <strong>${record}</strong></span>` : ""}
+                            ${classMode ? "" : `<span class="snake-legend"><i class="legend-elev"></i>Du <i class="legend-slange"></i>Slangen</span>`}
+                        </div>
+                        <div class="snake-actions">
+                            ${classMode ? `<button class="secondary-button" data-action="snake-undo" ${challenge.entries.length <= 1 || challenge.checking ? "disabled" : ""}>Angre siste ord</button>` : ""}
+                            ${classMode ? `<button class="secondary-button" data-action="snake-pause">Avslutt for i dag</button>` : ""}
+                            <button class="secondary-button ${challenge.confirmNew ? "danger" : ""}" data-action="snake-new">${challenge.confirmNew ? "Sikker? Slangen slettes" : "Ny slange"}</button>
+                            <button class="ghost-button" data-action="snake-setup">Regler</button>
+                        </div>
+                    </div>
+                    ${renderSnakeBoard(challenge)}
+                    ${renderSnakeDock(challenge)}
+                </section>
+            `;
+        }
+
+        // Bruk all tilgjengelig høyde, og gjør ordene så store som mulig uten at slangen renner over.
+        function afterSnakeRender() {
+            if (state.challenge) state.challenge.justAdded = null;
+            const fill = app.querySelector("[data-snake-fill]");
+            if (!fill) return;
+            const bottomGap = window.innerWidth <= 900 ? 12 : 18;
+            const top = fill.getBoundingClientRect().top + window.scrollY;
+            const available = Math.floor(window.innerHeight - top - bottomGap);
+            if (fill.classList.contains("snake-screen")) {
+                // Spillflaten får nøyaktig skjermhøyden; slangen ruller inni brettet.
+                fill.style.height = `${Math.max(440, available)}px`;
+            } else {
+                fill.style.minHeight = `${Math.max(360, available)}px`;
+            }
+
+            const board = fill.querySelector("[data-snake-board]");
+            const track = fill.querySelector("[data-snake-track]");
+            if (!board || !track) return;
+            let scale = 2.4;
+            track.style.setProperty("--snake-scale", scale);
+            const overflows = () => track.scrollHeight > board.clientHeight - 8 || track.scrollWidth > track.clientWidth + 1;
+            while (scale > 0.7 && overflows()) {
+                scale = Math.round((scale - 0.1) * 10) / 10;
+                track.style.setProperty("--snake-scale", scale);
+            }
+            board.scrollTop = board.scrollHeight;
+
+            if (state.challenge && state.challenge.phase === "play" && !state.challenge.checking && !state.challenge.appThinking
+                && window.matchMedia("(pointer: fine)").matches) {
+                const input = document.getElementById("snake-input");
+                if (input && document.activeElement !== input) input.focus({ preventScroll: true });
+            }
+        }
+
+        window.addEventListener("resize", () => {
+            if (state.view === "ordslangen") window.requestAnimationFrame(afterSnakeRender);
+        });
 
         loadProgress();
         render();

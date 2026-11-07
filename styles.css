@@ -2113,8 +2113,9 @@
             min-width: 100%;
             height: 100%;
             justify-content: flex-end;
-            /* Plass til den kveilede halen til venstre */
+            /* Plass til den kveilede halen til venstre, og til snakkeboblen øverst */
             padding-left: calc(var(--seg-font) * 5.2);
+            padding-top: min(150px, 22%);
             font-size: var(--seg-font);
         }
 
@@ -2127,8 +2128,8 @@
         }
 
         .snake-seg,
-        .snake-head-word,
-        .snake-head {
+        .snake-food,
+        .snake-head-space {
             position: relative;
             z-index: 1;
             flex: 0 0 auto;
@@ -2230,20 +2231,63 @@
             font-size: 0.62em;
         }
 
-        /* Hodet: starten på neste ord står ferdig, eleven skriver resten */
-        .snake-head-word {
+        /* Plassen der hodet tegnes (hodet er en del av slangekroppen i SVG-en) */
+        .snake-head-space {
+            display: inline-block;
+            width: 3em;
+            height: 1.6em;
+        }
+
+        /* Maten foran munnen: starten på neste ord står ferdig, eleven skriver resten */
+        .snake-food {
             display: inline-flex;
             align-items: center;
             gap: 0.06em;
-            margin: 0;
-            padding: 0.14em 0.16em 0.14em 0.42em;
-            border-radius: 999px;
-            border: 0.08em solid rgba(26, 46, 5, 0.45);
-            background: #4d7c0f;
-            color: #fff;
+            margin: 0 0 0 1.4em;
+            padding: 0.16em 0.16em 0.16em 0.4em;
+            border-radius: 0.9em;
+            border: 0.08em solid #c2410c;
+            background: linear-gradient(180deg, #fffbeb 0%, #fde68a 100%);
+            color: #431407;
             font-weight: 900;
             line-height: 1.1;
             white-space: nowrap;
+            box-shadow: 0 0.12em 0 rgba(67, 20, 7, 0.25), 0 0.3em 0.6em rgba(20, 50, 10, 0.25);
+            animation: food-bob 2.4s ease-in-out infinite;
+        }
+
+        /* Et lite blad, så maten ser ut som en godbit */
+        .snake-food::before {
+            content: "";
+            position: absolute;
+            left: 0.5em;
+            top: -0.32em;
+            width: 0.55em;
+            height: 0.3em;
+            border-radius: 0 100% 0 100%;
+            background: #16a34a;
+            border: 0.04em solid #14532d;
+            transform: rotate(-18deg);
+        }
+
+        .snake-food.fresh {
+            animation: food-drop 420ms ease-out, food-bob 2.4s ease-in-out 420ms infinite;
+        }
+
+        .snake-food.being-eaten {
+            padding: 0.2em 0.5em;
+            animation: food-eaten 480ms ease-in forwards;
+            transform-origin: left center;
+        }
+
+        .snake-food.from-slange {
+            border-color: #0369a1;
+            background: linear-gradient(180deg, #f0f9ff 0%, #bae6fd 100%);
+            color: #0c4a6e;
+        }
+
+        .food-word {
+            padding: 0 0.1em;
         }
 
         .head-prefix {
@@ -2260,23 +2304,23 @@
             margin: 0;
             padding: 0.1em 0.12em;
             border: 0;
-            border-bottom: 0.08em dashed rgba(255, 255, 255, 0.85);
+            border-bottom: 0.08em dashed rgba(67, 20, 7, 0.6);
             border-radius: 0.2em 0.2em 0 0;
-            background: rgba(255, 255, 255, 0.16);
-            color: #fff;
+            background: rgba(255, 255, 255, 0.7);
+            color: #431407;
             font: inherit;
             font-weight: 900;
             line-height: 1.1;
             outline: none;
-            caret-color: var(--abcya-yellow);
+            caret-color: #c2410c;
         }
 
         .head-input::placeholder {
-            color: rgba(255, 255, 255, 0.6);
+            color: rgba(67, 20, 7, 0.45);
         }
 
         .head-input:focus {
-            background: rgba(255, 255, 255, 0.26);
+            background: #fff;
             border-bottom-style: solid;
         }
 
@@ -2292,8 +2336,8 @@
             place-items: center;
             border-radius: 50%;
             border: 0.06em solid rgba(26, 46, 5, 0.4);
-            background: var(--abcya-yellow);
-            color: #1a2e05;
+            background: #16a34a;
+            color: #fff;
             font-size: 0.75em;
             font-weight: 950;
             cursor: pointer;
@@ -2308,15 +2352,16 @@
 
         .head-question {
             padding: 0 0.3em;
-            color: #fecaca;
+            color: #b91c1c;
         }
 
-        .snake-head-word.stuck {
-            border-color: #fecaca;
+        .snake-food.stuck {
+            border-color: #b91c1c;
             border-style: dashed;
+            animation: none;
         }
 
-        .snake-head-word.shake {
+        .snake-food.shake {
             animation: shake 300ms linear;
         }
 
@@ -2330,7 +2375,7 @@
             width: 0.26em;
             height: 0.26em;
             border-radius: 50%;
-            background: #fff;
+            background: #0369a1;
             animation: snake-dots 900ms ease-in-out infinite;
         }
 
@@ -2362,48 +2407,18 @@
             border-color: #1a2e05;
         }
 
-        .snake-head {
-            display: inline-block;
-            width: 2.9em;
-            height: 2.35em;
-            margin-left: -0.5em;
-            border-radius: 40% 62% 62% 40% / 50% 55% 55% 50%;
-            background: radial-gradient(circle at 70% 35%, #65a30d, #3f6212 70%);
-            border: 0.08em solid #365314;
-            z-index: 0;
+        /* Hodet blinker med tunga, og «svelger» når det spiser et ord */
+        .snake-tongue-path {
+            animation: tongue-flick 2.2s steps(1, end) infinite;
         }
 
-        .snake-head i {
-            top: 16%;
-            width: 0.42em;
-            height: 0.46em;
-            box-shadow: inset 0.08em 0 0 0.12em #111827;
+        .snake-face {
+            transform-box: fill-box;
+            transform-origin: center;
         }
 
-        .snake-head i:first-child { left: 42%; }
-        .snake-head i:nth-child(2) { left: 66%; }
-
-        .snake-tongue {
-            position: absolute;
-            right: -0.48em;
-            top: 56%;
-            width: 0.55em;
-            height: 0.12em;
-            border-radius: 2px;
-            background: #e11d48;
-            transform-origin: left center;
-            animation: snake-tongue 1.6s ease-in-out infinite;
-        }
-
-        .snake-tongue::after {
-            content: "";
-            position: absolute;
-            right: -0.1em;
-            top: -0.08em;
-            width: 0.18em;
-            height: 0.28em;
-            border-radius: 2px;
-            border-right: 0.08em solid #e11d48;
+        .snake-face.gulp {
+            animation: snake-gulp 420ms ease-out;
         }
 
         /* Snakkeboble med beskjeder */
@@ -2471,6 +2486,36 @@
         @keyframes snake-tongue {
             0%, 70%, 100% { transform: scaleX(1); }
             80% { transform: scaleX(1.5); }
+        }
+
+        @keyframes food-bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-0.12em); }
+        }
+
+        @keyframes food-drop {
+            0% { transform: translateY(-1.2em) scale(0.6); opacity: 0; }
+            70% { transform: translateY(0.1em) scale(1.05); opacity: 1; }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        @keyframes food-eaten {
+            0% { transform: translateX(0) scale(1); opacity: 1; }
+            100% { transform: translateX(-3em) scale(0.15); opacity: 0; }
+        }
+
+        @keyframes snake-gulp {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes tongue-flick {
+            0%, 55% { opacity: 0; }
+            56%, 70% { opacity: 1; }
+            71%, 80% { opacity: 0; }
+            81%, 92% { opacity: 1; }
+            93%, 100% { opacity: 0; }
         }
 
         @keyframes snake-dots {

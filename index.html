@@ -1420,6 +1420,9 @@
             const selection = focusedId && typeof active.selectionStart === "number"
                 ? [active.selectionStart, active.selectionEnd]
                 : null;
+            const snakeBoard = app.querySelector("[data-snake-board]");
+            // Husk hvor langt eleven har rullet – men bare fra et brett som faktisk er ferdig tegnet.
+            if (snakeBoard && snakeBoard.dataset.ready && state.challenge) state.challenge.savedScroll = snakeBoard.scrollLeft;
             app.innerHTML = `
                 <div class="app-shell ${state.view === "ordslangen" ? "app-shell-wide" : ""}">
                     ${renderTopbar()}
@@ -2962,7 +2965,6 @@
         /* ================================================================== */
 
         const SNAKE_STORAGE_KEY = "setningsverksted-ordslangen-v1";
-        const SNAKE_VISIBLE_ENTRIES = 60;
 
         // Startord. «a|b» viser leddene, «>grunnform» gir grunnformen av et bøyd sisteledd.
         // Alle er kontrollert mot Bokmålsordboka slik at det finnes mange ord å fortsette med.
@@ -3066,7 +3068,6 @@
                 appThinking: false,
                 messages: [],
                 hint: { step: 0, result: null, loading: false, promise: null },
-                showAll: false,
                 newRecord: false,
                 confirmNew: false
             };
@@ -3155,7 +3156,9 @@
             challenge.input = "";
             challenge.newRecord = false;
             challenge.confirmNew = false;
-            challenge.showAll = false;
+            challenge.prefixChoice = null;
+            challenge.savedScroll = undefined;
+            challenge.scrollToHead = true;
             resetSnakeHint(challenge);
             const saved = mode === "class" && continueSaved ? savedClassChain(challenge) : null;
             challenge.entries = saved ? saved.entries : [makeStartEntry(challenge)];
@@ -3163,12 +3166,12 @@
                 saveClassChain(challenge);
                 setSnakeMessages(challenge, saved
                     ? { type: "info", text: `Velkommen tilbake! Fortsett med ${snakeNeed(challenge).label}` }
-                    : { type: "info", text: `Startordet er «${challenge.entries[0].word}».`, detail: `Neste ord må begynne med ${snakeNeed(challenge).label}` });
+                    : { type: "info", text: `Startordet er «${challenge.entries[0].word}».`, detail: "Skriv resten av neste ord rett i hodet på slangen." });
             } else {
                 setSnakeMessages(challenge, {
                     type: "info",
                     text: `Slangen starter med «${challenge.entries[0].word}». Din tur!`,
-                    detail: "Du og slangen bytter på å legge ord."
+                    detail: "Starten på ordet står allerede i hodet på slangen. Skriv resten."
                 });
                 prefetchSnakeHint(challenge);
             }
@@ -3204,12 +3207,31 @@
                 });
         }
 
+        // Ordet ligger som mat foran munnen, slangen spiser det, og ordet blir en ny del av kroppen.
+        async function feedSnake(challenge, result, by) {
+            const round = challenge.round;
+            challenge.feeding = { word: result.word, by };
+            render();
+            await new Promise((resolve) => window.setTimeout(resolve, 480));
+            if (state.challenge !== challenge || challenge.round !== round) return false;
+            challenge.feeding = null;
+            challenge.foodFresh = true;
+            addSnakeEntry(challenge, result, by);
+            return true;
+        }
+
         async function submitSnakeWord() {
             const challenge = state.challenge;
-            if (!challenge || challenge.phase !== "play" || challenge.checking || challenge.appThinking) return;
+            if (!challenge || challenge.phase !== "play" || challenge.checking || challenge.appThinking || challenge.feeding) return;
             const input = document.getElementById("snake-input");
             if (input) challenge.input = input.value;
-            const raw = challenge.input;
+            if (!String(challenge.input || "").trim()) {
+                challenge.shake = true;
+                setSnakeMessages(challenge, { type: "info", text: `Skriv resten av ordet etter «${snakePrefix(challenge)}».` });
+                render();
+                return;
+            }
+            const raw = snakeTypedWord(challenge);
             const need = snakeNeed(challenge);
             const used = snakeUsed(challenge);
             const round = challenge.round;
@@ -3230,14 +3252,16 @@
 
             if (!result.ok) {
                 if (challenge.mode === "solo") miss();
+                challenge.shake = true;
                 setSnakeMessages(challenge, { type: "error", text: result.error, detail: result.detail || "" });
                 render();
                 return;
             }
 
             const fullHint = challenge.mode === "solo" && challenge.hint.step >= 3;
-            addSnakeEntry(challenge, result, "elev");
             challenge.input = "";
+            if (!(await feedSnake(challenge, result, "elev"))) return;
+            challenge.prefixChoice = null;
             const points = fullHint ? 0 : award();
             if (points > 0) completeTaskCelebration();
 
@@ -3294,6 +3318,7 @@
 
             if (!result) {
                 challenge.phase = "won";
+                challenge.scrollToHead = true;
                 updateSnakeRecord(challenge);
                 challenge.newRecord = challenge.recordAtStart > 0 && challenge.entries.length > challenge.recordAtStart;
                 setSnakeMessages(challenge);
@@ -3302,7 +3327,7 @@
                 return;
             }
 
-            addSnakeEntry(challenge, result, "slange");
+            if (!(await feedSnake(challenge, result, "slange"))) return;
             updateSnakeRecord(challenge);
             setSnakeMessages(challenge, challenge.messages[0], {
                 type: "info",
@@ -3406,6 +3431,7 @@
 
             if (action === "snake-resume") {
                 challenge.phase = "play";
+                challenge.scrollToHead = true;
                 setSnakeMessages(challenge, { type: "info", text: `Fortsett med ${snakeNeed(challenge).label}` });
                 render();
                 return;
@@ -3414,6 +3440,8 @@
             if (action === "snake-undo") {
                 if (challenge.checking || challenge.entries.length <= 1) return;
                 const removed = challenge.entries.pop();
+                challenge.prefixChoice = null;
+                challenge.scrollToHead = true;
                 saveClassChain(challenge);
                 setSnakeMessages(challenge, { type: "info", text: `«${removed.word}» er fjernet.`, detail: `Neste ord må begynne med ${snakeNeed(challenge).label}` });
                 render();
@@ -3427,8 +3455,9 @@
                 return;
             }
 
-            if (action === "snake-show-all") {
-                challenge.showAll = !challenge.showAll;
+            if (action === "snake-prefix") {
+                challenge.prefixChoice = target.dataset.prefix;
+                challenge.scrollToHead = true;
                 render();
                 return;
             }
@@ -3455,6 +3484,10 @@
         app.addEventListener("input", (event) => {
             if (event.target.id === "snake-input" && state.challenge) {
                 state.challenge.input = event.target.value;
+                event.target.style.width = snakeInputWidth(event.target.value);
+                layoutSnake();
+                const board = app.querySelector("[data-snake-board]");
+                if (board) snakeScrollToHead(board, false);
             }
         });
 
@@ -3566,6 +3599,60 @@
             `;
         }
 
+        // Slangen bukter seg: hvert ord får en liten høyde- og vinkelforskyvning langs en bølge.
+        const SNAKE_WAVE_STEP = 1.05;
+
+        const SNAKE_WAVE_HEIGHT = 1.9;
+
+        // widthEm: omtrentlig bredde på ordet, slik at helningen følger kurven uten å bli for bratt å lese.
+        function snakeWave(position, widthEm = 5) {
+            const angle = position * SNAKE_WAVE_STEP;
+            const slope = (SNAKE_WAVE_HEIGHT * SNAKE_WAVE_STEP * Math.cos(angle)) / Math.max(3, widthEm);
+            const degrees = Math.max(-12, Math.min(12, Math.atan(slope) * 180 / Math.PI));
+            return {
+                y: (Math.sin(angle) * SNAKE_WAVE_HEIGHT).toFixed(3),
+                r: degrees.toFixed(2)
+            };
+        }
+
+        function waveStyle(position, text = "") {
+            const wave = snakeWave(position, String(text).length * 0.62 + 1.4);
+            return `--wy: ${wave.y}em; --wr: ${wave.r}deg;`;
+        }
+
+        // Hvilke ordstarter som kan stå ferdig skrevet i hodet. Er den ene formen starten på den andre
+        // (bein / beina), holder det med den korteste – eleven skriver bare videre.
+        function snakePrefixOptions(challenge) {
+            const forms = snakeNeed(challenge).forms || [];
+            if (!forms.length) return [""];
+            if (snakeVariant() === "syllable" && challenge.strict) return [forms[0]];
+            const shortest = [...forms].sort((a, b) => a.length - b.length)[0];
+            if (forms.every((form) => form.startsWith(shortest))) return [shortest];
+            // Grunnformen først for sammensatte ord (tre før trærne), hovedstavelsen først for stavelser.
+            return snakeVariant() === "compound" ? [...forms].reverse() : forms;
+        }
+
+        function snakePrefix(challenge) {
+            const options = snakePrefixOptions(challenge);
+            return options.includes(challenge.prefixChoice) ? challenge.prefixChoice : options[0];
+        }
+
+        // Ordet eleven har skrevet: ferdig utfylt start + resten. Har eleven skrevet hele ordet likevel, godtas det.
+        function snakeTypedWord(challenge) {
+            const prefix = snakePrefix(challenge);
+            const typed = String(challenge.input || "").trim();
+            const lower = typed.toLowerCase();
+            const forms = snakeNeed(challenge).forms || [];
+            if (prefix.length >= 2 && forms.some((form) => lower.startsWith(form) && lower.length > form.length + 1)) {
+                return typed;
+            }
+            return prefix + typed;
+        }
+
+        function snakeInputWidth(value) {
+            return `${Math.max(2.4, String(value || "").length + 0.9)}ch`;
+        }
+
         function renderSnakeSegment(entry, index, isLast, syllableMode, animate) {
             const word = entry.word;
             const lastPart = entry.parts[entry.parts.length - 1] || "";
@@ -3603,92 +3690,105 @@
                 animate ? "pop" : ""
             ].filter(Boolean).join(" ");
             const label = entry.by === "slange" ? "Slangens ord" : (entry.by === "start" ? "Startord" : "Elevens ord");
-            return `<button type="button" class="${classes}" data-action="snake-seg" data-index="${index}" aria-label="${escapeHtml(`${label}: ${word}`)}">${inner}${entry.unchecked ? `<span class="seg-badge" title="Ikke sjekket i ordboka">?</span>` : ""}</button>`;
+            return `<button type="button" class="${classes}" data-action="snake-seg" data-index="${index}" data-snake-point aria-label="${escapeHtml(`${label}: ${word}`)}" style="${waveStyle(index, word)}">${inner}${entry.unchecked ? `<span class="seg-badge" title="Ikke sjekket i ordboka">?</span>` : ""}</button>`;
+        }
+
+        // Hodet på slangen: ordstarten står ferdig, eleven skriver resten rett inn i slangen.
+        // Maten foran munnen: starten på neste ord står ferdig, eleven skriver resten.
+        // Når ordet godkjennes, spiser slangen det, og ordet blir en ny del av kroppen.
+        function renderSnakeFood(challenge) {
+            const total = challenge.entries.length;
+            const prefix = snakePrefix(challenge);
+            const options = snakePrefixOptions(challenge);
+            const feeding = challenge.feeding;
+            const busy = challenge.checking || challenge.appThinking || Boolean(feeding);
+            const won = challenge.phase === "won";
+            const position = total + 1.25;
+            if (feeding) {
+                return `<span class="snake-food being-eaten ${feeding.by === "slange" ? "from-slange" : ""}" style="${waveStyle(position, feeding.word)}"><span class="food-word">${escapeHtml(feeding.word)}</span></span>`;
+            }
+            const classes = [
+                "snake-food",
+                busy ? "busy" : "",
+                won ? "stuck" : "",
+                challenge.shake ? "shake" : "",
+                challenge.foodFresh ? "fresh" : ""
+            ].filter(Boolean).join(" ");
+            if (won) {
+                return `<span class="${classes}" style="${waveStyle(position, prefix)}"><span class="head-prefix">${escapeHtml(prefix)}</span><span class="head-question">?</span></span>`;
+            }
+            const choices = options.length > 1 && !busy
+                ? `
+                    <span class="prefix-options" role="group" aria-label="Velg hvordan ordet begynner">
+                        ${options.map((option) => `<button type="button" class="prefix-option ${option === prefix ? "active" : ""}" data-action="snake-prefix" data-prefix="${escapeHtml(option)}">${escapeHtml(option)}-</button>`).join("")}
+                    </span>
+                `
+                : "";
+            return `
+                <form class="${classes}" data-snake-form autocomplete="off" style="${waveStyle(position, `${prefix}${challenge.input || ""}xx`)}">
+                    ${choices}
+                    <label class="head-prefix" for="snake-input">${escapeHtml(prefix)}</label>
+                    ${challenge.appThinking
+                        ? `<span class="head-thinking" aria-label="Slangen tenker"><i></i><i></i><i></i></span>`
+                        : `<input id="snake-input" class="head-input" type="text" inputmode="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send"
+                            style="width: ${snakeInputWidth(challenge.input)}" aria-label="${escapeHtml(`Skriv resten av ordet etter ${prefix}`)}" placeholder="…" value="${escapeHtml(challenge.input)}" ${busy ? "disabled" : ""}>`}
+                    <button class="head-submit" type="submit" aria-label="Gi ordet til slangen" title="Gi ordet til slangen" ${busy ? "disabled" : ""}>${challenge.checking ? "…" : "✓"}</button>
+                </form>
+            `;
         }
 
         function renderSnakeBoard(challenge) {
             const syllableMode = snakeVariant() === "syllable";
             const total = challenge.entries.length;
-            const hiddenCount = challenge.showAll ? 0 : Math.max(0, total - SNAKE_VISIBLE_ENTRIES);
-            const visible = challenge.entries.slice(hiddenCount);
-            const need = snakeNeed(challenge);
-            const ghost = challenge.phase === "won"
-                ? `<span class="snake-ghost stuck">${escapeHtml(need.label)}?</span>`
-                : `<span class="snake-ghost ${challenge.appThinking ? "thinking" : ""}">${challenge.appThinking ? "<i></i><i></i><i></i>" : `${escapeHtml(need.forms[0] || "")}…`}</span>`;
             return `
-                <div class="snake-board" data-snake-board>
-                    <div class="snake-track" data-snake-track>
-                        ${hiddenCount ? `<button type="button" class="snake-more" data-action="snake-show-all">+ ${hiddenCount} ord til</button>` : ""}
-                        ${challenge.showAll && total > SNAKE_VISIBLE_ENTRIES ? `<button type="button" class="snake-more" data-action="snake-show-all">Vis bare de siste</button>` : ""}
-                        ${visible.map((entry, offset) => renderSnakeSegment(entry, hiddenCount + offset, offset === visible.length - 1, syllableMode, challenge.justAdded === hiddenCount + offset)).join("")}
-                        <span class="snake-head" aria-hidden="true"><i></i><i></i><span class="snake-tongue"></span></span>
-                        ${ghost}
+                <div class="snake-stage">
+                    <div class="snake-lawn" data-snake-board>
+                        <div class="snake-track" data-snake-track>
+                            <svg class="snake-body" data-snake-body aria-hidden="true"></svg>
+                            ${challenge.entries.map((entry, index) => renderSnakeSegment(entry, index, index === total - 1, syllableMode, challenge.justAdded === index)).join("")}
+                            <span class="snake-head-space" data-snake-head aria-hidden="true" style="${waveStyle(total, "xxx")}"></span>
+                            ${renderSnakeFood(challenge)}
+                        </div>
                     </div>
+                    <div class="snake-bubble ${challenge.phase === "won" ? "won" : ""}" aria-live="polite">${renderSnakeMessages(challenge)}</div>
                 </div>
             `;
         }
 
         function renderSnakeMessages(challenge) {
-            if (challenge.checking) {
-                return `<div class="snake-message info"><strong>Sjekker i ordboka …</strong></div>`;
-            }
-            if (challenge.appThinking) {
-                const first = challenge.messages[0];
-                return `
-                    ${first ? `<div class="snake-message ${first.type}"><strong>${escapeHtml(first.text)}</strong>${first.detail ? `<span>${escapeHtml(first.detail)}</span>` : ""}</div>` : ""}
-                    <div class="snake-message info"><strong>Slangen tenker …</strong></div>
-                `;
-            }
-            if (challenge.hint.loading) {
-                return `<div class="snake-message info"><strong>Slangen leter etter et hint …</strong></div>`;
-            }
-            return challenge.messages.slice(0, 2).map((message) => `
-                <div class="snake-message ${message.type}">
-                    <strong>${escapeHtml(message.text)}</strong>
-                    ${message.detail ? `<span>${escapeHtml(message.detail)}</span>` : ""}
+            const message = (item) => `
+                <div class="snake-message ${item.type}">
+                    <strong>${escapeHtml(item.text)}</strong>
+                    ${item.detail ? `<span>${escapeHtml(item.detail)}</span>` : ""}
                 </div>
-            `).join("");
-        }
-
-        function renderSnakeDock(challenge) {
-            const need = snakeNeed(challenge);
+            `;
             if (challenge.phase === "won") {
+                const need = snakeNeed(challenge);
                 return `
-                    <div class="snake-dock won">
-                        <div class="snake-result">
-                            <strong>Du vant! 🎉</strong>
-                            <span>Slangen kom ikke på noe ord som begynner på ${escapeHtml(need.forms.map((form) => `«${form}»`).join(" eller "))}. Slangen ble ${challenge.entries.length} ord lang${challenge.newRecord ? " – ny rekord!" : "."}</span>
-                        </div>
+                    <div class="snake-message success snake-result">
+                        <strong>Du vant! 🎉</strong>
+                        <span>Slangen kom ikke på noe ord som begynner på ${escapeHtml(need.forms.map((form) => `«${form}»`).join(" eller "))}. Slangen ble ${challenge.entries.length} ord lang${challenge.newRecord ? " – ny rekord!" : "."}</span>
                         <button class="primary-button" data-action="snake-new">Ny slange</button>
                     </div>
                 `;
             }
-            const busy = challenge.checking || challenge.appThinking;
-            const syllableMode = snakeVariant() === "syllable";
-            const needText = syllableMode && challenge.strict
-                ? "Første stavelse må være"
-                : "Neste ord må begynne med";
-            return `
-                <div class="snake-dock">
-                    <div class="snake-need">
-                        <span>${challenge.appThinking ? "Slangen leter etter et ord på" : needText}</span>
-                        <strong class="need-chip">${need.forms.map((form) => escapeHtml(`${form}-`)).join(" <small>eller</small> ")}</strong>
-                    </div>
-                    <form class="snake-form" data-snake-form autocomplete="off">
-                        <label class="visually-hidden" for="snake-input">Skriv ordet</label>
-                        <input id="snake-input" class="snake-input" type="text" inputmode="text" autocomplete="off" autocapitalize="none" autocorrect="off" spellcheck="false" enterkeyhint="send"
-                            placeholder="${escapeHtml(need.forms[need.forms.length - 1] || "")}…" value="${escapeHtml(challenge.input)}" ${busy ? "disabled" : ""}>
-                        <button class="primary-button snake-submit" type="submit" ${busy ? "disabled" : ""}>${challenge.checking ? "Sjekker …" : "Legg til"}</button>
-                        ${challenge.mode === "solo" ? `<button class="secondary-button snake-help" type="button" data-action="snake-help" ${busy || challenge.hint.step >= 3 ? "disabled" : ""}>Jeg trenger hjelp${challenge.hint.step ? ` (${challenge.hint.step}/3)` : ""}</button>` : ""}
-                    </form>
-                    <div class="snake-messages" aria-live="polite">${renderSnakeMessages(challenge)}</div>
-                </div>
-            `;
+            if (challenge.checking) {
+                return message({ type: "info", text: "Sjekker i ordboka …" });
+            }
+            if (challenge.appThinking) {
+                const first = challenge.messages[0];
+                return `${first ? message(first) : ""}${message({ type: "info", text: "Slangen tenker …" })}`;
+            }
+            if (challenge.hint.loading) {
+                return message({ type: "info", text: "Slangen leter etter et hint …" });
+            }
+            return challenge.messages.slice(0, 2).map(message).join("");
         }
 
         function renderSnakePlay(challenge) {
             const record = challenge.mode === "solo" ? snakeRecord(challenge) : 0;
             const classMode = challenge.mode === "class";
+            const busy = challenge.checking || challenge.appThinking;
             return `
                 <section class="snake-screen ${classMode ? "class-mode" : "solo-mode"}" data-snake-fill>
                     <div class="snake-bar">
@@ -3702,46 +3802,334 @@
                             ${classMode ? "" : `<span class="snake-legend"><i class="legend-elev"></i>Du <i class="legend-slange"></i>Slangen</span>`}
                         </div>
                         <div class="snake-actions">
-                            ${classMode ? `<button class="secondary-button" data-action="snake-undo" ${challenge.entries.length <= 1 || challenge.checking ? "disabled" : ""}>Angre siste ord</button>` : ""}
+                            ${classMode ? "" : `<button class="secondary-button snake-help" data-action="snake-help" ${busy || challenge.phase !== "play" || challenge.hint.step >= 3 ? "disabled" : ""}>Jeg trenger hjelp${challenge.hint.step ? ` (${challenge.hint.step}/3)` : ""}</button>`}
+                            ${classMode ? `<button class="secondary-button" data-action="snake-undo" ${challenge.entries.length <= 1 || busy ? "disabled" : ""}>Angre siste ord</button>` : ""}
                             ${classMode ? `<button class="secondary-button" data-action="snake-pause">Avslutt for i dag</button>` : ""}
                             <button class="secondary-button ${challenge.confirmNew ? "danger" : ""}" data-action="snake-new">${challenge.confirmNew ? "Sikker? Slangen slettes" : "Ny slange"}</button>
                             <button class="ghost-button" data-action="snake-setup">Regler</button>
                         </div>
                     </div>
                     ${renderSnakeBoard(challenge)}
-                    ${renderSnakeDock(challenge)}
                 </section>
             `;
         }
 
-        // Bruk all tilgjengelig høyde, og gjør ordene så store som mulig uten at slangen renner over.
+        /* Kroppen tegnes som én myk, sammenhengende form gjennom midten av hvert ord,
+           med en hale som smalner av og kveiler seg bakerst. */
+        function sampleCurve(points, perSegment = 10) {
+            const samples = [];
+            for (let index = 0; index < points.length - 1; index += 1) {
+                const p0 = points[index - 1] || points[index];
+                const p1 = points[index];
+                const p2 = points[index + 1];
+                const p3 = points[index + 2] || p2;
+                for (let step = 0; step < perSegment; step += 1) {
+                    const t = step / perSegment;
+                    const t2 = t * t;
+                    const t3 = t2 * t;
+                    const point = (a, b, c, d) => 0.5 * ((2 * b) + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t2 + (-a + 3 * b - 3 * c + d) * t3);
+                    samples.push({ x: point(p0.x, p1.x, p2.x, p3.x), y: point(p0.y, p1.y, p2.y, p3.y) });
+                }
+            }
+            samples.push({ ...points[points.length - 1] });
+            return samples;
+        }
+
+        // Halen smalner jevnt av til en spiss og bøyer seg litt opp, som på en tegnet slange.
+        // direction: retningen kroppen har der halen begynner, så halen fortsetter kurven uten knekk.
+        function tailCurve(start, width, direction = { x: 1, y: 0 }) {
+            const length = 2.8 * width;
+            const normal = { x: -direction.y, y: direction.x };
+            const points = [];
+            const steps = 36;
+            for (let step = steps; step >= 1; step -= 1) {
+                const t = step / steps;
+                const lift = width * 1.2 * Math.pow(t, 2.5);
+                points.push({
+                    x: start.x - direction.x * length * t - normal.x * lift,
+                    y: start.y - direction.y * length * t - normal.y * lift,
+                    // Smalner av uten knekk der halen møter kroppen, og ender i en spiss.
+                    w: width * (1 - Math.pow(t, 1.5))
+                });
+            }
+            return points;
+        }
+
+        // Et bånd langs den ene siden av kroppen (magen), som smalner av sammen med kroppen.
+        function sideBand(centerline, inner, outer) {
+            const near = [];
+            const far = [];
+            centerline.forEach((point, index) => {
+                const before = centerline[Math.max(0, index - 1)];
+                const after = centerline[Math.min(centerline.length - 1, index + 1)];
+                const dx = after.x - before.x;
+                const dy = after.y - before.y;
+                const length = Math.hypot(dx, dy) || 1;
+                const nx = -dy / length;
+                const ny = dx / length;
+                near.push(`${(point.x + nx * point.w * inner).toFixed(1)},${(point.y + ny * point.w * inner).toFixed(1)}`);
+                far.push(`${(point.x + nx * point.w * outer).toFixed(1)},${(point.y + ny * point.w * outer).toFixed(1)}`);
+            });
+            return `M ${near.join(" L ")} L ${far.reverse().join(" L ")} Z`;
+        }
+
+        function outline(centerline) {
+            const left = [];
+            const right = [];
+            centerline.forEach((point, index) => {
+                const before = centerline[Math.max(0, index - 1)];
+                const after = centerline[Math.min(centerline.length - 1, index + 1)];
+                const dx = after.x - before.x;
+                const dy = after.y - before.y;
+                const length = Math.hypot(dx, dy) || 1;
+                const nx = -dy / length;
+                const ny = dx / length;
+                const half = point.w / 2;
+                left.push(`${(point.x + nx * half).toFixed(1)},${(point.y + ny * half).toFixed(1)}`);
+                right.push(`${(point.x - nx * half).toFixed(1)},${(point.y - ny * half).toFixed(1)}`);
+            });
+            // Avrundet ende ved hodet.
+            const last = centerline[centerline.length - 1];
+            const previous = centerline[centerline.length - 2] || last;
+            const length = Math.hypot(last.x - previous.x, last.y - previous.y) || 1;
+            const dx = (last.x - previous.x) / length;
+            const dy = (last.y - previous.y) / length;
+            const cap = [];
+            for (let step = 1; step < 10; step += 1) {
+                const angle = (step / 10) * Math.PI;
+                const half = last.w / 2;
+                cap.push(`${(last.x + (-dy * Math.cos(angle) + dx * Math.sin(angle)) * half).toFixed(1)},${(last.y + (dx * Math.cos(angle) + dy * Math.sin(angle)) * half).toFixed(1)}`);
+            }
+            return `M ${[...left, ...cap, ...right.reverse()].join(" L ")} Z`;
+        }
+
+        // Bredden på slangen nær hodet (d = avstand fra midten av hodet, negativ bakover).
+        // Kroppen blir gradvis litt bredere fram mot hodet, og hodet runder av til en snute
+        // uten noen innsnevring – hodet går i ett med kroppen.
+        const SNAKE_HEAD_LENGTH = 1.1;
+
+        function headWidth(d, width) {
+            const neck = 1.8 * width;
+            if (d <= -neck) return width;
+            if (d <= 0) {
+                const t = (d + neck) / neck;
+                return width * (1 + 0.14 * t * t * (3 - 2 * t));
+            }
+            const u = Math.min(1, d / (SNAKE_HEAD_LENGTH * width));
+            return width * 1.14 * Math.sqrt(Math.max(0, 1 - Math.pow(u, 2.6)));
+        }
+
+        function offsetLine(points, distance) {
+            return points.map((point, index) => {
+                const before = points[Math.max(0, index - 1)];
+                const after = points[Math.min(points.length - 1, index + 1)];
+                const dx = after.x - before.x;
+                const dy = after.y - before.y;
+                const length = Math.hypot(dx, dy) || 1;
+                return `${(point.x - (dy / length) * distance).toFixed(1)},${(point.y + (dx / length) * distance).toFixed(1)}`;
+            }).join(" L ");
+        }
+
+        let lastSnakeMouth = null;
+
+        // Maten legges rett foran munnen, i samme retning som hodet peker.
+        function placeSnakeFood() {
+            const track = app.querySelector("[data-snake-track]");
+            const food = track && track.querySelector(".snake-food");
+            if (!food || !lastSnakeMouth) return;
+            // Mål plasseringen uten animasjoner og flytting (offsetLeft/offsetTop er upåvirket av transform).
+            const height = food.offsetHeight;
+            const left = { x: food.offsetLeft, y: food.offsetTop + height / 2 };
+            const { tip, dir } = lastSnakeMouth;
+            const angle = Math.max(-14, Math.min(14, Math.atan2(dir.y, dir.x) * 180 / Math.PI));
+            // Venstre kant av maten (litt inn) skal ligge ved tungespissen.
+            const target = { x: tip.x + dir.x * height * 0.05, y: tip.y + dir.y * height * 0.05 };
+            food.style.translate = `${(target.x - left.x).toFixed(1)}px ${(target.y - left.y).toFixed(1)}px`;
+            food.style.rotate = `${angle.toFixed(1)}deg`;
+            food.style.transformOrigin = "left center";
+        }
+
+        // Tegner slangen og legger maten foran munnen. Stikker maten utenfor, får brettet mer plass til høyre.
+        function layoutSnake(gulp = false) {
+            const track = app.querySelector("[data-snake-track]");
+            if (!track) return;
+            drawSnakeBody(gulp);
+            placeSnakeFood();
+            const food = track.querySelector(".snake-food");
+            if (!food) return;
+            const overflow = food.getBoundingClientRect().right - track.getBoundingClientRect().left + 24 - track.scrollWidth;
+            if (overflow > 1) {
+                track.style.paddingRight = `${(parseFloat(track.style.paddingRight) || 0) + overflow}px`;
+                drawSnakeBody(gulp);
+                placeSnakeFood();
+            }
+        }
+
+        // Slangen sett ovenfra: hale, kropp og hode tegnes som én sammenhengende form,
+        // så hodet vokser naturlig ut av kroppen.
+        function drawSnakeBody(gulp = false) {
+            const track = app.querySelector("[data-snake-track]");
+            const svg = app.querySelector("[data-snake-body]");
+            const headSpace = app.querySelector("[data-snake-head]");
+            if (!track || !svg || !headSpace) return;
+            const trackRect = track.getBoundingClientRect();
+            const center = (rect) => ({
+                x: rect.left - trackRect.left + rect.width / 2,
+                y: rect.top - trackRect.top + rect.height / 2
+            });
+            const points = [...track.querySelectorAll("[data-snake-point]")];
+            if (!points.length) return;
+            const rects = points.map((element) => element.getBoundingClientRect());
+            const centers = rects.map(center);
+            const head = center(headSpace.getBoundingClientRect());
+            // Bredden måles på ordene uten vipping, så kroppen sitter tett rundt dem.
+            const width = Math.max(...points.map((element) => element.offsetHeight)) * 1.38;
+
+            // Kroppen begynner ved venstre kant av første ord, der halen tar over.
+            // Halen begynner ved venstre kant av første ord, på linja kroppen har der (så kurven ikke slår ut).
+            const next = centers[1] || head;
+            const along = Math.hypot(next.x - centers[0].x, next.y - centers[0].y) || 1;
+            const tailDirection = { x: (next.x - centers[0].x) / along, y: (next.y - centers[0].y) / along };
+            const back = (centers[0].x - (rects[0].left - trackRect.left + points[0].offsetHeight * 0.4)) / Math.max(0.3, tailDirection.x);
+            const start = { x: centers[0].x - tailDirection.x * back, y: centers[0].y - tailDirection.y * back };
+            const body = sampleCurve([start, ...centers, head], 12);
+
+            // Avstand bakover fra midten av hodet, for å forme hodet.
+            const distances = new Array(body.length).fill(0);
+            for (let index = body.length - 2; index >= 0; index -= 1) {
+                distances[index] = distances[index + 1] - Math.hypot(body[index + 1].x - body[index].x, body[index + 1].y - body[index].y);
+            }
+            const shaped = body.map((point, index) => ({ ...point, w: headWidth(distances[index], width) }));
+
+            // Snuten: kurven fortsetter forbi midten av hodet og rundes av.
+            const previous = body[body.length - 2] || start;
+            const length = Math.hypot(head.x - previous.x, head.y - previous.y) || 1;
+            const dir = { x: (head.x - previous.x) / length, y: (head.y - previous.y) / length };
+            const normal = { x: -dir.y, y: dir.x };
+            const front = SNAKE_HEAD_LENGTH * width;
+            for (let step = 1; step <= 24; step += 1) {
+                const d = front * 0.998 * Math.sin((step / 24) * Math.PI / 2);
+                shaped.push({ x: head.x + dir.x * d, y: head.y + dir.y * d, w: headWidth(d, width) });
+            }
+
+            const centerline = [...tailCurve(start, width, tailDirection), ...shaped.slice(1)];
+            const shape = outline(centerline);
+            // Magen: et lyst bånd langs undersiden, fra halespissen til haken.
+            const belly = sideBand(centerline, 0.12, 0.5);
+            const bellyEdge = sideBand(centerline, 0.02, 0.14);
+
+            // «Over» er motsatt side av magen.
+            const at = (d, side) => ({
+                x: head.x + dir.x * d + normal.x * side,
+                y: head.y + dir.y * d + normal.y * side
+            });
+            const angle = Math.atan2(dir.y, dir.x) * 180 / Math.PI;
+            const eye = (d, side, radius) => {
+                const c = at(d, side);
+                const glint = at(d + radius * 0.25, side - radius * 0.35);
+                return `
+                    <circle cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" r="${radius.toFixed(1)}" fill="#d9480f" stroke="#1c2a0e" stroke-width="${(width * 0.035).toFixed(1)}"/>
+                    <ellipse cx="${c.x.toFixed(1)}" cy="${c.y.toFixed(1)}" rx="${(radius * 0.28).toFixed(1)}" ry="${(radius * 0.78).toFixed(1)}" fill="#111827" transform="rotate(${angle.toFixed(1)} ${c.x.toFixed(1)} ${c.y.toFixed(1)})"/>
+                    <circle cx="${glint.x.toFixed(1)}" cy="${glint.y.toFixed(1)}" r="${(radius * 0.28).toFixed(1)}" fill="#fff"/>
+                `;
+            };
+            const eyes = eye(0.08 * width, -0.3 * width, width * 0.15) + eye(0.7 * width, -0.36 * width, width * 0.12);
+            const nostrils = [-0.02, 0.1].map((side) => {
+                const nostril = at(front * 0.86, side * width);
+                return `<circle cx="${nostril.x.toFixed(1)}" cy="${nostril.y.toFixed(1)}" r="${(width * 0.032).toFixed(1)}" fill="#1c2a0e"/>`;
+            }).join("");
+            const p = (point) => `${point.x.toFixed(1)} ${point.y.toFixed(1)}`;
+            const mouthStart = at(front * 0.93, 0.16 * width);
+            const mouthControl = at(front * 0.5, 0.42 * width);
+            const mouthEnd = at(0.05 * width, 0.36 * width);
+            const mouthCurl = at(-0.02 * width, 0.27 * width);
+            const mouth = `M ${p(mouthStart)} Q ${p(mouthControl)} ${p(mouthEnd)} L ${p(mouthCurl)}`;
+
+            const tip = at(front, 0);
+            const fork = at(front + 0.3 * width, 0);
+            const prongA = at(front + 0.42 * width, 0.1 * width);
+            const prongB = at(front + 0.42 * width, -0.1 * width);
+            lastSnakeMouth = { tip: at(front + 0.36 * width, 0), dir };
+
+            const trackWidth = track.scrollWidth;
+            const trackHeight = track.scrollHeight;
+            const stroke = Math.max(2.5, width * 0.055);
+            svg.setAttribute("width", trackWidth);
+            svg.setAttribute("height", trackHeight);
+            svg.setAttribute("viewBox", `0 0 ${trackWidth} ${trackHeight}`);
+            svg.innerHTML = `
+                <defs>
+                    <clipPath id="snake-clip"><path d="${shape}"/></clipPath>
+                    <pattern id="snake-speckle" width="26" height="22" patternUnits="userSpaceOnUse">
+                        <circle cx="3" cy="4" r="1.1" fill="#fff" fill-opacity="0.35"/>
+                        <circle cx="15" cy="9" r="0.8" fill="#fff" fill-opacity="0.3"/>
+                        <circle cx="22" cy="17" r="1.2" fill="#fff" fill-opacity="0.28"/>
+                        <circle cx="8" cy="16" r="0.7" fill="#fff" fill-opacity="0.32"/>
+                        <circle cx="19" cy="2" r="0.6" fill="#fff" fill-opacity="0.3"/>
+                    </pattern>
+                </defs>
+                <path d="${shape}" fill="rgba(20, 50, 10, 0.26)" transform="translate(${(width * 0.06).toFixed(1)} ${(width * 0.16).toFixed(1)})"/>
+                <path class="snake-tongue-path" d="M ${p(tip)} L ${p(fork)} L ${p(prongA)} M ${p(fork)} L ${p(prongB)}" fill="none" stroke="#e11d48" stroke-width="${(width * 0.07).toFixed(1)}" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="${shape}" fill="#5fae2c"/>
+                <g clip-path="url(#snake-clip)">
+                    <path d="${bellyEdge}" fill="#a6d662" fill-opacity="0.8"/>
+                    <path d="${belly}" fill="#d3ee9c"/>
+                    <path d="${shape}" fill="url(#snake-speckle)"/>
+                </g>
+                <path d="${shape}" fill="none" stroke="#1c2a0e" stroke-width="${stroke.toFixed(1)}" stroke-linejoin="round"/>
+                <g class="snake-face ${gulp ? "gulp" : ""}">
+                    <path d="${mouth}" fill="none" stroke="#1c2a0e" stroke-width="${(width * 0.045).toFixed(1)}" stroke-linecap="round"/>
+                    ${nostrils}
+                    ${eyes}
+                </g>
+            `;
+        }
+
+        function snakeScrollToHead(board, smooth) {
+            const max = board.scrollWidth - board.clientWidth;
+            if (smooth && typeof board.scrollTo === "function") {
+                board.scrollTo({ left: max, behavior: "smooth" });
+            } else {
+                board.scrollLeft = max;
+            }
+        }
+
+        // Bruk all tilgjengelig plass: spillflaten fyller skjermhøyden, og ordene blir så store som høyden tillater.
         function afterSnakeRender() {
-            if (state.challenge) state.challenge.justAdded = null;
+            const challenge = state.challenge;
             const fill = app.querySelector("[data-snake-fill]");
             if (!fill) return;
             const bottomGap = window.innerWidth <= 900 ? 12 : 18;
             const top = fill.getBoundingClientRect().top + window.scrollY;
             const available = Math.floor(window.innerHeight - top - bottomGap);
             if (fill.classList.contains("snake-screen")) {
-                // Spillflaten får nøyaktig skjermhøyden; slangen ruller inni brettet.
-                fill.style.height = `${Math.max(440, available)}px`;
+                fill.style.height = `${Math.max(420, available)}px`;
             } else {
                 fill.style.minHeight = `${Math.max(360, available)}px`;
             }
 
             const board = fill.querySelector("[data-snake-board]");
             const track = fill.querySelector("[data-snake-track]");
-            if (!board || !track) return;
-            let scale = 2.4;
-            track.style.setProperty("--snake-scale", scale);
-            const overflows = () => track.scrollHeight > board.clientHeight - 8 || track.scrollWidth > track.clientWidth + 1;
-            while (scale > 0.7 && overflows()) {
-                scale = Math.round((scale - 0.1) * 10) / 10;
-                track.style.setProperty("--snake-scale", scale);
+            if (!board || !track || !challenge) return;
+            const font = Math.max(16, Math.min(60, board.clientHeight * 0.065, board.clientWidth * 0.05));
+            track.style.setProperty("--seg-font", `${font.toFixed(1)}px`);
+            // Hodet står litt til høyre på skjermen; slangen strekker seg mot venstre.
+            track.style.paddingRight = `${Math.round(board.clientWidth * 0.16)}px`;
+            const grew = challenge.justAdded !== null && challenge.justAdded !== undefined;
+            layoutSnake(grew);
+            if (grew || challenge.scrollToHead || typeof challenge.savedScroll !== "number") {
+                if (grew && typeof challenge.savedScroll === "number") board.scrollLeft = challenge.savedScroll;
+                snakeScrollToHead(board, grew);
+            } else {
+                board.scrollLeft = challenge.savedScroll;
             }
-            board.scrollTop = board.scrollHeight;
+            challenge.justAdded = null;
+            challenge.scrollToHead = false;
+            challenge.shake = false;
+            challenge.foodFresh = false;
+            board.dataset.ready = "1";
 
-            if (state.challenge && state.challenge.phase === "play" && !state.challenge.checking && !state.challenge.appThinking
+            if (challenge.phase === "play" && !challenge.checking && !challenge.appThinking
                 && window.matchMedia("(pointer: fine)").matches) {
                 const input = document.getElementById("snake-input");
                 if (input && document.activeElement !== input) input.focus({ preventScroll: true });
@@ -3751,6 +4139,14 @@
         window.addEventListener("resize", () => {
             if (state.view === "ordslangen") window.requestAnimationFrame(afterSnakeRender);
         });
+
+        // Musehjul ruller slangen sidelengs.
+        app.addEventListener("wheel", (event) => {
+            const board = event.target.closest && event.target.closest("[data-snake-board]");
+            if (!board || Math.abs(event.deltaX) > Math.abs(event.deltaY)) return;
+            board.scrollLeft += event.deltaY;
+            event.preventDefault();
+        }, { passive: false });
 
         loadProgress();
         render();

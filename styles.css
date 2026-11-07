@@ -1989,7 +1989,7 @@
         /* Spillflaten: topplinje, brett som fyller resten, og skrivefelt nederst */
         .snake-screen {
             display: grid;
-            grid-template-rows: auto minmax(0, 1fr) auto;
+            grid-template-rows: auto minmax(0, 1fr);
             gap: 12px;
         }
 
@@ -2072,61 +2072,96 @@
             box-shadow: none;
         }
 
-        .snake-board {
+        /* Gressplenen slangen ligger på. Slangen ruller sidelengs inni plenen. */
+        .snake-stage {
+            position: relative;
             min-height: 0;
-            overflow-y: auto;
-            overscroll-behavior: contain;
-            padding: clamp(10px, 1.6vw, 22px);
             border-radius: var(--radius);
             border: 3px solid rgba(255, 255, 255, 0.55);
+            overflow: hidden;
             background:
-                radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.35) 0 3px, transparent 4px),
-                radial-gradient(circle at 78% 70%, rgba(255, 255, 255, 0.25) 0 4px, transparent 5px),
-                linear-gradient(160deg, #d9f99d 0%, #bef264 45%, #a3e635 100%);
-            background-size: 120px 120px, 160px 160px, auto;
-            box-shadow: inset 0 0 0 4px rgba(63, 98, 18, 0.12);
+                radial-gradient(circle at 8% 82%, #fde047 0 3px, #fff 3.5px 6px, transparent 6.5px),
+                radial-gradient(circle at 62% 14%, #fde047 0 3px, #fff 3.5px 6px, transparent 6.5px),
+                radial-gradient(circle at 38% 64%, #f9a8d4 0 2.5px, #fff 3px 5px, transparent 5.5px),
+                radial-gradient(ellipse at 20% 30%, rgba(255, 255, 255, 0.16), transparent 34%),
+                radial-gradient(ellipse at 80% 78%, rgba(20, 83, 45, 0.18), transparent 38%),
+                repeating-linear-gradient(105deg, rgba(255, 255, 255, 0.05) 0 2px, transparent 2px 9px),
+                repeating-linear-gradient(75deg, rgba(20, 83, 45, 0.07) 0 2px, transparent 2px 11px),
+                linear-gradient(170deg, #86c043 0%, #6aa733 48%, #4f8f24 100%);
+            background-size: 340px 300px, 420px 360px, 380px 330px, auto, auto, auto, auto, auto;
+            box-shadow: inset 0 0 40px rgba(20, 83, 45, 0.35);
+        }
+
+        .snake-lawn {
+            position: absolute;
+            inset: 0;
+            overflow-x: auto;
+            overflow-y: hidden;
+            overscroll-behavior-x: contain;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: rgba(26, 46, 5, 0.45) transparent;
         }
 
         .snake-track {
-            --snake-scale: 1;
-            --seg-font: calc(var(--snake-scale) * clamp(1rem, 0.72rem + 1.15vw, 1.6rem));
+            --seg-font: 32px;
+            position: relative;
             display: flex;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
             align-items: center;
-            align-content: flex-start;
-            gap: calc(var(--seg-font) * 0.45) 0;
+            width: max-content;
+            min-width: 100%;
+            height: 100%;
+            justify-content: flex-end;
+            /* Plass til den kveilede halen til venstre, og til snakkeboblen øverst */
+            padding-left: calc(var(--seg-font) * 7);
+            padding-top: min(150px, 22%);
             font-size: var(--seg-font);
         }
 
-        .snake-seg {
+        .snake-body {
+            position: absolute;
+            top: 0;
+            left: 0;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .snake-seg,
+        .snake-food,
+        .snake-head-space {
             position: relative;
+            z-index: 1;
+            flex: 0 0 auto;
+            translate: 0 var(--wy, 0);
+            rotate: var(--wr, 0deg);
+        }
+
+        .snake-seg {
             display: inline-flex;
             align-items: center;
-            margin-right: -0.18em;
-            padding: 0.32em 0.62em;
+            margin-right: 0.08em;
+            padding: 0.24em 0.5em;
             border-radius: 999px;
-            border: 0.1em solid rgba(26, 46, 5, 0.35);
-            background: #16a34a;
+            border: 0.08em solid rgba(26, 46, 5, 0.4);
+            background: #15803d;
             color: #fff;
             font: inherit;
             font-weight: 900;
             line-height: 1.1;
+            white-space: nowrap;
             cursor: pointer;
-            box-shadow: 0 0.14em 0 rgba(26, 46, 5, 0.35);
+            box-shadow: inset 0 -0.12em 0 rgba(26, 46, 5, 0.25), inset 0 0.1em 0 rgba(255, 255, 255, 0.18);
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
         }
 
-        .snake-seg + .snake-seg {
-            z-index: 0;
+        .snake-seg.alt {
+            background: #166534;
         }
 
         .snake-seg.by-start {
-            background: #4d7c0f;
-        }
-
-        .snake-seg.alt {
-            background: #15803d;
+            background: #3f6212;
         }
 
         .snake-seg.by-slange {
@@ -2143,7 +2178,7 @@
         }
 
         .snake-seg.pop {
-            animation: snake-pop 380ms ease-out;
+            animation: snake-pop 420ms ease-out;
         }
 
         .snake-seg:focus-visible {
@@ -2152,15 +2187,14 @@
         }
 
         /* Leddene som henger sammen med naboordene. Det nyeste ordet får gul markering
-           (samme farge som «Neste ord må begynne med»), de eldre en roligere markering. */
+           (samme farge som starten i hodet), de eldre en roligere markering. */
         .seg-link-in,
         .seg-link-out {
-            padding: 0 0.12em;
+            padding: 0 0.1em;
             border-radius: 0.2em;
-            background: rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.18);
         }
 
-        .snake-seg.newest .seg-link-in,
         .snake-seg.newest .seg-link-out {
             background: var(--abcya-yellow);
             color: #1a2e05;
@@ -2168,17 +2202,17 @@
 
         .seg-divider {
             display: inline-block;
-            width: 0.12em;
-            height: 1em;
-            margin: 0 0.08em;
+            width: 0.1em;
+            height: 0.9em;
+            margin: 0 0.07em;
             border-radius: 2px;
-            background: rgba(255, 255, 255, 0.55);
+            background: rgba(255, 255, 255, 0.5);
         }
 
         .seg-divider.dot {
             width: auto;
             height: auto;
-            margin: 0 0.04em;
+            margin: 0 0.03em;
             background: none;
             color: rgba(255, 255, 255, 0.85);
         }
@@ -2197,159 +2231,224 @@
             font-size: 0.62em;
         }
 
-        .snake-head {
-            position: relative;
+        /* Plassen der hodet tegnes (hodet er en del av slangekroppen i SVG-en) */
+        .snake-head-space {
             display: inline-block;
-            width: 2.1em;
-            height: 1.75em;
-            margin-right: 0.35em;
-            border-radius: 45% 60% 60% 45%;
-            background: #3f6212;
-            box-shadow: 0 0.14em 0 rgba(26, 46, 5, 0.35);
+            width: 3em;
+            height: 1.6em;
         }
 
-        .snake-tongue {
-            position: absolute;
-            right: -0.42em;
-            top: 58%;
-            width: 0.5em;
-            height: 0.12em;
-            border-radius: 2px;
-            background: #e11d48;
-            animation: snake-tongue 1.6s ease-in-out infinite;
-        }
-
-        .snake-ghost {
+        /* Maten foran munnen: starten på neste ord står ferdig, eleven skriver resten */
+        .snake-food {
             display: inline-flex;
             align-items: center;
-            gap: 0.15em;
-            padding: 0.32em 0.62em;
-            border-radius: 999px;
-            border: 0.1em dashed rgba(26, 46, 5, 0.55);
-            background: rgba(255, 255, 255, 0.55);
-            color: #1a2e05;
+            gap: 0.06em;
+            margin: 0 0 0 1.4em;
+            padding: 0.16em 0.16em 0.16em 0.4em;
+            border-radius: 0.9em;
+            border: 0.08em solid #c2410c;
+            background: linear-gradient(180deg, #fffbeb 0%, #fde68a 100%);
+            color: #431407;
             font-weight: 900;
             line-height: 1.1;
+            white-space: nowrap;
+            box-shadow: 0 0.12em 0 rgba(67, 20, 7, 0.25), 0 0.3em 0.6em rgba(20, 50, 10, 0.25);
+            animation: food-bob 2.4s ease-in-out infinite;
         }
 
-        .snake-ghost.stuck {
-            border-color: var(--danger);
-            color: #7f1d1d;
+        /* Et lite blad, så maten ser ut som en godbit */
+        .snake-food::before {
+            content: "";
+            position: absolute;
+            left: 0.5em;
+            top: -0.32em;
+            width: 0.55em;
+            height: 0.3em;
+            border-radius: 0 100% 0 100%;
+            background: #16a34a;
+            border: 0.04em solid #14532d;
+            transform: rotate(-18deg);
         }
 
-        .snake-ghost.thinking i {
-            width: 0.32em;
-            height: 0.32em;
+        .snake-food.fresh {
+            animation: food-drop 420ms ease-out, food-bob 2.4s ease-in-out 420ms infinite;
+        }
+
+        .snake-food.being-eaten {
+            padding: 0.2em 0.5em;
+            animation: food-eaten 480ms ease-in forwards;
+            transform-origin: left center;
+        }
+
+        .snake-food.from-slange {
+            border-color: #0369a1;
+            background: linear-gradient(180deg, #f0f9ff 0%, #bae6fd 100%);
+            color: #0c4a6e;
+        }
+
+        .food-word {
+            padding: 0 0.1em;
+        }
+
+        .head-prefix {
+            padding: 0.1em 0.12em;
+            border-radius: 0.2em;
+            background: var(--abcya-yellow);
+            color: #1a2e05;
+            cursor: text;
+        }
+
+        .head-input {
+            width: auto;
+            min-width: 2.2ch;
+            margin: 0;
+            padding: 0.1em 0.12em;
+            border: 0;
+            border-bottom: 0.08em dashed rgba(67, 20, 7, 0.6);
+            border-radius: 0.2em 0.2em 0 0;
+            background: rgba(255, 255, 255, 0.7);
+            color: #431407;
+            font: inherit;
+            font-weight: 900;
+            line-height: 1.1;
+            outline: none;
+            caret-color: #c2410c;
+        }
+
+        .head-input::placeholder {
+            color: rgba(67, 20, 7, 0.45);
+        }
+
+        .head-input:focus {
+            background: #fff;
+            border-bottom-style: solid;
+        }
+
+        .head-input:disabled {
+            opacity: 0.7;
+        }
+
+        .head-submit {
+            width: 1.5em;
+            height: 1.5em;
+            margin-left: 0.12em;
+            display: grid;
+            place-items: center;
             border-radius: 50%;
-            background: #1a2e05;
+            border: 0.06em solid rgba(26, 46, 5, 0.4);
+            background: #16a34a;
+            color: #fff;
+            font-size: 0.75em;
+            font-weight: 950;
+            cursor: pointer;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        .head-submit:disabled {
+            opacity: 0.5;
+            cursor: default;
+        }
+
+        .head-question {
+            padding: 0 0.3em;
+            color: #b91c1c;
+        }
+
+        .snake-food.stuck {
+            border-color: #b91c1c;
+            border-style: dashed;
+            animation: none;
+        }
+
+        .snake-food.shake {
+            animation: shake 300ms linear;
+        }
+
+        .head-thinking {
+            display: inline-flex;
+            gap: 0.14em;
+            padding: 0 0.3em;
+        }
+
+        .head-thinking i {
+            width: 0.26em;
+            height: 0.26em;
+            border-radius: 50%;
+            background: #0369a1;
             animation: snake-dots 900ms ease-in-out infinite;
         }
 
-        .snake-ghost.thinking i:nth-child(2) { animation-delay: 150ms; }
-        .snake-ghost.thinking i:nth-child(3) { animation-delay: 300ms; }
+        .head-thinking i:nth-child(2) { animation-delay: 150ms; }
+        .head-thinking i:nth-child(3) { animation-delay: 300ms; }
 
-        .snake-more {
-            margin-right: 0.4em;
-            padding: 0.3em 0.7em;
+        .prefix-options {
+            position: absolute;
+            left: 0;
+            bottom: calc(100% + 0.3em);
+            display: flex;
+            gap: 0.2em;
+            font-size: 0.5em;
+        }
+
+        .prefix-option {
+            padding: 0.25em 0.6em;
             border-radius: 999px;
-            border: 2px dashed rgba(26, 46, 5, 0.5);
-            background: rgba(255, 255, 255, 0.7);
+            border: 2px solid rgba(26, 46, 5, 0.35);
+            background: rgba(255, 255, 255, 0.85);
             color: #1a2e05;
             font: inherit;
-            font-size: 0.7em;
             font-weight: 850;
             cursor: pointer;
         }
 
-        /* Skrivefeltet nederst */
-        .snake-dock {
-            display: grid;
-            grid-template-columns: auto minmax(0, 1fr);
-            gap: 10px 16px;
-            align-items: center;
-            padding: 12px 14px;
-            border-radius: var(--radius);
-            border: 1px solid rgba(126, 235, 232, 0.40);
-            background: linear-gradient(180deg, rgba(204, 232, 246, 0.97) 0%, rgba(187, 229, 225, 0.97) 100%);
-        }
-
-        .snake-need {
-            display: grid;
-            gap: 4px;
-            font-weight: 800;
-            color: #334155;
-        }
-
-        .need-chip {
-            width: fit-content;
-            padding: 4px 12px;
-            border-radius: var(--radius);
+        .prefix-option.active {
             background: var(--abcya-yellow);
-            color: #1a2e05;
-            font-family: var(--display-font);
-            font-size: clamp(1.5rem, 1.1rem + 1.6vw, 2.6rem);
-            line-height: 1.1;
-            box-shadow: 0 5px 0 rgba(0, 0, 0, 0.16);
+            border-color: #1a2e05;
         }
 
-        .need-chip small {
-            font-family: ui-sans-serif, system-ui, sans-serif;
-            font-size: 0.45em;
-            color: #475569;
+        /* Hodet blinker med tunga, og «svelger» når det spiser et ord */
+        .snake-tongue-path {
+            animation: tongue-flick 2.2s steps(1, end) infinite;
         }
 
-        .snake-form {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
+        .snake-face {
+            transform-box: fill-box;
+            transform-origin: center;
         }
 
-        .snake-input {
-            flex: 1 1 220px;
-            width: 100%;
-            min-width: 0;
-            min-height: 56px;
-            padding: 8px 16px;
-            border-radius: var(--radius);
-            border: 3px solid #65a30d;
-            background: #fff;
-            color: var(--ink);
-            font-size: clamp(1.3rem, 1.05rem + 0.9vw, 1.9rem);
-            font-weight: 800;
+        .snake-face.gulp {
+            animation: snake-gulp 420ms ease-out;
         }
 
-        .snake-input:focus {
-            outline: 3px solid var(--focus);
-            outline-offset: 2px;
-        }
-
-        .snake-input:disabled {
-            background: #f1f5f9;
-        }
-
-        .snake-submit,
-        .snake-help {
-            min-height: 56px;
-            font-size: 1.08rem;
-        }
-
-        .snake-messages {
-            grid-column: 1 / -1;
+        /* Snakkeboble med beskjeder */
+        .snake-bubble {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 3;
+            width: min(520px, 48%);
             display: grid;
             gap: 8px;
+            pointer-events: none;
         }
 
-        .snake-messages:empty {
+        .snake-bubble:empty {
             display: none;
+        }
+
+        .snake-bubble .snake-message {
+            pointer-events: auto;
+            box-shadow: 0 8px 18px rgba(20, 83, 45, 0.25);
         }
 
         .snake-message {
             display: grid;
             gap: 2px;
             padding: 10px 14px;
-            border-radius: var(--radius);
-            border: 1px solid #bfdbfe;
-            background: #eff6ff;
+            border-radius: 14px;
+            border: 2px solid #bfdbfe;
+            background: rgba(239, 246, 255, 0.96);
             color: #1e3a8a;
             font-size: clamp(0.98rem, 0.92rem + 0.3vw, 1.15rem);
             line-height: 1.35;
@@ -2357,25 +2456,20 @@
 
         .snake-message.success {
             border-color: #86efac;
-            background: #f0fdf4;
+            background: rgba(240, 253, 244, 0.96);
             color: #14532d;
         }
 
         .snake-message.error {
             border-color: #fecaca;
-            background: #fff1f2;
+            background: rgba(255, 241, 242, 0.97);
             color: #7f1d1d;
         }
 
-        .snake-dock.won {
-            grid-template-columns: minmax(0, 1fr) auto;
-        }
-
         .snake-result {
-            display: grid;
-            gap: 4px;
+            justify-items: start;
+            gap: 8px;
             font-size: clamp(1.05rem, 0.95rem + 0.5vw, 1.35rem);
-            color: #14532d;
         }
 
         .snake-result strong {
@@ -2384,14 +2478,44 @@
         }
 
         @keyframes snake-pop {
-            0% { transform: scale(0.6); opacity: 0; }
-            70% { transform: scale(1.08); opacity: 1; }
+            0% { transform: scale(0.4); opacity: 0; }
+            70% { transform: scale(1.1); opacity: 1; }
             100% { transform: scale(1); }
         }
 
         @keyframes snake-tongue {
             0%, 70%, 100% { transform: scaleX(1); }
-            80% { transform: scaleX(1.6); }
+            80% { transform: scaleX(1.5); }
+        }
+
+        @keyframes food-bob {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-0.12em); }
+        }
+
+        @keyframes food-drop {
+            0% { transform: translateY(-1.2em) scale(0.6); opacity: 0; }
+            70% { transform: translateY(0.1em) scale(1.05); opacity: 1; }
+            100% { transform: translateY(0) scale(1); }
+        }
+
+        @keyframes food-eaten {
+            0% { transform: translateX(0) scale(1); opacity: 1; }
+            100% { transform: translateX(-3em) scale(0.15); opacity: 0; }
+        }
+
+        @keyframes snake-gulp {
+            0% { transform: scale(1); }
+            40% { transform: scale(1.12); }
+            100% { transform: scale(1); }
+        }
+
+        @keyframes tongue-flick {
+            0%, 55% { opacity: 0; }
+            56%, 70% { opacity: 1; }
+            71%, 80% { opacity: 0; }
+            81%, 92% { opacity: 1; }
+            93%, 100% { opacity: 0; }
         }
 
         @keyframes snake-dots {
@@ -2415,8 +2539,10 @@
                 grid-template-rows: minmax(110px, auto) auto auto auto;
             }
 
-            .snake-dock {
-                grid-template-columns: minmax(0, 1fr);
+            .snake-bubble {
+                left: 10px;
+                right: 10px;
+                width: auto;
             }
         }
 
